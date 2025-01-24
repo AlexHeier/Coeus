@@ -2,7 +2,7 @@ package main
 
 import (
 	"Coeus/conversation"
-	_ "Coeus/conversation/memory"
+	"Coeus/conversation/memory"
 	"Coeus/provider"
 	"fmt"
 	"log"
@@ -23,15 +23,13 @@ var model = "llama3.2"
 
 func main() {
 
-	llm, err := provider.NewOllama(ip, port, model)
+	llm, err := provider.Ollama(ip, port, model)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	conversation := conversation.ConversationSetup{
-		llm:    llm,
-		Memory: conversation.Memory.Summery(),
-	}
+	var con conversation.Struct
+	con.Setup(llm, memory.Summary)
 
-	fmt.Print(conversation)
+	fmt.Print(con)
 }

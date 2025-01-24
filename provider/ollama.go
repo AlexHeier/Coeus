@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-type Ollama struct {
+type OllamaStruct struct {
 	Provider     string
 	HttpProtocol string
 	ServerIP     string
@@ -15,23 +15,23 @@ type Ollama struct {
 	Stream       bool
 }
 
-func NewOllama(ip, port, model string) (Ollama, error) {
+func Ollama(ip, port, model string) (OllamaStruct, error) {
 	// Validate IP address
 	if net.ParseIP(ip) == nil {
-		return Ollama{}, errors.New("invalid IP address")
+		return OllamaStruct{}, errors.New("invalid IP address")
 	}
 
 	// Validate port
 	if _, err := strconv.Atoi(port); err != nil {
-		return Ollama{}, errors.New("invalid port")
+		return OllamaStruct{}, errors.New("invalid port")
 	}
 
 	// Validate model (example: non-empty string)
 	if model == "" {
-		return Ollama{}, errors.New("model cannot be empty")
+		return OllamaStruct{}, errors.New("model cannot be empty")
 	}
 
-	return Ollama{
+	return OllamaStruct{
 		Provider:     "Ollama",
 		HttpProtocol: "http",
 		ServerIP:     ip,

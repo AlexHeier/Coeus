@@ -1,12 +1,6 @@
 package conversation
 
-type memoryFunc func([]string) []string
-
-type llmInput interface{}
-
-type llmFunc func(llmInput) struct{}
-
-type ConversationSetup struct {
-	llm    llmFunc
-	Memory memoryFunc
+type Struct struct {
+	llm    interface{}
+	Memory func(args ...interface{}) string
 }
