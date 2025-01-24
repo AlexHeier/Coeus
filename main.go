@@ -1,34 +1,37 @@
 package main
 
 import (
-	coeus "Coeus/Coeus"
-
+	"Coeus/conversation"
+	_ "Coeus/conversation/memory"
+	"Coeus/provider"
+	"fmt"
 	"log"
 
-	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 )
 
-func main() {
-
+func init() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+}
 
-	var Coeus coeus.Coeus
+var ip = "10.212.168.203"
+var port = "11434"
+var model = "llama3.2"
 
-	// Setup router with handler functions
-	var ServerConfig coeus.SrvConfig
-	ServerConfig.Router = mux.NewRouter()
-	ServerConfig.HttpProtocol = "http"
-	ServerConfig.IPaddress = "localhost"
-	ServerConfig.Port = "9050"
+func main() {
 
-	ServerConfig.Router.HandleFunc("/api/v1/status", coeus.StatusHandler)
+	llm, err := provider.NewOllama(ip, port, model)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
-	LLMConfig := Coeus.NewOllamaConfig("http", "localhost", "11434", "llama3.2", "YEr fucked mate", false)
+	conversation := conversation.ConversationSetup{
+		llm:    llm,
+		Memory: conversation.Memory.Summery(),
+	}
 
-	Coeus.Init(ServerConfig, LLMConfig)
-	Coeus.Start()
+	fmt.Print(conversation)
 }
