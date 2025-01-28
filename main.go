@@ -1,10 +1,9 @@
 package main
 
 import (
-	"Coeus/conversation"
-	"Coeus/conversation/memory"
+	"Coeus/llm"
+	"Coeus/llm/memory"
 	"Coeus/provider"
-	"fmt"
 	"log"
 
 	"github.com/joho/godotenv"
@@ -23,13 +22,11 @@ var model = "llama3.2"
 
 func main() {
 
-	llm, err := provider.Ollama(ip, port, model)
+	prov, err := provider.Ollama(ip, port, model)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	var con conversation.Struct
-	con.Setup(llm, memory.Summary)
+	llm.Setup(prov, memory.Summary)
 
-	fmt.Print(con)
 }
