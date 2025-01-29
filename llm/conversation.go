@@ -1,8 +1,15 @@
 package llm
 
-var Message Struct
+type Conversation struct {
+	MainPrompt string
+	ToolsDesc  string
+	ToolsResp  string
+	History    string
+	UserPrompt string
+}
 
-type Struct struct {
-	llm    interface{}
-	Create func(interface{}) (string, error)
+var MainConversation Conversation
+
+func (c *Conversation) UpdateHistory(s string) {
+	c.History += s
 }
