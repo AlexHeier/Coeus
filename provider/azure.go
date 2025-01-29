@@ -36,3 +36,8 @@ func NewAzure(ip, port, model string) (Azure, error) {
 	}, nil
 }
 */
+
+func SendAzure(prompt string) (map[string]interface{}, error) {
+	var v map[string]interface{}
+	return v, nil
+}
