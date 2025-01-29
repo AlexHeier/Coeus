@@ -2,6 +2,7 @@ package main
 
 import (
 	"Coeus/provider"
+	"fmt"
 	"log"
 	"os"
 
@@ -21,6 +22,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	res, _ := provider.Send("Hello!")
+	fmt.Println(res)
 
 	//llm.Setup(prov, memory.Summary)
 

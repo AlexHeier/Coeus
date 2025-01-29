@@ -1,10 +1,16 @@
 package provider
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"io"
 	"net"
+	"net/http"
 	"strconv"
 )
+
+const OLLAMA_GENERATE_SUFFIX = "/api/generate"
 
 type OllamaStruct struct {
 	Provider     string
@@ -41,4 +47,46 @@ func Ollama(ip, port, model string) error {
 	}
 
 	return nil
+}
+
+func SendOllama(prompt string) (map[string]interface{}, error) {
+
+	config := Provider.(OllamaStruct)
+
+	url := "http://" + config.ServerIP + ":" + config.Port + OLLAMA_GENERATE_SUFFIX
+
+	reqData := make(map[string]interface{})
+
+	reqData["model"] = config.Model
+	reqData["stream"] = config.Stream
+	reqData["prompt"] = prompt
+
+	data := new(bytes.Buffer)
+
+	json.NewEncoder(data).Encode(reqData)
+
+	req, err := http.NewRequest(http.MethodPost, url, data)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	resData, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonData := make(map[string]interface{})
+
+	err = json.Unmarshal(resData, &jsonData)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonData, nil
 }
