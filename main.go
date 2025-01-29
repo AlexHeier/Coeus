@@ -1,8 +1,6 @@
 package main
 
 import (
-	"Coeus/llm"
-	"Coeus/llm/memory"
 	"Coeus/provider"
 	"log"
 	"os"
@@ -19,11 +17,11 @@ func init() {
 
 func main() {
 
-	prov, err := provider.Ollama(os.Getenv("OLLAMA_IP"), os.Getenv("OLLAMA_PORT"), os.Getenv("OLLAMA_MODEL"))
+	err := provider.Ollama(os.Getenv("OLLAMA_IP"), os.Getenv("OLLAMA_PORT"), os.Getenv("OLLAMA_MODEL"))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	llm.Setup(prov, memory.Summary)
+	//llm.Setup(prov, memory.Summary)
 
 }

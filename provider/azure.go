@@ -1,12 +1,6 @@
 package provider
 
-import (
-	"errors"
-	"net"
-	"strconv"
-)
-
-type Azure struct {
+type AzureStruct struct {
 	Provider     string
 	HttpProtocol string
 	ServerIP     string
@@ -15,6 +9,7 @@ type Azure struct {
 	Stream       bool
 }
 
+/*
 func NewAzure(ip, port, model string) (Azure, error) {
 	// Validate IP address
 	if net.ParseIP(ip) == nil {
@@ -40,3 +35,4 @@ func NewAzure(ip, port, model string) (Azure, error) {
 		Stream:       false,
 	}, nil
 }
+*/

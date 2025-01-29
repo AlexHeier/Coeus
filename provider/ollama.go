@@ -15,28 +15,30 @@ type OllamaStruct struct {
 	Stream       bool
 }
 
-func Ollama(ip, port, model string) (OllamaStruct, error) {
+func Ollama(ip, port, model string) error {
 	// Validate IP address
 	if net.ParseIP(ip) == nil {
-		return OllamaStruct{}, errors.New("invalid IP address")
+		return errors.New("invalid IP address")
 	}
 
 	// Validate port
 	if _, err := strconv.Atoi(port); err != nil {
-		return OllamaStruct{}, errors.New("invalid port")
+		return errors.New("invalid port")
 	}
 
 	// Validate model (example: non-empty string)
 	if model == "" {
-		return OllamaStruct{}, errors.New("model cannot be empty")
+		return errors.New("model cannot be empty")
 	}
 
-	return OllamaStruct{
+	Provider = OllamaStruct{
 		Provider:     "Ollama",
 		HttpProtocol: "http",
 		ServerIP:     ip,
 		Port:         port,
 		Model:        model,
 		Stream:       false,
-	}, nil
+	}
+
+	return nil
 }
