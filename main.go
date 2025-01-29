@@ -3,12 +3,16 @@ package main
 import (
 	"Coeus/llm"
 	"Coeus/provider"
-	"fmt"
+	"encoding/json"
+	"io"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/joho/godotenv"
 )
+
+var cons map[string]*llm.Conversation
 
 func init() {
 	err := godotenv.Load()
@@ -24,35 +28,58 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	con := llm.BeginConversation()
-	con.Prompt("Hi im 10 years old and where does babies come from?")
+	cons = make(map[string]*llm.Conversation)
 
-	fmt.Println(con.LatestResponse)
+	http.HandleFunc("/api/chat", chatHandler)
+	http.ListenAndServe(":9002", nil)
 
-	//fmt.Println(con.DumpConversation())
+}
 
-	con.Prompt("Yes that does make sence! Thank you. Also what was my previous question?")
+func chatHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		chatPostHandler(w, r)
+	default:
+		http.Error(w, "", http.StatusMethodNotAllowed)
+	}
+}
 
-	//fmt.Println(con.DumpConversation())
+func chatPostHandler(w http.ResponseWriter, r *http.Request) {
+	req, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	fmt.Println(con.LatestResponse)
+	var data map[string]interface{}
 
-	con.Prompt("Do you have any jokes relevant to the last questions i gave you?")
+	err = json.Unmarshal(req, &data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	fmt.Println(con.LatestResponse)
+	_, ok := data["userid"].(string)
+	if !ok {
+		http.Error(w, "bad userid type", http.StatusBadRequest)
+		return
+	}
 
-	con.Prompt("Whats PI's first 150 numbers?")
+	_, ok = data["prompt"].(string)
+	if !ok {
+		http.Error(w, "bad prompt type", http.StatusBadRequest)
+		return
+	}
 
-	fmt.Println(con.LatestResponse)
+	prompt := data["prompt"].(string)
+	userid := data["userid"].(string)
 
-	con.Prompt("Can you give me a list of the previous questions asked?")
+	_, exist := cons[userid]
+	if !exist {
+		cons[userid] = llm.BeginConversation()
+	}
 
-	fmt.Println(con.LatestResponse)
+	cons[userid].Prompt(prompt)
 
-	con.Prompt("What part about your functionality do you think im testing?")
-
-	fmt.Println(con.LatestResponse)
-
-	//fmt.Println(con.DumpConversation())
-
+	w.Write([]byte(cons[userid].LatestResponse))
 }
