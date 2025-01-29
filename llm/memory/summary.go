@@ -5,13 +5,16 @@ import (
 	"strings"
 )
 
-/**
-* Summery is a function that will take a summery of the conversation and use the summary as memory.
- */
+/*
+Summary is a function that will take a summary of the conversation and use the summary as memory.
+
+@param intf An interface{} that should be a slice of strings representing the conversation.
+@return A string representing the new message with the summary and an error if the conversion fails.
+*/
 func Summary(intf interface{}) (string, error) {
 
 	chat, ok := intf.([]string)
-	if ok == false {
+	if !ok {
 		return "", fmt.Errorf("could not convert interface to []string")
 	}
 

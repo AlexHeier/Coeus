@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Coeus/llm/memory"
 	"Coeus/provider"
 	"log"
 	"os"
@@ -22,6 +23,6 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	//llm.Setup(prov, memory.Summary)
+	memory.Version(memory.Summary)
 
 }

@@ -1,14 +1,13 @@
 package memory
 
-// Dette er bare eksempler, vi må lage dem bedre senere. Tror vi bør sette opp pekere her, tanken er at vi definerer memory=func der func er en av de neden for.
-// Så bruker programet riktig minnehåndtering deretter. Evt så må man bare gjøre et systemkall typ newMessage = Coeus.Conversation.Memory.Summery(OldSummery, UserMessage) eller tilsvarende.
-// evt sette opp en funksjon som bytter imellom All() og Summery basert på billigst token bruk fortløpende.
+/*
+Default memory function is All. This function will use all messages as memory.
+*/
+var Memory interface{} = All
 
-// alle må ha en interface{} som input og returnere en string og en error.
-
-/**
-* Last is a function that will use the last int x messages as memory
- */
-func Last(int) {
-
+/*
+Changes the function used for memory managment. Default is All messages.
+*/
+func Version(newFunc interface{}) {
+	Memory = newFunc
 }
