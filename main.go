@@ -47,6 +47,7 @@ func webHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func webGetHandler(w http.ResponseWriter, r *http.Request) {
+	_ = r
 	data, err := os.ReadFile("./index.html")
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
