@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .chat-container {
+            width: 350px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .input-box {
+            display: flex;
+            padding: 10px;
+        }
+        .input-box input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .input-box button {
+            padding: 8px 12px;
+            border: none;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            margin-left: 5px;
+            border-radius: 4px;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+        .user-message {
+            background: #007bff;
+            color: white;
+            align-self: flex-end;
+        }
+        .bot-message {
+            background: #ddd;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-box" id="chat-box"></div>
+        <div class="input-box">
+            <input type="text" id="user-input" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+       async function MessageLLM(Prompt, Userid) {
+        url = "http://localhost:9002/api/chat";
+        try {
+        const response = await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify({
+                userid: Userid,
+                prompt: Prompt
+            }),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        }).finally(response => {
+        if (!response.ok) {
+            throw new Error('You fucked up fam: ' + response.statusText);
+        }
+
+        return response;
+    });
+
+        } catch { console.error(error.message)}
+    }
+
+        function sendMessage() {
+            let userInput = document.getElementById("user-input").value;
+            if (userInput.trim() === "") return;
+            
+            let chatBox = document.getElementById("chat-box");
+            let userMessage = document.createElement("div");
+            userMessage.className = "message user-message";
+            userMessage.textContent = userInput;
+            chatBox.appendChild(userMessage);
+            document.getElementById("user-input").value = "";
+
+
+            
+            
+            setTimeout(() => {
+                let botMessage = document.createElement("div");
+                botMessage.className = "message bot-message";
+                botMessage.textContent = MessageLLM(userInput, "Hello")
+                chatBox.appendChild(botMessage);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 500);
+        }
+
+        function getBotResponse(input) {
+            const responses = {
+                "hello": "Hi there! How can I assist you?",
+                "how are you": "I'm just a bot, but I'm doing great!",
+                "bye": "Goodbye! Have a great day!"
+            };
+            
+            let response = responses[input.toLowerCase()];
+            return response ? response : "I'm not sure how to respond to that.";
+        }
+    </script>
+</body>
+</html>
+
+

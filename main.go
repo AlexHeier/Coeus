@@ -4,6 +4,7 @@ import (
 	"Coeus/llm"
 	"Coeus/provider"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -30,9 +31,30 @@ func main() {
 
 	cons = make(map[string]*llm.Conversation)
 
+	http.HandleFunc("/", webHandler)
 	http.HandleFunc("/api/chat", chatHandler)
 	http.ListenAndServe(":9002", nil)
 
+}
+
+func webHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		webGetHandler(w, r)
+	default:
+		http.Error(w, "", http.StatusMethodNotAllowed)
+	}
+}
+
+func webGetHandler(w http.ResponseWriter, r *http.Request) {
+	data, err := os.ReadFile("./index.html")
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		fmt.Println(err.Error())
+		return
+	}
+
+	w.Write(data)
 }
 
 func chatHandler(w http.ResponseWriter, r *http.Request) {
