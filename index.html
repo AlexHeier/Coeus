@@ -60,22 +60,64 @@
             background: #ddd;
             color: black;
         }
+        .inputs {
+            width: 44%;
+            margin: 5px;
+        }
     </style>
 </head>
 <body>
+
     <div class="chat-container">
         <div class="chat-box" id="chat-box"></div>
         <div class="input-box">
             <input type="text" id="user-input" placeholder="Type a message...">
             <button onclick="sendMessage()">Send</button>
         </div>
+        <input id="input_userid" class="inputs" type="text" placeholder="Conversation ID">
+        <input id="input_url" class="inputs" type="text" value="http://localhost:9002/api/chat">
     </div>
 
     <script>
-       async function MessageLLM(Prompt, Userid) {
+    function MessageLLM(Prompt, Userid) {
+        url = document.getElementById("input_url").value;
+        body = JSON.stringify({
+                userid: Userid,
+                prompt: Prompt
+            });
+
+        let temp
+
+        const response = fetch(url, {
+            method: 'POST',
+            body: body,
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.text())
+        .then(data => { 
+            console.log(data)
+
+            setTimeout(() => {
+                let chatBox = document.getElementById("chat-box");
+                let botMessage = document.createElement("div");
+                botMessage.className = "message bot-message";
+                botMessage.textContent = data
+                chatBox.appendChild(botMessage);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 500);
+
+        });
+
+};
+
+
+   function MessageLLM2(Prompt, Userid) {
         url = "http://localhost:9002/api/chat";
-        try {
-        const response = await fetch(url, {
+
+        const response = fetch(url, {
             method: 'POST',
             body: JSON.stringify({
                 userid: Userid,
@@ -85,16 +127,16 @@
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
             },
-        }).finally(response => {
-        if (!response.ok) {
-            throw new Error('You fucked up fam: ' + response.statusText);
-        }
+        }).catch(a => {
+            console.log(a)
+        });
+        console.log(response.value)
+    };
 
-        return response;
-    });
 
-        } catch { console.error(error.message)}
-    }
+        
+    
+
 
         function sendMessage() {
             let userInput = document.getElementById("user-input").value;
@@ -108,15 +150,9 @@
             document.getElementById("user-input").value = "";
 
 
+            MessageLLM(userInput, "Hi")
             
-            
-            setTimeout(() => {
-                let botMessage = document.createElement("div");
-                botMessage.className = "message bot-message";
-                botMessage.textContent = MessageLLM(userInput, "Hello")
-                chatBox.appendChild(botMessage);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 500);
+
         }
 
         function getBotResponse(input) {

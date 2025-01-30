@@ -51,7 +51,7 @@ func (c *Conversation) DumpConversation() string {
 
 func BeginConversation() *Conversation {
 	newCon := Conversation{
-		MainPrompt: Persona,
+		MainPrompt: Persona_BarackObama,
 	}
 
 	conversations = append(conversations, newCon)
