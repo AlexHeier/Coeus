@@ -4,27 +4,19 @@ import "Coeus/provider"
 
 var conversations []Conversation
 
+// Struct for containing the individual conversations with the LLMs
 type Conversation struct {
 	MainPrompt     string
-	ToolsDesc      string
-	ToolsResp      string
+	ToolsResp      interface{}
 	History        []string
+	Summary        string
 	LatestResponse string
 	UserPrompt     string
 }
 
-func (c *Conversation) AppendUserHistory(s string) {
-	newHistory := "[USER]\n" + s + "\n\n"
-	c.History = append(c.History, newHistory)
-}
-
-func (c *Conversation) AppendSystemHistory(s string) {
-	newHistory := "[SYSTEM]\n" + s + "\n\n"
-	c.History = append(c.History, newHistory)
-}
-
-func (c *Conversation) AppendLLMHistory(s string) {
-	newHistory := "[LLM]\n" + s + "\n\n"
+// Appends a prompt and section to the history within the conversation
+func (c *Conversation) AppendHistory(s, section string) {
+	newHistory := "[" + section + "]\n" + s + "\n\n"
 	c.History = append(c.History, newHistory)
 }
 
@@ -34,8 +26,8 @@ func (c *Conversation) Prompt(s string) (map[string]interface{}, error) {
 	if err != nil {
 		return res, err
 	}
-	c.AppendUserHistory(s)
-	c.AppendLLMHistory(res["response"].(string))
+	c.AppendHistory(s, "USER")
+	c.AppendHistory(res["response"].(string), "LLM")
 	c.LatestResponse = res["response"].(string)
 	return res, err
 }

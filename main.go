@@ -1,26 +1,13 @@
 package main
 
 import (
-	"Coeus/llm"
+	"Coeus/llm/memory"
+	"Coeus/llm/tool"
 	"Coeus/provider"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
-
-	"github.com/joho/godotenv"
 )
-
-var cons map[string]*llm.Conversation
-
-func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-}
 
 func main() {
 
@@ -29,80 +16,25 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	cons = make(map[string]*llm.Conversation)
+	memory.Version(memory.Summary)
 
-	http.HandleFunc("/", webHandler)
-	http.HandleFunc("/api/chat", chatHandler)
-	http.ListenAndServe(":9002", nil)
+	tool.New("test", "a test function", test)
 
-}
-
-func webHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		webGetHandler(w, r)
-	default:
-		http.Error(w, "", http.StatusMethodNotAllowed)
-	}
-}
-
-func webGetHandler(w http.ResponseWriter, r *http.Request) {
-	_ = r
-	data, err := os.ReadFile("./index.html")
+	t, err := tool.Find("test")
 	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		fmt.Println(err.Error())
-		return
+		log.Fatal(err.Error())
 	}
 
-	w.Write(data)
+	anw, err := t.Run(40, 60)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	fmt.Print(anw)
+
 }
 
-func chatHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		chatPostHandler(w, r)
-	default:
-		http.Error(w, "", http.StatusMethodNotAllowed)
-	}
-}
+func test(a, b int) int {
 
-func chatPostHandler(w http.ResponseWriter, r *http.Request) {
-	req, err := io.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	var data map[string]interface{}
-
-	err = json.Unmarshal(req, &data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	_, ok := data["userid"].(string)
-	if !ok {
-		http.Error(w, "bad userid type", http.StatusBadRequest)
-		return
-	}
-
-	_, ok = data["prompt"].(string)
-	if !ok {
-		http.Error(w, "bad prompt type", http.StatusBadRequest)
-		return
-	}
-
-	prompt := data["prompt"].(string)
-	userid := data["userid"].(string)
-
-	_, exist := cons[userid]
-	if !exist {
-		cons[userid] = llm.BeginConversation()
-	}
-
-	cons[userid].Prompt(prompt)
-
-	w.Write([]byte(cons[userid].LatestResponse))
+	return a * b
 }

@@ -3,13 +3,12 @@ package memory
 /*
 All is a function that will use all messages as memory.
 
-@param h is the history of messages.
 @return A string of the history.
 */
-func All(h []string) string {
+func All(args ...interface{}) string {
 	var temp string
-	for _, v := range h {
-		temp += v + "\n"
+	for _, h := range args.History {
+		temp += h
 	}
 	return temp
 }
