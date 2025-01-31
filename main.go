@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Coeus/llm/memory"
+	"Coeus/llm"
 	"Coeus/llm/tool"
 	"Coeus/provider"
 	"fmt"
@@ -16,7 +16,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	memory.Version(memory.Summary)
+	llm.MemoryVersion(llm.MemoryAllMessage)
 
 	tool.New("test", "a test function", test)
 

@@ -1,7 +1,7 @@
 package endpoint
 
 import (
-	"Coeus/conversation"
+	"Coeus/llm"
 	"fmt"
 	"net/http"
 )
@@ -13,7 +13,7 @@ const ENDPOINT_STATUS = BASE_URL + "/status"
 
 //const ENDPOINT_CONVERSATION = BASE_URL + "/conversation"
 
-func chatHandler(w http.ResponseWriter, r *http.Request, con *conversation.Struct) {
+func ChatHandler(w http.ResponseWriter, r *http.Request, con *llm.Conversation) {
 	switch r.Method {
 	case http.MethodPost:
 		chatPostHandler(w, r, con)
@@ -22,7 +22,7 @@ func chatHandler(w http.ResponseWriter, r *http.Request, con *conversation.Struc
 	}
 }
 
-func chatPostHandler(w http.ResponseWriter, r *http.Request, con *conversation.Struct) {
+func chatPostHandler(w http.ResponseWriter, r *http.Request, con *llm.Conversation) {
 
 	if con == nil {
 		fmt.Println("Conversation cannot be empty")

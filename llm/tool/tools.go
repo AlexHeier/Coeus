@@ -6,6 +6,9 @@ import (
 	"strings"
 )
 
+// ToolDefintion defines how the LLM should access the tools
+var ToolDefintion = `To get access to the TOOLS resources. Respond with the tool name capitalized and the parameters needed. For example, "MULTIPLY 40 60 " `
+
 // ToolStruct is the struct of a tool
 type ToolStruct struct {
 	Name     string
@@ -30,7 +33,7 @@ func New(name, desc string, function interface{}) {
 	var newTool ToolStruct
 	newTool.Desc = desc
 	newTool.Function = function
-	newTool.Name = strings.ToLower(name)
+	newTool.Name = strings.ToUpper(name)
 
 	Tools = append(Tools, newTool)
 }
@@ -81,7 +84,6 @@ Find finds a tool by its name and returns the tool struct.
 @return: an error if the tool is not found
 */
 func Find(name string) (ToolStruct, error) {
-	name = strings.ToLower(name)
 	for _, tool := range Tools {
 		if tool.Name == name {
 			return tool, nil
