@@ -1,12 +1,18 @@
 package provider
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"io"
 	"net"
+	"net/http"
 	"strconv"
 )
 
-type Ollama struct {
+const OLLAMA_GENERATE_SUFFIX = "/api/generate"
+
+type OllamaStruct struct {
 	Provider     string
 	HttpProtocol string
 	ServerIP     string
@@ -15,28 +21,72 @@ type Ollama struct {
 	Stream       bool
 }
 
-func NewOllama(ip, port, model string) (Ollama, error) {
+func Ollama(ip, port, model string) error {
 	// Validate IP address
 	if net.ParseIP(ip) == nil {
-		return Ollama{}, errors.New("invalid IP address")
+		return errors.New("invalid IP address")
 	}
 
 	// Validate port
 	if _, err := strconv.Atoi(port); err != nil {
-		return Ollama{}, errors.New("invalid port")
+		return errors.New("invalid port")
 	}
 
 	// Validate model (example: non-empty string)
 	if model == "" {
-		return Ollama{}, errors.New("model cannot be empty")
+		return errors.New("model cannot be empty")
 	}
 
-	return Ollama{
+	Provider = OllamaStruct{
 		Provider:     "Ollama",
 		HttpProtocol: "http",
 		ServerIP:     ip,
 		Port:         port,
 		Model:        model,
 		Stream:       false,
-	}, nil
+	}
+
+	return nil
+}
+
+func SendOllama(prompt string) (map[string]interface{}, error) {
+
+	config := Provider.(OllamaStruct)
+
+	url := "http://" + config.ServerIP + ":" + config.Port + OLLAMA_GENERATE_SUFFIX
+
+	reqData := make(map[string]interface{})
+
+	reqData["model"] = config.Model
+	reqData["stream"] = config.Stream
+	reqData["prompt"] = prompt
+
+	data := new(bytes.Buffer)
+
+	json.NewEncoder(data).Encode(reqData)
+
+	req, err := http.NewRequest(http.MethodPost, url, data)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	resData, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonData := make(map[string]interface{})
+
+	err = json.Unmarshal(resData, &jsonData)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonData, nil
 }

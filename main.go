@@ -1,37 +1,40 @@
 package main
 
 import (
-	"Coeus/conversation"
-	_ "Coeus/conversation/memory"
+	"Coeus/llm/memory"
+	"Coeus/llm/tool"
 	"Coeus/provider"
 	"fmt"
 	"log"
-
-	"github.com/joho/godotenv"
+	"os"
 )
-
-func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-}
-
-var ip = "10.212.168.203"
-var port = "11434"
-var model = "llama3.2"
 
 func main() {
 
-	llm, err := provider.NewOllama(ip, port, model)
+	err := provider.Ollama(os.Getenv("OLLAMA_IP"), os.Getenv("OLLAMA_PORT"), os.Getenv("OLLAMA_MODEL"))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 
-	conversation := conversation.ConversationSetup{
-		llm:    llm,
-		Memory: conversation.Memory.Summery(),
+	memory.Version(memory.Summary)
+
+	tool.New("test", "a test function", test)
+
+	t, err := tool.Find("test")
+	if err != nil {
+		log.Fatal(err.Error())
 	}
 
-	fmt.Print(conversation)
+	anw, err := t.Run(40, 60)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	fmt.Print(anw)
+
+}
+
+func test(a, b int) int {
+
+	return a * b
 }
