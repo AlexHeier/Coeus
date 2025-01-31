@@ -3,6 +3,8 @@ package llm
 import (
 	"Coeus/llm/tool"
 	"Coeus/provider"
+	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -25,6 +27,10 @@ func (c *Conversation) AppendHistory(user, llm string) {
 
 func (c *Conversation) Prompt(s string) (map[string]interface{}, error) {
 	var toolDesc string
+	var resString string
+	var response map[string]interface{}
+	var err error
+	var toolResponse []interface{}
 
 	if len(tool.Tools) > 0 {
 		for _, t := range tool.Tools {
@@ -32,27 +38,53 @@ func (c *Conversation) Prompt(s string) (map[string]interface{}, error) {
 		}
 	}
 
-	// Memory(append([]interface{}{c}, MemArgs...)...) sends the conversation and the arguments to the memory function if the user defined some.
-	prefix := c.MainPrompt + "[BEGIN TOOLS] " + tool.ToolDefintion + toolDesc + "[END TOOLS]\n[BEGIN HISTORY]" + Memory(append([]interface{}{c}, MemArgs...)...) + "[END HISTORY]\n"
-	res, err := provider.Send(prefix + s)
-	if err != nil {
-		return res, err
-	}
-	resString := res["response"].(string)
+	for {
+		var toolUsed bool = false
+		// Memory(append([]interface{}{c}, MemArgs...)...) sends the conversation and the arguments to the memory function if the user defined some.
+		prefix := c.MainPrompt + "[BEGIN TOOLS] " + tool.ToolDefintion + toolDesc + "[END TOOLS]\n[BEGIN INFORMATION]" + fmt.Sprintf("%v", toolResponse) + "[END INFORMATION]\n[BEGIN HISTORY]" + Memory(append([]interface{}{c}, MemArgs...)...) + "[END HISTORY]\n"
+		response, err := provider.Send(prefix + s)
+		if err != nil {
+			return response, err
+		}
+		resString = response["response"].(string)
 
-	// Check for if the response contains a summary and extract it
-	if strings.Contains(resString, "[BEGIN SUMMARY]") {
-		beginIndex := strings.Index(resString, "[BEGIN SUMMARY]")
-		endIndex := strings.Index(resString, "[END SUMMARY]")
-		if endIndex > beginIndex {
-			c.Summary = strings.TrimSpace(resString[beginIndex:endIndex])
+		// Check for if the response contains a summary and extract it
+		if strings.Contains(resString, "[BEGIN SUMMARY]") {
+			beginIndex := strings.Index(resString, "[BEGIN SUMMARY]")
+			endIndex := strings.Index(resString, "[END SUMMARY]")
+			if endIndex > beginIndex {
+				c.Summary = strings.TrimSpace(resString[beginIndex:endIndex])
+			}
+		}
+
+		for _, t := range tool.Tools {
+			if strings.Contains(resString, t.Name) {
+				toolUsed = true
+				ft := reflect.ValueOf(t.Function)
+				argCount := ft.Type().NumIn()
+
+				beginIndex := strings.Index(resString, t.Name)
+				args := strings.Fields(resString[beginIndex:])
+				args = args[:argCount]
+
+				callArgs := make([]reflect.Value, argCount)
+				for i := 0; i < argCount; i++ {
+					callArgs[i] = reflect.ValueOf(args[i])
+				}
+				tr, err := t.Run(callArgs)
+				if err != nil {
+					return response, err
+				}
+				toolResponse = append(toolResponse, tr)
+			}
+		}
+		if !toolUsed {
+			break
 		}
 	}
 
-	// TODO: Implement a way to use the tools
-
 	c.AppendHistory(s, resString)
-	return res, err
+	return response, err
 }
 
 func (c *Conversation) DumpConversation() string {
