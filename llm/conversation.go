@@ -32,7 +32,8 @@ func (c *Conversation) Prompt(s string) (map[string]interface{}, error) {
 		}
 	}
 
-	prefix := c.MainPrompt + "[BEGIN TOOLS] " + tool.ToolDefintion + toolDesc + "[END TOOLS]\n[BEGIN HISTORY]" + Memory(c) + "[END HISTORY]\n"
+	// Memory(append([]interface{}{c}, MemArgs...)...) sends the conversation and the arguments to the memory function if the user defined some.
+	prefix := c.MainPrompt + "[BEGIN TOOLS] " + tool.ToolDefintion + toolDesc + "[END TOOLS]\n[BEGIN HISTORY]" + Memory(append([]interface{}{c}, MemArgs...)...) + "[END HISTORY]\n"
 	res, err := provider.Send(prefix + s)
 	if err != nil {
 		return res, err
