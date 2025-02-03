@@ -41,7 +41,7 @@ func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 	for {
 		var toolUsed bool = false
 		// Memory(append([]interface{}{c}, MemArgs...)...) sends the conversation and the arguments to the memory function if the user defined some.
-		prefix := c.MainPrompt + "[BEGIN TOOLS] " + tool.ToolDefintion + toolDesc + "[END TOOLS]\n[BEGIN INFORMATION]" + fmt.Sprintf("%v", toolResponse) + "[END INFORMATION]\n[BEGIN HISTORY]" + Memory(append([]interface{}{c}, MemArgs...)...) + "[END HISTORY]\n"
+		prefix := c.MainPrompt + "[BEGIN TOOLS] " + tool.ToolDefintion + toolDesc + "Do not send the tool name if you do not need it [END TOOLS]\n[BEGIN INFORMATION]" + fmt.Sprintf("%v", toolResponse) + "[END INFORMATION]\n[BEGIN HISTORY]" + Memory(append([]interface{}{c}, MemArgs...)...) + "[END HISTORY]\n"
 		response, err = provider.Send(prefix + s)
 		if err != nil {
 			return response, err
@@ -72,14 +72,13 @@ func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 
 				ft := reflect.ValueOf(t.Function)
 				argCount := ft.Type().NumIn()
-				fmt.Println(fmt.Sprintf("%v", argCount))
 
 				args := splitString[startIndex:]
 				args = args[:argCount]
 
 				callArgs := make([]interface{}, argCount)
 				for i := 0; i < argCount; i++ {
-					callArgs[i] = reflect.ValueOf(args[i])
+					callArgs[i] = args[i]
 				}
 				fmt.Print("Arguments: ")
 				fmt.Println(callArgs[0:]...)
@@ -87,7 +86,6 @@ func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 				if err != nil {
 					return response, err
 				}
-				fmt.Println(fmt.Sprintf("%v", tr))
 
 				toolResponse = append(toolResponse, tr)
 			}
@@ -95,7 +93,6 @@ func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 		if !toolUsed {
 			break
 		}
-		break
 	}
 
 	c.AppendHistory(s, resString)

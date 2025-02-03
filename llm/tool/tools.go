@@ -51,31 +51,44 @@ func (t *ToolStruct) Run(args ...interface{}) ([]interface{}, error) {
 		return nil, fmt.Errorf("function is not a function")
 	}
 
-	fmt.Print("Tool:")
 	fmt.Println(args)
 
-	if len(args) != f.Type().NumIn() { // check if the number of arguments is correct
-		return nil, fmt.Errorf("wrong number of arguments")
-	}
+	// Check if args are an array (or slice) and unpack accordingly
+	var finalArgs []reflect.Value
 
-	in := make([]reflect.Value, len(args))
-	for i, arg := range args {
-		expctedType := f.Type().In(i)
+	for _, arg := range args {
 		argValue := reflect.ValueOf(arg)
 
-		if !argValue.Type().ConvertibleTo(expctedType) { // check if the argument type is correct
-			return nil, fmt.Errorf("wrong argument type expexted %s got %s", expctedType, argValue.Type())
+		// If the argument is a slice, we need to process each element in the slice
+		if argValue.Kind() == reflect.Slice {
+			for j := 0; j < argValue.Len(); j++ {
+				elem := argValue.Index(j)
+				// Check the type of the element and ensure it is compatible with the function signature
+				expectedType := f.Type().In(len(finalArgs))
+				if !elem.Type().ConvertibleTo(expectedType) {
+					return nil, fmt.Errorf("wrong argument type: expected %s, got %s", expectedType, elem.Type())
+				}
+				finalArgs = append(finalArgs, elem.Convert(expectedType)) // append converted element
+			}
+		} else {
+			// If it's a regular argument, just check and convert
+			expectedType := f.Type().In(len(finalArgs))
+			if !argValue.Type().ConvertibleTo(expectedType) {
+				return nil, fmt.Errorf("wrong argument type: expected %s, got %s", expectedType, argValue.Type())
+			}
+			finalArgs = append(finalArgs, argValue.Convert(expectedType))
 		}
-
-		in[i] = argValue.Convert(expctedType) // set the argument
 	}
 
-	result := f.Call(in) // call the function
+	// Call the function with the final arguments
+	result := f.Call(finalArgs)
 
+	// Convert the result back to []interface{}
 	out := make([]interface{}, len(result))
 	for i, r := range result {
 		out[i] = r.Interface()
 	}
+
 	return out, nil // return the result
 }
 

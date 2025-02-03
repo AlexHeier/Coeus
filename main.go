@@ -119,7 +119,6 @@ func chatPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func Multiply(a, b string) int {
-	fmt.Println("Hello!")
 	a1, _ := strconv.Atoi(a)
 	b1, _ := strconv.Atoi(b)
 	return a1 * b1
