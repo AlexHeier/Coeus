@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Coeus/dashboard"
 	"Coeus/llm"
 	"Coeus/llm/tool"
 	"Coeus/provider"
@@ -39,31 +40,10 @@ func main() {
 
 	cons = make(map[string]*llm.Conversation)
 
-	http.HandleFunc("/", webHandler)
 	http.HandleFunc("/api/chat", chatHandler)
-	http.ListenAndServe(":9002", nil)
 
-}
+	dashboard.Enable("9002")
 
-func webHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		webGetHandler(w, r)
-	default:
-		http.Error(w, "", http.StatusMethodNotAllowed)
-	}
-}
-
-func webGetHandler(w http.ResponseWriter, r *http.Request) {
-	_ = r
-	data, err := os.ReadFile("./index.html")
-	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
-		fmt.Println(err.Error())
-		return
-	}
-
-	w.Write(data)
 }
 
 func chatHandler(w http.ResponseWriter, r *http.Request) {
@@ -121,5 +101,6 @@ func chatPostHandler(w http.ResponseWriter, r *http.Request) {
 func Multiply(a, b string) int {
 	a1, _ := strconv.Atoi(a)
 	b1, _ := strconv.Atoi(b)
+	fmt.Printf("Issued Command: Multiply %s by %s\n", a, b)
 	return a1 * b1
 }
