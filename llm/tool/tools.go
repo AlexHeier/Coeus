@@ -51,6 +51,7 @@ func (t *ToolStruct) Run(args ...interface{}) ([]interface{}, error) {
 		return nil, fmt.Errorf("function is not a function")
 	}
 
+	fmt.Print("Tool:")
 	fmt.Println(args)
 
 	if len(args) != f.Type().NumIn() { // check if the number of arguments is correct
@@ -59,14 +60,14 @@ func (t *ToolStruct) Run(args ...interface{}) ([]interface{}, error) {
 
 	in := make([]reflect.Value, len(args))
 	for i, arg := range args {
-		expctedTupe := f.Type().In(i)
+		expctedType := f.Type().In(i)
 		argValue := reflect.ValueOf(arg)
 
-		if !argValue.Type().AssignableTo(expctedTupe) { // check if the argument type is correct
-			return nil, fmt.Errorf("wrong argument type expexted %s got %s", expctedTupe, argValue.Type())
+		if !argValue.Type().ConvertibleTo(expctedType) { // check if the argument type is correct
+			return nil, fmt.Errorf("wrong argument type expexted %s got %s", expctedType, argValue.Type())
 		}
 
-		in[i] = argValue // set the argument
+		in[i] = argValue.Convert(expctedType) // set the argument
 	}
 
 	result := f.Call(in) // call the function

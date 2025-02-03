@@ -1,7 +1,6 @@
 package provider
 
 type AzureStruct struct {
-	Provider     string
 	HttpProtocol string
 	ServerIP     string
 	Port         string

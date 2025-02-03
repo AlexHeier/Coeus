@@ -13,7 +13,6 @@ import (
 const OLLAMA_GENERATE_SUFFIX = "/api/generate"
 
 type OllamaStruct struct {
-	Provider     string
 	HttpProtocol string
 	ServerIP     string
 	Port         string
@@ -38,7 +37,6 @@ func Ollama(ip, port, model string) error {
 	}
 
 	Provider = OllamaStruct{
-		Provider:     "Ollama",
 		HttpProtocol: "http",
 		ServerIP:     ip,
 		Port:         port,
