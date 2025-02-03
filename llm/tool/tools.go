@@ -51,8 +51,6 @@ func (t *ToolStruct) Run(args ...interface{}) ([]interface{}, error) {
 		return nil, fmt.Errorf("function is not a function")
 	}
 
-	fmt.Println(args)
-
 	// Check if args are an array (or slice) and unpack accordingly
 	var finalArgs []reflect.Value
 
