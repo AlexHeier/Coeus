@@ -1,7 +1,6 @@
 package llm
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -30,7 +29,6 @@ All is a function that will use all messages as memory.
 @return A string of the history.
 */
 func MemoryAllMessage(args ...interface{}) string {
-	fmt.Println(args[0])
 	con, ok := args[0].(*Conversation)
 	if !ok {
 		return "No history"

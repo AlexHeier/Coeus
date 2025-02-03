@@ -58,7 +58,7 @@ func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 				c.Summary = strings.TrimSpace(resString[beginIndex:endIndex])
 			}
 		}
-		fmt.Println(c.Summary)
+
 		for _, t := range tool.Tools {
 			if strings.Contains(resString, t.Name) {
 				var startIndex int
@@ -77,12 +77,11 @@ func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 				args := splitString[startIndex:]
 				args = args[:argCount]
 
-				fmt.Println(args)
-
 				callArgs := make([]interface{}, argCount)
 				for i := 0; i < argCount; i++ {
 					callArgs[i] = reflect.ValueOf(args[i])
 				}
+				fmt.Print("Arguments: ")
 				fmt.Println(callArgs[0:]...)
 				tr, err := t.Run(callArgs[0:]...)
 				if err != nil {
@@ -100,7 +99,6 @@ func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 	}
 
 	c.AppendHistory(s, resString)
-	fmt.Println(response)
 	return response, err
 }
 
