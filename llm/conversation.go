@@ -48,6 +48,7 @@ func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 		}
 
 		resString = response.Response
+		splitString := strings.Split(resString, " ")
 
 		// Check for if the response contains a summary and extract it
 		if strings.Contains(resString, "[BEGIN SUMMARY]") {
@@ -60,13 +61,20 @@ func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 		fmt.Println(c.Summary)
 		for _, t := range tool.Tools {
 			if strings.Contains(resString, t.Name) {
+				var startIndex int
 				toolUsed = true
+				for i, _ := range splitString {
+					if splitString[i] == t.Name {
+						startIndex = i
+						break
+					}
+				}
+
 				ft := reflect.ValueOf(t.Function)
 				argCount := ft.Type().NumIn()
 				fmt.Println(fmt.Sprintf("%v", argCount))
 
-				beginIndex := strings.Index(resString, t.Name)
-				args := strings.Fields(resString[beginIndex:])
+				args := splitString[startIndex:]
 				args = args[:argCount]
 
 				callArgs := make([]reflect.Value, argCount)
