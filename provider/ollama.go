@@ -49,7 +49,7 @@ func Ollama(ip, port, model string) error {
 	return nil
 }
 
-func SendOllama(prompt string) (map[string]interface{}, error) {
+func SendOllama(prompt string) (ResponseStruct, error) {
 
 	config := Provider.(OllamaStruct)
 
@@ -67,26 +67,32 @@ func SendOllama(prompt string) (map[string]interface{}, error) {
 
 	req, err := http.NewRequest(http.MethodPost, url, data)
 	if err != nil {
-		return nil, err
+		return ResponseStruct{}, err
 	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return ResponseStruct{}, err
 	}
 	defer res.Body.Close()
 
 	resData, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return ResponseStruct{}, err
 	}
 
-	jsonData := make(map[string]interface{})
+	jData := make(map[string]interface{})
 
-	err = json.Unmarshal(resData, &jsonData)
+	err = json.Unmarshal(resData, &jData)
 	if err != nil {
-		return nil, err
+		return ResponseStruct{}, err
 	}
 
-	return jsonData, nil
+	return ResponseStruct{
+		Response:             jData["response"].(string),
+		LoadDuration:         jData["load_duration"].(string),
+		eval_count:           jData["eval_count"].(string),
+		prompt_eval_count:    jData["prompt_eval_count"].(string),
+		prompt_eval_duration: jData["prompt_eval_duration"].(string),
+	}, nil
 }

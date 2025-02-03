@@ -11,33 +11,32 @@ type AzureStruct struct {
 
 /*
 func NewAzure(ip, port, model string) (Azure, error) {
-	// Validate IP address
-	if net.ParseIP(ip) == nil {
-		return Azure{}, errors.New("invalid IP address")
-	}
+    // Validate IP address
+    if net.ParseIP(ip) == nil {
+        return Azure{}, errors.New("invalid IP address")
+    }
 
-	// Validate port
-	if _, err := strconv.Atoi(port); err != nil {
-		return Azure{}, errors.New("invalid port")
-	}
+    // Validate port
+    if _, err := strconv.Atoi(port); err != nil {
+        return Azure{}, errors.New("invalid port")
+    }
 
-	// Validate model (example: non-empty string)
-	if model == "" {
-		return Azure{}, errors.New("model cannot be empty")
-	}
+    // Validate model (example: non-empty string)
+    if model == "" {
+        return Azure{}, errors.New("model cannot be empty")
+    }
 
-	return Azure{
-		Provider:     "Ollama",
-		HttpProtocol: "http",
-		ServerIP:     ip,
-		Port:         port,
-		Model:        model,
-		Stream:       false,
-	}, nil
+    return Azure{
+        Provider:     "Ollama",
+        HttpProtocol: "http",
+        ServerIP:     ip,
+        Port:         port,
+        Model:        model,
+        Stream:       false,
+    }, nil
 }
 */
 
-func SendAzure(prompt string) (map[string]interface{}, error) {
-	var v map[string]interface{}
-	return v, nil
+func SendAzure(prompt string) (ResponseStruct, error) {
+	return ResponseStruct{}, nil
 }

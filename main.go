@@ -24,7 +24,7 @@ func init() {
 
 func main() {
 
-	err := provider.Ollama(os.Getenv("OLLAMA_IP"), os.Getenv("OLLAMA_PORT"), os.Getenv("OLLAMA_MODEL"))
+	err := provider.OpenAI("Heihei", os.Getenv("OPENAI_APIKEY"))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -111,5 +111,5 @@ func chatPostHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err.Error())
 	}
 
-	w.Write([]byte(res["response"].(string)))
+	w.Write([]byte(res.Response))
 }

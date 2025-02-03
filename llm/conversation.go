@@ -25,10 +25,10 @@ func (c *Conversation) AppendHistory(user, llm string) {
 	c.History = append(c.History, newHistory)
 }
 
-func (c *Conversation) Prompt(s string) (map[string]interface{}, error) {
+func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 	var toolDesc string
 	var resString string
-	var response map[string]interface{}
+	var response provider.ResponseStruct
 	var err error
 	var toolResponse []interface{}
 
@@ -47,12 +47,7 @@ func (c *Conversation) Prompt(s string) (map[string]interface{}, error) {
 			return response, err
 		}
 
-		_, ok := response["response"].(string)
-		if !ok {
-			fmt.Println("No valid response reveived")
-		}
-
-		resString = response["response"].(string)
+		resString = response.Response
 
 		// Check for if the response contains a summary and extract it
 		if strings.Contains(resString, "[BEGIN SUMMARY]") {
