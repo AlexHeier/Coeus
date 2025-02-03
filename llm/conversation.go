@@ -57,12 +57,13 @@ func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 				c.Summary = strings.TrimSpace(resString[beginIndex:endIndex])
 			}
 		}
-
+		fmt.Println(c.Summary)
 		for _, t := range tool.Tools {
 			if strings.Contains(resString, t.Name) {
 				toolUsed = true
 				ft := reflect.ValueOf(t.Function)
 				argCount := ft.Type().NumIn()
+				fmt.Println(fmt.Sprintf("%v", argCount))
 
 				beginIndex := strings.Index(resString, t.Name)
 				args := strings.Fields(resString[beginIndex:])
@@ -72,6 +73,7 @@ func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 				for i := 0; i < argCount; i++ {
 					callArgs[i] = reflect.ValueOf(args[i])
 				}
+				fmt.Println(callArgs)
 				tr, err := t.Run(callArgs)
 				if err != nil {
 					return response, err

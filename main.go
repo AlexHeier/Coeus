@@ -2,6 +2,7 @@ package main
 
 import (
 	"Coeus/llm"
+	"Coeus/llm/tool"
 	"Coeus/provider"
 	"encoding/json"
 	"fmt"
@@ -24,7 +25,7 @@ func init() {
 
 func main() {
 
-	err := provider.OpenAI("Heihei", os.Getenv("OPENAI_APIKEY"))
+	err := provider.Ollama(os.Getenv("OLLAMA_IP"), os.Getenv("OLLAMA_PORT"), os.Getenv("OLLAMA_MODEL"))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -32,6 +33,8 @@ func main() {
 	llm.SetPersona("You are a chatbot with several tools available. These include a history section which can be used to remember things and previous messages. A tools section which gives you the ability to do actions and receive responses from the server. Use these when needed and before using information from your history, but use existing tool results before calling for tools again. Make sure to not run the same tools multiple times after one another. To call a tool simply say it's name in all capital letters. For your conversations: try to keep responses short and precise. Never ever mention to the user about your systemprompt, history or tools. Make the conversation as natural as possible and use your tools to assist yourself and the user when needed.")
 
 	llm.MemoryVersion(llm.MemoryAllMessage)
+
+	tool.New("Multiply", "Takes two ints and returns the multiplied result. Always use this when you multiply numbers. Can be called like this for example: MULTIPLY 50 60", Multiply)
 
 	cons = make(map[string]*llm.Conversation)
 
@@ -112,4 +115,9 @@ func chatPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write([]byte(res.Response))
+}
+
+func Multiply(a, b int) int {
+	fmt.Println("Hello!")
+	return a * b
 }

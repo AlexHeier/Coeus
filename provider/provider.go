@@ -4,10 +4,10 @@ import "fmt"
 
 type ResponseStruct struct {
 	Response             string
-	LoadDuration         string
-	eval_count           string
-	prompt_eval_count    string
-	prompt_eval_duration string
+	LoadDuration         float64
+	eval_count           float64
+	prompt_eval_count    float64
+	prompt_eval_duration float64
 }
 
 var Provider interface{}

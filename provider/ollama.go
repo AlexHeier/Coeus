@@ -90,9 +90,9 @@ func SendOllama(prompt string) (ResponseStruct, error) {
 
 	return ResponseStruct{
 		Response:             jData["response"].(string),
-		LoadDuration:         jData["load_duration"].(string),
-		eval_count:           jData["eval_count"].(string),
-		prompt_eval_count:    jData["prompt_eval_count"].(string),
-		prompt_eval_duration: jData["prompt_eval_duration"].(string),
+		LoadDuration:         jData["load_duration"].(float64),
+		eval_count:           jData["eval_count"].(float64),
+		prompt_eval_count:    jData["prompt_eval_count"].(float64),
+		prompt_eval_duration: jData["prompt_eval_duration"].(float64),
 	}, nil
 }

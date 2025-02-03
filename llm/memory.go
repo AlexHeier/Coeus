@@ -77,6 +77,8 @@ Summary is a function that will take a summary of the conversation and use the s
 */
 
 func MemorySummary(args ...interface{}) string {
+	var prompt string
+
 	con, ok := args[0].(*Conversation)
 	if !ok {
 		return "No history"
@@ -84,9 +86,8 @@ func MemorySummary(args ...interface{}) string {
 
 	if con.Summary == "" {
 		for _, h := range con.History {
-			con.Summary += h
+			prompt += h + "\n"
 		}
 	}
-
 	return con.Summary + "\nCreate a new summary of the conversation at the end of the conversation. Start with [BEGIN SUMMARY] and end with [END SUMMARY]."
 }
