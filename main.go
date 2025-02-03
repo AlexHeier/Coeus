@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -117,7 +118,9 @@ func chatPostHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(res.Response))
 }
 
-func Multiply(a, b int) int {
+func Multiply(a, b string) int {
 	fmt.Println("Hello!")
-	return a * b
+	a1, _ := strconv.Atoi(a)
+	b1, _ := strconv.Atoi(b)
+	return a1 * b1
 }

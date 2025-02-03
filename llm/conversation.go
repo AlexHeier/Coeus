@@ -65,7 +65,7 @@ func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 				toolUsed = true
 				for i, _ := range splitString {
 					if splitString[i] == t.Name {
-						startIndex = i
+						startIndex = i + 1
 						break
 					}
 				}
@@ -77,21 +77,26 @@ func (c *Conversation) Prompt(s string) (provider.ResponseStruct, error) {
 				args := splitString[startIndex:]
 				args = args[:argCount]
 
-				callArgs := make([]reflect.Value, argCount)
+				fmt.Println(args)
+
+				callArgs := make([]interface{}, argCount)
 				for i := 0; i < argCount; i++ {
 					callArgs[i] = reflect.ValueOf(args[i])
 				}
-				fmt.Println(callArgs)
-				tr, err := t.Run(callArgs)
+				fmt.Println(callArgs[0:]...)
+				tr, err := t.Run(callArgs[0:]...)
 				if err != nil {
 					return response, err
 				}
+				fmt.Println(fmt.Sprintf("%v", tr))
+
 				toolResponse = append(toolResponse, tr)
 			}
 		}
 		if !toolUsed {
 			break
 		}
+		break
 	}
 
 	c.AppendHistory(s, resString)

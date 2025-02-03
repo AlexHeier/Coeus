@@ -51,6 +51,8 @@ func (t *ToolStruct) Run(args ...interface{}) ([]interface{}, error) {
 		return nil, fmt.Errorf("function is not a function")
 	}
 
+	fmt.Println(args)
+
 	if len(args) != f.Type().NumIn() { // check if the number of arguments is correct
 		return nil, fmt.Errorf("wrong number of arguments")
 	}
