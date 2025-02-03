@@ -147,9 +147,9 @@
             userMessage.textContent = userInput;
             chatBox.appendChild(userMessage);
             document.getElementById("user-input").value = "";
+            let userid = document.getElementById("input_userid").value 
 
-
-            MessageLLM(userInput, "Hi")
+            MessageLLM(userInput, userid)
             
 
         }
