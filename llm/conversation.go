@@ -42,10 +42,16 @@ func (c *Conversation) Prompt(s string) (map[string]interface{}, error) {
 		var toolUsed bool = false
 		// Memory(append([]interface{}{c}, MemArgs...)...) sends the conversation and the arguments to the memory function if the user defined some.
 		prefix := c.MainPrompt + "[BEGIN TOOLS] " + tool.ToolDefintion + toolDesc + "[END TOOLS]\n[BEGIN INFORMATION]" + fmt.Sprintf("%v", toolResponse) + "[END INFORMATION]\n[BEGIN HISTORY]" + Memory(append([]interface{}{c}, MemArgs...)...) + "[END HISTORY]\n"
-		response, err := provider.Send(prefix + s)
+		response, err = provider.Send(prefix + s)
 		if err != nil {
 			return response, err
 		}
+
+		_, ok := response["response"].(string)
+		if !ok {
+			fmt.Println("No valid response reveived")
+		}
+
 		resString = response["response"].(string)
 
 		// Check for if the response contains a summary and extract it
@@ -84,6 +90,7 @@ func (c *Conversation) Prompt(s string) (map[string]interface{}, error) {
 	}
 
 	c.AppendHistory(s, resString)
+	fmt.Println(response)
 	return response, err
 }
 
@@ -98,7 +105,7 @@ func (c *Conversation) DumpConversation() string {
 
 func BeginConversation() *Conversation {
 	newCon := Conversation{
-		MainPrompt: Persona + "Anser in the language the user is using.\n",
+		MainPrompt: Persona + "Answer in the language the user is using.\n",
 	}
 
 	conversations = append(conversations, newCon)

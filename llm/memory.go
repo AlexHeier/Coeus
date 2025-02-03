@@ -1,6 +1,9 @@
 package llm
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 /* Default memory function is All. This function will use all messages as memory. */
 var Memory func(args ...interface{}) string = MemoryAllMessage
@@ -27,7 +30,8 @@ All is a function that will use all messages as memory.
 @return A string of the history.
 */
 func MemoryAllMessage(args ...interface{}) string {
-	con, ok := args[0].(Conversation)
+	fmt.Println(args[0])
+	con, ok := args[0].(*Conversation)
 	if !ok {
 		return "No history"
 	}
@@ -46,7 +50,7 @@ Last is a function that will use the last int x messages as memory.
 @return A string representing the memory.
 */
 func MemoryLastMessage(args ...interface{}) string {
-	con, ok := args[0].(Conversation)
+	con, ok := args[0].(*Conversation)
 	if !ok {
 		return "No history"
 	}
@@ -72,9 +76,8 @@ Summary is a function that will take a summary of the conversation and use the s
 @return A string representing the new message with the summary and an error if the conversion fails.
 */
 
-// TODO: Finne ut av hvordan man skal lage denne
 func MemorySummary(args ...interface{}) string {
-	con, ok := args[0].(Conversation)
+	con, ok := args[0].(*Conversation)
 	if !ok {
 		return "No history"
 	}
