@@ -71,7 +71,7 @@ func MemoryLastMessage(args ...interface{}) string {
 
 /*
 Summary is a function that will take a summary of the conversation and use the summary as memory.
-It's inefficient as it takes an additional LLM call to create the history summary. Other options should be considered.
+It's inefficient as it takes an additional LLM call to create the history summary. Other options like a single LLM call should be considered.
 
 @param intf An interface{} that should be a slice of strings representing the conversation.
 @return A string representing the new message with the summary and an error if the conversion fails.
