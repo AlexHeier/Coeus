@@ -23,7 +23,7 @@ func webHandler(w http.ResponseWriter, r *http.Request) {
 
 func webGetHandler(w http.ResponseWriter, r *http.Request) {
 	_ = r
-	data, err := os.ReadFile("./dashboard/index.html")
+	data, err := os.ReadFile("./dashboard/dashboardv2.html")
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		fmt.Println(err.Error())
