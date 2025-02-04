@@ -3,169 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot Interface</title>
+    <title>Messenger-Style Chat</title>
     <style>
-        body {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
             font-family: Arial, sans-serif;
+        }
+
+        body {
             display: flex;
-            justify-content: center;
-            align-items: center;
             height: 100vh;
-            background-color: #f4f4f4;
         }
-        .chat-container {
-            width: 900px;
-            background: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .chat-box {
-            height: 400px;
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 25%;
+            background: #f0f0f0;
+            border-right: 1px solid #ccc;
             overflow-y: auto;
             padding: 10px;
-            border-bottom: 1px solid #ddd;
         }
-        .input-box {
-            display: flex;
-            padding: 10px;
+
+        .chat-list {
+            list-style: none;
         }
-        .input-box input {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .input-box button {
-            padding: 8px 12px;
-            border: none;
-            background: #007bff;
-            color: white;
+
+        .chat-list li {
+            padding: 15px;
             cursor: pointer;
-            margin-left: 5px;
-            border-radius: 4px;
+            border-bottom: 1px solid #ddd;
+            transition: background 0.3s;
         }
+
+        .chat-list li:hover, .chat-list .active {
+            background: #d9d9d9;
+        }
+
+        /* Chat Window Styling */
+        .chat-container {
+            width: 75%;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+        }
+
+        .chat-header {
+            padding: 15px;
+            border-bottom: 1px solid #ccc;
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+
+        .chat-box {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
         .message {
-            margin: 5px 0;
-            padding: 8px;
-            border-radius: 5px;
-            max-width: 80%;
+            max-width: 70%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 10px;
         }
-        .user-message {
-            width: fit-content;
-            background: #007bff;
+
+        .sent {
+            align-self: flex-end;
+            background: #0078ff;
             color: white;
         }
-        .bot-message {
-            width: fit-content;
-            background: #ddd;
-            color: black;
+
+        .received {
+            align-self: flex-start;
+            background: #e0e0e0;
         }
-        .inputs {
-            width: 44%;
-            margin: 5px;
+
+        /* Message Input Box */
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #ccc;
+            padding: 10px;
+            background: #f9f9f9;
         }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        button {
+            padding: 10px 15px;
+            background: #0078ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        #newChatButton {
+            width: 93%;
+        }
+
     </style>
 </head>
 <body>
 
+    <!-- Sidebar for Chat Selection -->
+    <div class="sidebar">
+        <button id="newChatButton" onclick="createConversation()">
+            NewChat
+        </button>
+        <ul class="chat-list">
+        </ul>
+    </div>
+
+    <!-- Chat Window -->
     <div class="chat-container">
-        <div class="chat-box" id="chat-box"></div>
-        <div class="input-box">
-            <input type="text" id="user-input" placeholder="Type a message...">
-            <button onclick="sendMessage()">Send</button>
+        <div class="chat-header">Create a new chat</div>
+        <div class="chat-box"></div>
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="Type a message...">
+            <button onclick="MessageLLM()">Send</button>
         </div>
-        <input id="input_userid" class="inputs" type="text" placeholder="Conversation ID">
-        <input id="input_url" class="inputs" type="text" value="http://localhost:9002/api/chat">
     </div>
 
     <script>
-    function MessageLLM(Prompt, Userid) {
-        url = document.getElementById("input_url").value;
-        body = JSON.stringify({
-                userid: Userid,
-                prompt: Prompt
+
+        let conversations;
+
+        let currentChat;
+
+        // Function to switch chats
+        function switchChat(index) {
+
+            currentChat = index;
+
+            // Update active class
+            document.querySelectorAll(".chat-list li").forEach((li, i) => {
+                if (li.innerHTML == `Chat-${currentChat}`) {
+                    li.classList.add("active");
+                } else {
+                    li.classList.remove("active");
+                }
             });
 
-        let temp
+            document.querySelector(".chat-header").textContent = currentChat;
+            loadMessages();
+        }
 
-        const response = fetch(url, {
-            method: 'POST',
-            body: body,
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(response => response.text())
-        .then(data => { 
-            console.log(data)
+        // Function to load messages
+        function loadMessages() {
+            const chatBox = document.querySelector(".chat-box");
+            chatBox.innerHTML = "";
 
-            setTimeout(() => {
-                let chatBox = document.getElementById("chat-box");
-                let botMessage = document.createElement("div");
-                botMessage.className = "message bot-message";
-                botMessage.textContent = data
-                chatBox.appendChild(botMessage);
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }, 500);
-        });
-    };
+            conversations.get(currentChat).forEach(msg => {
+                const messageDiv = document.createElement("div");
+                messageDiv.classList.add("message", msg.type);
+                messageDiv.textContent = msg.text;
+                chatBox.appendChild(messageDiv);
+            });
 
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
 
-   function MessageLLM2(Prompt, Userid) {
-        url = "http://localhost:9002/api/chat";
-
-        const response = fetch(url, {
-            method: 'POST',
-            body: JSON.stringify({
-                userid: Userid,
-                prompt: Prompt
-            }),
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-        }).catch(a => {
-            console.log(a)
-        });
-        console.log(response.value)
-    };
-
-
-        
-    
-
-
+        // Function to send a message
         function sendMessage() {
-            let userInput = document.getElementById("user-input").value;
-            if (userInput.trim() === "") return;
-            
-            let chatBox = document.getElementById("chat-box");
-            let userMessage = document.createElement("div");
-            userMessage.className = "message user-message";
-            userMessage.textContent = userInput;
-            chatBox.appendChild(userMessage);
-            document.getElementById("user-input").value = "";
-            let userid = document.getElementById("input_userid").value 
+            const input = document.getElementById("messageInput");
+            const text = input.value.trim();
+            if (text === "") return;
 
-            MessageLLM(userInput, userid)
-            
+            // Add message to conversation
+            conversations.get(currentChat).push({ text, type: "sent" });
+            loadMessages();
 
+            // Clear input
+            input.value = "";
         }
 
-        function getBotResponse(input) {
-            const responses = {
-                "hello": "Hi there! How can I assist you?",
-                "how are you": "I'm just a bot, but I'm doing great!",
-                "bye": "Goodbye! Have a great day!"
-            };
-            
-            let response = responses[input.toLowerCase()];
-            return response ? response : "I'm not sure how to respond to that.";
+        function createConversation() {
+            setCurrentChat()
+            var chatlist = document.getElementsByClassName("chat-list")[0];
+            var conversation = document.createElement("li");
+            conversation.setAttribute('onclick', `switchChat('${currentChat}')`);
+            conversation.innerHTML = `Chat-${currentChat}`;
+            chatlist.appendChild(conversation);
+            conversations.set(currentChat, [{ text: "New conversation. Send a message to begin the conversation", type: "received" }]);
+            document.querySelector(".chat-header").textContent = currentChat;
         }
+
+        function MessageLLM() {
+
+            const input = document.getElementById("messageInput");
+            const text = input.value.trim();
+            if (text === "") return;
+
+            // Add message to conversation
+            conversations.get(currentChat).push({ text, type: "sent" });
+            loadMessages();
+
+            // Clear input
+            input.value = "";
+
+            url = "http://localhost:9002/api/chat"
+            body = JSON.stringify({
+                    userid: currentChat,
+                    prompt: text
+                });
+
+            const response = fetch(url, {
+                method: 'POST',
+                body: body,
+                 headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.text())
+            .then(data => { 
+
+                setTimeout(() => {
+
+                    conversations.get(currentChat).push({ text: data, type: "received" });
+                    loadMessages();
+
+                 }, 500);
+            });
+         };
+
+        function setCurrentChat() {
+            currentChat = (`${Math.floor(Math.random() * 10000)}`).toString();
+        }
+
+        function setupMap() {
+            conversations = new Map();
+        }
+
+       
+
+        setupMap()
+        setCurrentChat()
+        // Load initial chat messages
+        createConversation(currentChat)
+        loadMessages();
+
+        document.querySelector("#messageInput").addEventListener("keyup", event => {
+            if(event.key !== "Enter") return; // Use `.key` instead.
+            MessageLLM() // Things you want to do.
+            event.preventDefault(); // No need to `return false;`.
+        });
     </script>
+
 </body>
 </html>
-
-
