@@ -7,7 +7,7 @@ import (
 )
 
 // ToolDefintion defines how the LLM should access the tools
-var ToolDefintion = `To get access to the TOOLS resources. Respond with the tool name capitalized and the parameters needed. For example, "MULTIPLY 40 60 " `
+var ToolDefintion = `To get access to the TOOLS resources. Respond with the tool name capitalized and the parameters needed.`
 
 // ToolStruct is the struct of a tool
 type ToolStruct struct {
