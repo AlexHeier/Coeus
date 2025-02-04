@@ -130,7 +130,7 @@
         <button id="newChatButton" onclick="createConversation()">
             NewChat
         </button>
-        <input id="input_server_ip" value="localhost:9002" placeholder="localhost:9002" type="text">
+        <input type="text" value="localhost:9002"  id="input_server_ip">
         <ul class="chat-list">
         </ul>
     </div>
@@ -211,7 +211,7 @@
 
         function MessageLLM() {
 
-            url = "http://localhost:9002/api/chat"
+            url = "http://" + `${document.getElementById("input_server_ip").value}`+ "/api/chat"
 
             const input = document.getElementById("messageInput");
             const text = input.value.trim();
