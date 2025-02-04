@@ -112,6 +112,15 @@
             width: 93%;
         }
 
+        #input_server_ip {
+            width: 93%;
+            padding: 5px;
+            margin-top: 5px;
+            margin-left: 10px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+        }
+
     </style>
 </head>
 <body>
@@ -121,6 +130,7 @@
         <button id="newChatButton" onclick="createConversation()">
             NewChat
         </button>
+        <input id="input_server_ip" value="localhost:9002" placeholder="localhost:9002" type="text">
         <ul class="chat-list">
         </ul>
     </div>
@@ -201,6 +211,8 @@
 
         function MessageLLM() {
 
+            url = "http://localhost:9002/api/chat"
+
             const input = document.getElementById("messageInput");
             const text = input.value.trim();
             if (text === "") return;
@@ -212,7 +224,6 @@
             // Clear input
             input.value = "";
 
-            url = "http://localhost:9002/api/chat"
             body = JSON.stringify({
                     userid: currentChat,
                     prompt: text
