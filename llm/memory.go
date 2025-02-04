@@ -88,8 +88,8 @@ func MemorySummary(args ...interface{}) string {
 		return "Amount of history to include not specified as an int"
 	}
 
-	// Makes sure that the amount of messages remains a positive number
-	if (messages < 0) || (messages > 10) {
+	// Makes sure that the amount of messages remains a positive number. Should really not exceed 10-15 as it may take lots of extra processing. Max at 20 for now.
+	if (messages < 0) || (messages > 20) {
 		fmt.Printf("MemorySummary: Amount of messages outside bounds! Using internal value of %d. Was %d\n", 2, messages)
 		messages = 2
 	}
@@ -104,23 +104,27 @@ func MemorySummary(args ...interface{}) string {
 		return dump
 	}
 
+	// Creates an array containing the history to be summarised.
 	var sumPrompt string
 	for _, history := range con.History[:len(con.History)-messages] {
 		sumPrompt += history
 	}
 
+	// Sends the history to be summarised. Prompt is not perfect but gets the job done for now.
 	res, err := provider.Send("Only create a short bulletpoint summary of this conversation between the user and LLM. Highlights things which will help the LLM to keep the conversation going. No other text.\n[BEGIN]\n" + sumPrompt + "\n[END]\n")
 	if err != nil {
 		fmt.Println(err.Error())
 		return ""
 	}
 
+	// Saves the summary within the conversation. Should be done inside conversation.go
 	con.Summary = "[BEGIN SUMMARY]\n" + res.Response + "\n[END SUMMARY]\n"
 
-	var ret string
+	var newestHistory string
 	for _, h := range con.History[messages:] {
-		ret += h
+		newestHistory += h
 	}
 
-	return con.Summary + ret
+	// Returns the summary and newest history as a string
+	return con.Summary + newestHistory
 }
