@@ -88,8 +88,8 @@ func MemorySummary(args ...interface{}) string {
 		return "Amount of history to include not specified as an int"
 	}
 
-	// Makes sure that the amount of messages remains a positive number. Should really not exceed 10-15 as it may take lots of extra processing. Max at 20 for now.
-	if (messages < 0) || (messages > 20) {
+	// Makes sure that the amount of messages remains a positive number. Should really not exceed 25-30 at lower models since it beings to hallucinate. Max at 50 for now.
+	if (messages < 0) || (messages > 50) {
 		fmt.Printf("MemorySummary: Amount of messages outside bounds! Using internal value of %d. Was %d\n", 2, messages)
 		messages = 2
 	}
