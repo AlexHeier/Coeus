@@ -1,8 +1,6 @@
 package llm
 
 import (
-	"Coeus/provider"
-	"fmt"
 	"strings"
 )
 
@@ -40,7 +38,10 @@ func MemoryAllMessage(args ...interface{}) string {
 	for _, h := range con.History {
 		temp += h
 	}
-	return temp
+
+	print(temp)
+
+	return "[BEGIN HISTORY]" + temp + "[END HISTORY]"
 }
 
 /*
@@ -66,65 +67,31 @@ func MemoryLastMessage(args ...interface{}) string {
 	}
 
 	lastMessages := con.History[historyLen-x:]
-	return strings.Join(lastMessages, "\n")
+	return "[BEGIN HISTORY]" + strings.Join(lastMessages, "\n") + "[END HISTORY]"
 }
 
 /*
-Summary is a function that will take a summary of the conversation and use the summary as memory.
-It's inefficient as it takes an additional LLM call to create the history summary. Other options like a single LLM call should be considered.
+Summary will create a summary of the conversation and use it as memory.
 
-@param intf An interface{} that should be a slice of strings representing the conversation.
 @return A string representing the new message with the summary and an error if the conversion fails.
 */
 func MemorySummary(args ...interface{}) string {
+	var tempSum string
 
 	con, ok := args[0].(*Conversation)
 	if !ok {
 		return "No history"
 	}
 
-	messages, ok := args[1].(int)
-	if !ok {
-		return "Amount of history to include not specified as an int"
-	}
-
-	// Makes sure that the amount of messages remains a positive number. Should really not exceed 25-30 at lower models since it beings to hallucinate. Max at 50 for now.
-	if (messages < 0) || (messages > 50) {
-		fmt.Printf("MemorySummary: Amount of messages outside bounds! Using internal value of %d. Was %d\n", 2, messages)
-		messages = 2
-	}
-
-	// Summary is set to contain atleast 4 entries of history. That way the AI has more information to work with and gives better answers.
-	if len(con.History) < (messages + 4) {
-		fmt.Printf("Not enough history to create summary. Need %d or more. Have %d\n", messages+4, len(con.History))
-		var dump string
-		for _, history := range con.History {
-			dump += history
+	if con.Summary == "" {
+		for _, h := range con.History {
+			tempSum += h + "\n"
 		}
-		return dump
+		tempSum += "Can you create a short summary of the conversation that contains everything important at the end of the message? begin the summary with [BEGIN SUMMARY] and end with [END SUMMARY]."
+		con.Summary = tempSum
+	} else {
+		con.Summary = "[BEGIN OLD SUMMARY]" + con.Summary + "[END OLD SUMMARY]\nCreate a precise summary of the last summary + the users new message. Add the new summary at the end of the message? begin the summary with [BEGIN SUMMARY] and end with [END SUMMARY]."
 	}
 
-	// Creates an array containing the history to be summarised.
-	var sumPrompt string
-	for _, history := range con.History[:len(con.History)-messages] {
-		sumPrompt += history
-	}
-
-	// Sends the history to be summarised. Prompt is not perfect but gets the job done for now.
-	res, err := provider.Send("Only create a short bulletpoint summary of this conversation between the user and LLM. Highlights things which will help the LLM to keep the conversation going. No other text.\n[BEGIN]\n" + sumPrompt + "\n[END]\n")
-	if err != nil {
-		fmt.Println(err.Error())
-		return ""
-	}
-
-	// Saves the summary within the conversation. Should be done inside conversation.go
-	con.Summary = "[BEGIN SUMMARY]\n" + res.Response + "\n[END SUMMARY]\n"
-
-	var newestHistory string
-	for _, h := range con.History[messages:] {
-		newestHistory += h
-	}
-
-	// Returns the summary and newest history as a string
-	return con.Summary + newestHistory
+	return con.Summary
 }
