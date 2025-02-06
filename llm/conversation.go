@@ -42,7 +42,7 @@ func (c *Conversation) Prompt(UserPrompt string) (provider.ResponseStruct, error
 	for {
 		toolUsed = false
 		// Memory(append([]interface{}{c}, MemArgs...)...) sends the conversation and the arguments to the memory function if the user defined some.
-		prefix := c.MainPrompt + "Always use a tool if its usable " + tool.ToolDefintion + toolDesc + "Do not send the tool name if you do not need it. Do not reuse the tool name\nAnswers from used tools(" + fmt.Sprintf("%v", toolResponse) + ")\n" + Memory(append([]interface{}{c}, MemArgs...)...) + "\n\n"
+		prefix := c.MainPrompt + "[BEGIN TOOLS] Always use a tool if its usable " + tool.ToolDefintion + toolDesc + "Do not send the tool name if you do not need it. Do not reuse the tool name [END TOOLS] \n [BEGIN TOOL RESPONSE] Answers from used tools" + fmt.Sprintf("%v", toolResponse) + "[END TOOL RESPONSE]\n" + Memory(append([]interface{}{c}, MemArgs...)...) + "\n\n"
 
 		//fmt.Println(prefix + UserPrompt)
 		print(prefix)
@@ -58,7 +58,7 @@ func (c *Conversation) Prompt(UserPrompt string) (provider.ResponseStruct, error
 		// Check for if the response contains a summary and extract it
 		if strings.Contains(resString, "[BEGIN SUMMARY]") {
 			beginIndex := strings.Index(resString, "[BEGIN SUMMARY]") + len("[BEGIN SUMMARY]")
-			endIndex := strings.Index(resString, "[END SUMMARY]") - len("[END SUMMARY]")
+			endIndex := strings.Index(resString, "[END SUMMARY]")
 			if endIndex > beginIndex {
 				c.Summary = strings.TrimSpace(resString[beginIndex:endIndex])
 			}
