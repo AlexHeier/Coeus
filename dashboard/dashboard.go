@@ -16,7 +16,7 @@ func Enable(Port string) error {
 	cons = make(map[string]*llm.Conversation)
 	http.HandleFunc("/api/chat", chatHandler)
 	http.HandleFunc("/", webHandler)
-	return http.ListenAndServe(":9002", nil)
+	return http.ListenAndServe(":"+Port, nil)
 }
 
 func webHandler(w http.ResponseWriter, r *http.Request) {
