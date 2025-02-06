@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messenger-Style Chat</title>
+    <title>Coeus Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -141,19 +141,60 @@
         <div class="chat-box"></div>
         <div class="chat-input">
             <input type="text" id="messageInput" placeholder="Type a message...">
+            <button id="speachButton">Speak</button>
             <button onclick="MessageLLM()">Send</button>
         </div>
     </div>
 
     <script>
 
-        let conversations;
+        let conversations; // Stores the conversations
+        let currentChat; // Points to the active conversation
 
-        let currentChat;
+        const startSpeach = document.getElementById("speachButton");
+        const messageInput = document.getElementById("messageInput");
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+
+            const recognition = new SpeechRecognition();
+
+            recognition.continuous = false; // Stop when speech ends
+            //recognition.lang = 'en-US'; // Language
+            recognition.lang = 'nb-NO'; // Language
+            recognition.interimResults = true; // Show interim results
+
+            // Start recognition
+            startSpeach.addEventListener('click', () => {
+            recognition.start();
+            });
+
+            // Capture the result
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = 0; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                messageInput.value = transcript;
+                //text = transcript;
+            };
+
+            // Actions to do when the capture ends
+            recognition.onend = (event) => {
+                MessageLLM();
+            }
+
+            // Error handling
+            recognition.onerror = (event) => {
+                messageInput.value = 'Error occurred: ' + event.error;
+            };
+        } else {
+            startSpeach.style.backgroundColor = "grey";
+        }
+
 
         // Function to switch chats
         function switchChat(index) {
-
             currentChat = index;
 
             // Update active class
@@ -182,20 +223,6 @@
             });
 
             chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        // Function to send a message
-        function sendMessage() {
-            const input = document.getElementById("messageInput");
-            const text = input.value.trim();
-            if (text === "") return;
-
-            // Add message to conversation
-            conversations.get(currentChat).push({ text, type: "sent" });
-            loadMessages();
-
-            // Clear input
-            input.value = "";
         }
 
         function createConversation() {
@@ -239,12 +266,9 @@
             })
             .then(response => response.text())
             .then(data => { 
-
                 setTimeout(() => {
-
                     conversations.get(currentChat).push({ text: data, type: "received" });
                     loadMessages();
-
                  }, 500);
             });
          };
@@ -259,10 +283,9 @@
 
        
 
-        setupMap()
-        setCurrentChat()
-        // Load initial chat messages
-        createConversation(currentChat)
+        setupMap();
+        setCurrentChat();
+        createConversation(currentChat);
         loadMessages();
 
         document.querySelector("#messageInput").addEventListener("keyup", event => {

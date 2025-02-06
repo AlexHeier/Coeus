@@ -40,8 +40,9 @@ func (c *Conversation) Prompt(UserPrompt string) (provider.ResponseStruct, error
 
 	for {
 		toolUsed = false
+
 		// Memory(append([]interface{}{c}, MemArgs...)...) sends the conversation and the arguments to the memory function if the user defined some.
-		prefix := c.MainPrompt + "Always use a tool if its suitable " + tool.ToolDefintion + toolDesc + "Do not send the tool name if you do not need it. Do not reuse the tool name\nAnswers from used tools(" + fmt.Sprintf("%v", toolResponse) + ")\n" + Memory(append([]interface{}{c}, MemArgs...)...) + "\n\n"
+		prefix := c.MainPrompt + "[BEGIN TOOLS] Always use a tool if its suitable " + tool.ToolDefintion + toolDesc + "Do not send the tool name if you do not need it. Do not reuse the tool name [END TOOLS] \n [BEGIN TOOL RESPONSE] Answers from used tools" + fmt.Sprintf("%v", toolResponse) + "[END TOOL RESPONSE]\n" + Memory(append([]interface{}{c}, MemArgs...)...) + "\n\n"
 
 		response, err = provider.Send(prefix + UserPrompt)
 		if err != nil {
@@ -51,6 +52,7 @@ func (c *Conversation) Prompt(UserPrompt string) (provider.ResponseStruct, error
 		splitString := strings.Split(response.Response, " ")
 
 		// Check for if the response contains a summary and extract it
+
 		for i, w := range splitString {
 			if strings.Contains(w, "SUMMARY") {
 				c.Summary = strings.Join(splitString[i+1:], " ")
