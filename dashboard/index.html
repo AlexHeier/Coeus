@@ -121,7 +121,7 @@
             border-radius: 5px;
         }
 
-        #languageSelector{
+        .selector {
             padding: 10px 15px;
             background: #0078ff;
             color: white;
@@ -129,6 +129,9 @@
             border-radius: 5px;
             cursor: pointer;
             margin-left: 10px;
+            text-overflow: ellipsis;
+            min-width: 120px;
+            max-width: 10%;
         }
 
     </style>
@@ -152,11 +155,14 @@
         <div class="chat-input">
             <input type="text" id="messageInput" placeholder="Type a message...">
             <button onclick="MessageLLM()">Send</button>
-            <button id="speachButton">Speak</button>
-            <select name="languageSelector" id="languageSelector">
+            <button id="speechButton">Speak</button>
+            <select class="selector" name="languageSelector" id="languageSelector">
                 <option value="en-US">English US</option>
                 <option value="en-GB">English UK</option>
                 <option value="no-NB">Norwegian</option>
+            </select>
+            <select class="selector" name="voiceSelector" id="voiceSelector">
+                <option value="">No Speech</option>
             </select>
         </div>
     </div>
@@ -166,10 +172,13 @@
         let conversations; // Stores the conversations
         let currentChat; // Points to the active conversation
 
-        const startSpeach = document.getElementById("speachButton");
+        const startSpeach = document.getElementById("speechButton");
         const messageInput = document.getElementById("messageInput");
         const languageSelect = document.getElementById("languageSelector");
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+       
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition; // Used in converting speech to text
+        const synth = window.speechSynthesis; // Used in converting text to speech
+        let voices = synth.getVoices(); // Stores the voices used in text to speech synth
         
 
         if (SpeechRecognition) {
@@ -210,8 +219,30 @@
             };
         } else {
             startSpeach.style.backgroundColor = "grey";
-        }
+        };
 
+
+        function populateVoiceList() {
+            const voiceSelect = document.getElementById("voiceSelector");
+            
+            voices.forEach(voice => {
+                const option = document.createElement("option");
+                option.textContent = `${voice.name} (${voice.lang})`;
+
+                if (voice.default) {
+                    option.textContent += " — DEFAULT";
+                }
+
+                option.setAttribute("data-lang", voice.lang);
+                option.setAttribute("data-name", voice.name);
+                voiceSelect.appendChild(option);
+            });
+        };
+
+        window.speechSynthesis.onvoiceschanged = function() {
+            voices = synth.getVoices();
+            populateVoiceList();
+        };  
 
         // Function to switch chats
         function switchChat(index) {
@@ -228,7 +259,7 @@
 
             document.querySelector(".chat-header").textContent = currentChat;
             loadMessages();
-        }
+        };
 
         // Function to load messages
         function loadMessages() {
@@ -243,7 +274,7 @@
             });
 
             chatBox.scrollTop = chatBox.scrollHeight;
-        }
+        };
 
         function createConversation() {
             setCurrentChat()
@@ -254,7 +285,7 @@
             chatlist.appendChild(conversation);
             conversations.set(currentChat, [{ text: "New conversation. Send a message to begin the conversation", type: "received" }]);
             document.querySelector(".chat-header").textContent = currentChat;
-        }
+        };
 
         function MessageLLM() {
 
@@ -289,19 +320,35 @@
                 setTimeout(() => {
                     conversations.get(currentChat).push({ text: data, type: "received" });
                     loadMessages();
-                 }, 500);
+
+                    // If a voice is selected then speak out the LLM response
+                    if (document.getElementById("voiceSelector").value !== "") {
+                        const response = new SpeechSynthesisUtterance(data);
+                        const selectedOption = document.getElementById("voiceSelector").selectedOptions[0].getAttribute("data-name");
+
+                        voices.forEach(voice => { 
+                            if (voice.name === selectedOption) {
+                                response.voice = voice;
+                            }
+                        });
+
+                        response.pitch = 1;
+                        response.rate = 1;
+                        synth.speak(response);
+                    }
+                 }, 1000);
             });
          };
 
         function setCurrentChat() {
             currentChat = (`${Math.floor(Math.random() * 10000)}`).toString();
-        }
+        };
 
         function setupMap() {
             conversations = new Map();
-        }
+        };
+        
 
-       
 
         setupMap();
         setCurrentChat();
