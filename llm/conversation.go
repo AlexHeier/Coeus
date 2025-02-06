@@ -25,7 +25,7 @@ func (c *Conversation) AppendHistory(user, llm string) {
 	c.History = append(c.History, newHistory)
 }
 
-func (c *Conversation) Prompt(UserPrompt string) (provider.ResponseStruct, error) {
+func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error) {
 	var toolDesc string
 	var response provider.ResponseStruct
 	var err error
@@ -42,9 +42,9 @@ func (c *Conversation) Prompt(UserPrompt string) (provider.ResponseStruct, error
 		toolUsed = false
 
 		// Memory(append([]interface{}{c}, MemArgs...)...) sends the conversation and the arguments to the memory function if the user defined some.
-		prefix := c.MainPrompt + "[BEGIN TOOLS] Always use a tool if its suitable " + tool.ToolDefintion + toolDesc + "Do not send the tool name if you do not need it. Do not reuse the tool name [END TOOLS] \n [BEGIN TOOL RESPONSE] Answers from used tools" + fmt.Sprintf("%v", toolResponse) + "[END TOOL RESPONSE]\n" + Memory(append([]interface{}{c}, MemArgs...)...) + "\n\n"
-
-		response, err = provider.Send(prefix + UserPrompt)
+		prefix := c.MainPrompt + "[BEGIN TOOLS] Always use a tool if its suitable " + tool.ToolDefintion + toolDesc + "Do not send the tool name if you do not need it. Do not reuse the tool name [END TOOLS] \n [BEGIN TOOL RESPONSE] Answers from used tools, always use these resoults " + fmt.Sprintf("%v", toolResponse) + " [END TOOL RESPONSE]\n" + Memory(append([]interface{}{c}, MemArgs...)...) + "\n\n"
+		print(prefix)
+		response, err = provider.Send(prefix + userPrompt)
 		if err != nil {
 			return response, err
 		}
@@ -94,7 +94,7 @@ func (c *Conversation) Prompt(UserPrompt string) (provider.ResponseStruct, error
 		}
 	}
 
-	c.AppendHistory(UserPrompt, response.Response)
+	c.AppendHistory(userPrompt, response.Response)
 	return response, err
 }
 
