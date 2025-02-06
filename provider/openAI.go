@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/openai/openai-go"
-	"github.com/openai/openai-go/option"
+	"github.com/sashabaranov/go-openai"
 )
 
 type OpenAIStruct struct {
@@ -18,26 +17,25 @@ func OpenAI(model, api_key string) error {
 		Model:   model,
 		API_KEY: api_key,
 	}
-
 	return nil
 }
 
 func SendOpenAI(prompt string) (ResponseStruct, error) {
 	config := Provider.(OpenAIStruct)
-	client := openai.NewClient(option.WithAPIKey(config.API_KEY))
+	client := openai.NewClient(config.API_KEY)
 
-	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
-		Messages: openai.F([]openai.ChatCompletionMessageParamUnion{
-			openai.UserMessage(prompt),
-		}),
-		Model: openai.F(openai.ChatModelGPT4o),
+	resp, err := client.CreateChatCompletion(context.TODO(), openai.ChatCompletionRequest{
+		Model: config.Model,
+		Messages: []openai.ChatCompletionMessage{
+			{Role: "user", Content: prompt},
+		},
 	})
 	if err != nil {
 		return ResponseStruct{}, err
 	}
-	fmt.Print(chatCompletion.Choices[0].Message.Content)
 
-	return ResponseStruct{
-		Response: chatCompletion.Choices[0].Message.Content,
-	}, nil
+	responseContent := resp.Choices[0].Message.Content
+	fmt.Print(responseContent)
+
+	return ResponseStruct{Response: responseContent}, nil
 }
