@@ -52,7 +52,6 @@ func (c *Conversation) Prompt(UserPrompt string) (provider.ResponseStruct, error
 		splitString := strings.Split(response.Response, " ")
 
 		// Check for if the response contains a summary and extract it
-
 		for i, w := range splitString {
 			if strings.Contains(w, "SUMMARY") {
 				c.Summary = strings.Join(splitString[i+1:], " ")
