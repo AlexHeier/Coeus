@@ -189,13 +189,12 @@
                 messageInput.value = 'Error occurred: ' + event.error;
             };
         } else {
-            document.getElementById("speachButton").style.backgroundColor = "grey";
+            startSpeach.style.backgroundColor = "grey";
         }
 
 
         // Function to switch chats
         function switchChat(index) {
-
             currentChat = index;
 
             // Update active class
@@ -224,20 +223,6 @@
             });
 
             chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        // Function to send a message
-        function sendMessage() {
-            const input = document.getElementById("messageInput");
-            const text = input.value.trim();
-            if (text === "") return;
-
-            // Add message to conversation
-            conversations.get(currentChat).push({ text, type: "sent" });
-            loadMessages();
-
-            // Clear input
-            input.value = "";
         }
 
         function createConversation() {
@@ -281,12 +266,9 @@
             })
             .then(response => response.text())
             .then(data => { 
-
                 setTimeout(() => {
-
                     conversations.get(currentChat).push({ text: data, type: "received" });
                     loadMessages();
-
                  }, 500);
             });
          };
@@ -301,10 +283,9 @@
 
        
 
-        setupMap()
-        setCurrentChat()
-        // Load initial chat messages
-        createConversation(currentChat)
+        setupMap();
+        setCurrentChat();
+        createConversation(currentChat);
         loadMessages();
 
         document.querySelector("#messageInput").addEventListener("keyup", event => {
