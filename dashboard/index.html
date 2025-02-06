@@ -157,12 +157,13 @@
             <button onclick="MessageLLM()">Send</button>
             <button id="speechButton">Speak</button>
             <select class="selector" name="languageSelector" id="languageSelector">
+                <option value="en-US">Speech To Text Language</option>
                 <option value="en-US">English US</option>
                 <option value="en-GB">English UK</option>
                 <option value="no-NB">Norwegian</option>
             </select>
             <select class="selector" name="voiceSelector" id="voiceSelector">
-                <option value="">No Speech</option>
+                <option value="">No Text To Speech</option>
             </select>
         </div>
     </div>
@@ -224,7 +225,7 @@
 
         function populateVoiceList() {
             const voiceSelect = document.getElementById("voiceSelector");
-            
+
             voices.forEach(voice => {
                 const option = document.createElement("option");
                 option.textContent = `${voice.name} (${voice.lang})`;
