@@ -22,7 +22,7 @@ func init() {
 
 func main() {
 
-	err := provider.OpenAI("gpt-4", os.Getenv("OPENAI_API_KEY"))
+	err := provider.Ollama(os.Getenv("OLLAMA_IP"), os.Getenv("OLLAMA_PORT"), os.Getenv("OLLAMA_MODEL"))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
