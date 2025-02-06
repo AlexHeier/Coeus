@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -35,7 +34,6 @@ func SendOpenAI(prompt string) (ResponseStruct, error) {
 	}
 
 	responseContent := resp.Choices[0].Message.Content
-	fmt.Print(responseContent)
 
 	return ResponseStruct{Response: responseContent}, nil
 }

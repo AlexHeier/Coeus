@@ -77,7 +77,7 @@ Summary will create a summary of the conversation and use it as memory.
 */
 func MemorySummary(args ...interface{}) string {
 	var tempSummary string
-	makeNewSummary := `Respond to the user's latest message appropriately. Then, generate a summary using only the previous summary and the latest user message. Do not include any other context. Begin the summary with "[SUMMARY]".`
+	makeNewSummary := `Respond to the user's latest message appropriately. Then, generate a summary using only the previous summary [OLD SUMMARY] and the latest user message. Do not include any other context. Begin the summary with "[SUMMARY]". Ensure that all information from the old summary is retained.`
 
 	con, ok := args[0].(*Conversation)
 	if !ok {
@@ -90,6 +90,8 @@ func MemorySummary(args ...interface{}) string {
 		}
 		con.Summary = tempSummary
 	}
+
+	print("\n" + con.Summary)
 
 	return "[BEGIN OLD SUMMARY] " + con.Summary + " [END OLD SUMMARY]" + makeNewSummary
 }

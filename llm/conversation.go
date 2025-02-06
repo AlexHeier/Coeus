@@ -27,7 +27,6 @@ func (c *Conversation) AppendHistory(user, llm string) {
 
 func (c *Conversation) Prompt(UserPrompt string) (provider.ResponseStruct, error) {
 	var toolDesc string
-	var resString string
 	var response provider.ResponseStruct
 	var err error
 	var toolResponse []interface{}
@@ -42,33 +41,29 @@ func (c *Conversation) Prompt(UserPrompt string) (provider.ResponseStruct, error
 	for {
 		toolUsed = false
 		// Memory(append([]interface{}{c}, MemArgs...)...) sends the conversation and the arguments to the memory function if the user defined some.
-		prefix := c.MainPrompt + "Always use a tool if its usable " + tool.ToolDefintion + toolDesc + "Do not send the tool name if you do not need it. Do not reuse the tool name\nAnswers from used tools(" + fmt.Sprintf("%v", toolResponse) + ")\n" + Memory(append([]interface{}{c}, MemArgs...)...) + "\n\n"
-
-		//fmt.Println(prefix + UserPrompt)
-		print(prefix)
+		prefix := c.MainPrompt + "Always use a tool if its suitable " + tool.ToolDefintion + toolDesc + "Do not send the tool name if you do not need it. Do not reuse the tool name\nAnswers from used tools(" + fmt.Sprintf("%v", toolResponse) + ")\n" + Memory(append([]interface{}{c}, MemArgs...)...) + "\n\n"
 
 		response, err = provider.Send(prefix + UserPrompt)
 		if err != nil {
 			return response, err
 		}
 
-		resString = response.Response
-		splitString := strings.Split(resString, " ")
+		splitString := strings.Split(response.Response, " ")
 
 		// Check for if the response contains a summary and extract it
-		if strings.Contains(resString, "[BEGIN SUMMARY]") {
-			beginIndex := strings.Index(resString, "[BEGIN SUMMARY]") + len("[BEGIN SUMMARY]")
-			endIndex := strings.Index(resString, "[END SUMMARY]") - len("[END SUMMARY]")
-			if endIndex > beginIndex {
-				c.Summary = strings.TrimSpace(resString[beginIndex:endIndex])
+		for i, w := range splitString {
+			if strings.Contains(w, "SUMMARY") {
+				c.Summary = strings.Join(splitString[i+1:], " ")
+				response.Response = strings.Join(splitString[:i], " ")
+				break
 			}
 		}
 
 		for _, t := range tool.Tools {
-			if strings.Contains(resString, t.Name) {
+			if strings.Contains(response.Response, t.Name) {
 				var startIndex int
 				toolUsed = true
-				for i, _ := range splitString {
+				for i := range splitString {
 					if splitString[i] == t.Name {
 						startIndex = i + 1
 						break
@@ -97,9 +92,8 @@ func (c *Conversation) Prompt(UserPrompt string) (provider.ResponseStruct, error
 			break
 		}
 	}
-	print(resString)
 
-	c.AppendHistory(UserPrompt, resString)
+	c.AppendHistory(UserPrompt, response.Response)
 	return response, err
 }
 

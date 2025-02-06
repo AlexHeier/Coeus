@@ -36,7 +36,7 @@ func main() {
 
 	llm.MemoryVersion(llm.MemorySummary)
 
-	tool.New("Multiply", "Takes two ints and returns the multiplied result. Always use this when you multiply numbers. Can be called like this for example: MULTIPLY 50 60", Multiply)
+	tool.New("Multiply", "Takes two ints and returns the multiplied result. Can be called like this for example: MULTIPLY 50 60", Multiply)
 
 	cons = make(map[string]*llm.Conversation)
 
