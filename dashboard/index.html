@@ -121,6 +121,16 @@
             border-radius: 5px;
         }
 
+        #languageSelector{
+            padding: 10px 15px;
+            background: #0078ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
     </style>
 </head>
 <body>
@@ -141,8 +151,13 @@
         <div class="chat-box"></div>
         <div class="chat-input">
             <input type="text" id="messageInput" placeholder="Type a message...">
-            <button id="speachButton">Speak</button>
             <button onclick="MessageLLM()">Send</button>
+            <button id="speachButton">Speak</button>
+            <select name="languageSelector" id="languageSelector">
+                <option value="en-US">English US</option>
+                <option value="en-GB">English UK</option>
+                <option value="no-NB">Norwegian</option>
+            </select>
         </div>
     </div>
 
@@ -153,20 +168,25 @@
 
         const startSpeach = document.getElementById("speachButton");
         const messageInput = document.getElementById("messageInput");
+        const languageSelect = document.getElementById("languageSelector");
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
 
         if (SpeechRecognition) {
 
             const recognition = new SpeechRecognition();
 
             recognition.continuous = false; // Stop when speech ends
-            //recognition.lang = 'en-US'; // Language
-            recognition.lang = 'nb-NO'; // Language
+            recognition.lang = 'en-US'; // Language
             recognition.interimResults = true; // Show interim results
 
             // Start recognition
             startSpeach.addEventListener('click', () => {
             recognition.start();
+            });
+
+            languageSelect.addEventListener('change', () => {
+                recognition.lang = languageSelect.value;
             });
 
             // Capture the result
