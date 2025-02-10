@@ -1,11 +1,17 @@
 FROM ubuntu
 
-RUN mkdir /server
-COPY ./server /server
+RUN apt-get update && apt-get upgrade -y
 
-EXPOSE 32420
+RUN mkdir /server
+RUN mkdir /server/dashboard
+
+WORKDIR /server
+
+COPY ./dashboard/index.html /server/dashboard/index.html
+COPY ./server /server/server
+COPY ./.env /server/.env
+
+EXPOSE 8081
 
 RUN useradd app
 USER app
-
-CMD ["/server"]
