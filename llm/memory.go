@@ -39,8 +39,6 @@ func MemoryAllMessage(args ...interface{}) string {
 		temp += h
 	}
 
-	print(temp)
-
 	return "[BEGIN HISTORY]" + temp + "[END HISTORY]"
 }
 
@@ -90,8 +88,6 @@ func MemorySummary(args ...interface{}) string {
 		}
 		con.Summary = tempSummary
 	}
-
-	print("\n" + con.Summary)
 
 	return "[BEGIN OLD SUMMARY] " + con.Summary + " [END OLD SUMMARY]" + makeNewSummary
 }

@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
-var conversations []Conversation
+var Conversations []Conversation
 
 // Struct for containing the individual conversations with the LLMs
 type Conversation struct {
@@ -17,11 +18,12 @@ type Conversation struct {
 	History    []string
 	Summary    string
 	UserPrompt string
+	LastActive time.Time
 }
 
 // Appends a prompt and section to the history within the conversation
 func (c *Conversation) AppendHistory(user, llm string) {
-	newHistory := "\n[USER:]" + user + "\n[LLM:]" + llm
+	newHistory := "[USER:] " + user + "[LLM:] " + llm
 	c.History = append(c.History, newHistory)
 }
 
@@ -31,6 +33,8 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 	var err error
 	var toolResponse []interface{}
 	var toolUsed bool = false
+
+	c.LastActive = time.Now()
 
 	if len(tool.Tools) > 0 {
 		for _, t := range tool.Tools {
@@ -43,7 +47,7 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 
 		// Memory(append([]interface{}{c}, MemArgs...)...) sends the conversation and the arguments to the memory function if the user defined some.
 		prefix := c.MainPrompt + "[BEGIN TOOLS] Always use a tool if its suitable " + tool.ToolDefintion + toolDesc + "Do not send the tool name if you do not need it. Do not reuse the tool name [END TOOLS] \n [BEGIN TOOL RESPONSE] Answers from used tools, always use these resoults " + fmt.Sprintf("%v", toolResponse) + " [END TOOL RESPONSE]\n" + Memory(append([]interface{}{c}, MemArgs...)...) + "\n\n"
-		print(prefix)
+
 		response, err = provider.Send(prefix + userPrompt)
 		if err != nil {
 			return response, err
@@ -99,12 +103,13 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 }
 
 func (c *Conversation) DumpConversation() string {
-	dump := c.MainPrompt
+	var temp string
 
 	for _, h := range c.History {
-		dump += h
+		temp += h
 	}
-	return dump
+
+	return temp
 }
 
 func BeginConversation() *Conversation {
@@ -112,6 +117,6 @@ func BeginConversation() *Conversation {
 		MainPrompt: Persona + "Answer in the language the user is using.\n",
 	}
 
-	conversations = append(conversations, newCon)
-	return &conversations[len(conversations)-1]
+	Conversations = append(Conversations, newCon)
+	return &Conversations[len(Conversations)-1]
 }

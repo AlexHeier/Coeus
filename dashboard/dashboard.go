@@ -11,8 +11,14 @@ import (
 
 var cons map[string]*llm.Conversation
 
-// Enables the built-in dashboard for Coeus. Is usually disabled unless this function is called with a port as arg
-func Enable(Port string) error {
+/*
+Start starts the dashboard on the specified port.
+The dashboard is a web interface for the LLM chatbot used for trubleshooting and testing the chatbot.
+
+@param Port string - The port the dashboard should listen on.
+@return error - Returns an error if the server could not start.
+*/
+func Start(Port string) error {
 	cons = make(map[string]*llm.Conversation)
 	http.HandleFunc("/api/chat", chatHandler)
 	http.HandleFunc("/", webHandler)
