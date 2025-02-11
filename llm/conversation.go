@@ -10,15 +10,15 @@ import (
 	"time"
 )
 
-var ConDB ConversationDB
+var ConvAll ConversationAll
 
 // Struct for containing all the conversations
-type ConversationDB struct {
+type ConversationAll struct {
 	M             sync.Mutex
 	Conversations []*Conversation
 }
 
-// Struct for containing the individual conversations with the LLMs
+// Struct for a single conversation.
 type Conversation struct {
 	M          sync.Mutex
 	MainPrompt string
@@ -131,6 +131,6 @@ func BeginConversation() *Conversation {
 		MainPrompt: Persona + "Answer in the language the user is using.\n",
 	}
 
-	ConDB.Conversations = append(ConDB.Conversations, &newCon)
-	return ConDB.Conversations[len(ConDB.Conversations)-1]
+	ConvAll.Conversations = append(ConvAll.Conversations, &newCon)
+	return ConvAll.Conversations[len(ConvAll.Conversations)-1]
 }

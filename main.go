@@ -65,7 +65,7 @@ func TimeOutConversations() {
 	for {
 		time.Sleep(1 * time.Minute)
 		var temp []*llm.Conversation
-		for _, c := range llm.ConDB.Conversations {
+		for _, c := range llm.ConvAll.Conversations {
 			c.M.Lock()
 			if time.Since(c.LastActive) > 10*time.Minute {
 				_, err := db.Exec(query, c.DumpConversation())
@@ -77,6 +77,6 @@ func TimeOutConversations() {
 			}
 			c.M.Unlock()
 		}
-		llm.ConDB.Conversations = temp
+		llm.ConvAll.Conversations = temp
 	}
 }
