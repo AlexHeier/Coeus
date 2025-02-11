@@ -20,7 +20,7 @@ type ConversationAll struct {
 
 // Struct for a single conversation.
 type Conversation struct {
-	M          sync.Mutex
+	Mutex      sync.Mutex
 	MainPrompt string
 	ToolsResp  interface{}
 	History    []string
@@ -42,8 +42,8 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 	var toolResponse []interface{}
 	var toolUsed bool = false
 
-	c.M.Lock()
-	defer c.M.Unlock()
+	c.Mutex.Lock()
+	defer c.Mutex.Unlock()
 	c.LastActive = time.Now()
 
 	if len(tool.Tools) > 0 {
@@ -116,8 +116,8 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 
 func (c *Conversation) DumpConversation() string {
 	var temp string
-	c.M.Lock()
-	defer c.M.Unlock()
+	c.Mutex.Lock()
+	defer c.Mutex.Unlock()
 
 	for _, h := range c.History {
 		temp += h
