@@ -25,8 +25,6 @@ func init() {
 
 func main() {
 
-	go TimeOutConversations()
-
 	err := provider.Ollama(os.Getenv("OLLAMA_IP"), os.Getenv("OLLAMA_PORT"), os.Getenv("OLLAMA_MODEL"))
 	if err != nil {
 		log.Fatal(err.Error())
@@ -37,6 +35,8 @@ func main() {
 	llm.MemoryVersion(llm.MemoryAllMessage)
 
 	tool.New("Multiply", "Takes two ints and returns the multiplied result. Can be called like this for example: MULTIPLY 50 60", Multiply)
+
+	go TimeOutConversations()
 
 	dashboard.Start("9002")
 
@@ -50,7 +50,6 @@ func Multiply(a, b string) int {
 }
 
 func TimeOutConversations() {
-	var temp []llm.Conversation
 
 	psqlInfo := fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=disable",
 		os.Getenv("DATABASE_HOST"), os.Getenv("DATABASE_PORT"), os.Getenv("DATABASE_USER"), os.Getenv("DATABASE_PASSWORD"), os.Getenv("DATABASE_NAME"))
@@ -64,18 +63,20 @@ func TimeOutConversations() {
 	query := `INSERT INTO conversations (history) VALUES ($1)`
 
 	for {
-		time.Sleep(30 * time.Second)
-		for _, c := range llm.Conversations {
+		time.Sleep(1 * time.Minute)
+		var temp []*llm.Conversation
+		for _, c := range llm.ConDB.Conversations {
+			c.M.Lock()
 			if time.Since(c.LastActive) > 10*time.Minute {
-				_, err = db.Exec(query, c.DumpConversation())
+				_, err := db.Exec(query, c.DumpConversation())
 				if err != nil {
-					fmt.Print(err)
+					fmt.Println(err.Error())
 				}
 			} else {
 				temp = append(temp, c)
 			}
+			c.M.Unlock()
 		}
-		llm.Conversations = temp
-		temp = nil
+		llm.ConDB.Conversations = temp
 	}
 }

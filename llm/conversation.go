@@ -6,13 +6,21 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 )
 
-var Conversations []Conversation
+var ConDB ConversationDB
+
+// Struct for containing all the conversations
+type ConversationDB struct {
+	M             sync.Mutex
+	Conversations []*Conversation
+}
 
 // Struct for containing the individual conversations with the LLMs
 type Conversation struct {
+	M          sync.Mutex
 	MainPrompt string
 	ToolsResp  interface{}
 	History    []string
@@ -34,6 +42,8 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 	var toolResponse []interface{}
 	var toolUsed bool = false
 
+	c.M.Lock()
+	defer c.M.Unlock()
 	c.LastActive = time.Now()
 
 	if len(tool.Tools) > 0 {
@@ -98,12 +108,16 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 		}
 	}
 
+	fmt.Println(userPrompt)
+	fmt.Println(response.Response)
 	c.AppendHistory(userPrompt, response.Response)
 	return response, err
 }
 
 func (c *Conversation) DumpConversation() string {
 	var temp string
+	c.M.Lock()
+	defer c.M.Unlock()
 
 	for _, h := range c.History {
 		temp += h
@@ -117,6 +131,6 @@ func BeginConversation() *Conversation {
 		MainPrompt: Persona + "Answer in the language the user is using.\n",
 	}
 
-	Conversations = append(Conversations, newCon)
-	return &Conversations[len(Conversations)-1]
+	ConDB.Conversations = append(ConDB.Conversations, &newCon)
+	return ConDB.Conversations[len(ConDB.Conversations)-1]
 }

@@ -99,17 +99,33 @@
         }
 
         button {
-            padding: 10px 15px;
+            padding: 10px 10px;
             background: #0078ff;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            margin-left: 10px;
+            margin-left: 5px;
+            margin-right: 5px;
+        }
+
+        #server-box {
+            background: #0078ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 5px;
+            padding: 5px;
+            align-content: center;
+            width: 96%;
+        }
+
+        #server-box p {
+            text-align: center;
         }
 
         #newChatButton {
-            width: 93%;
+            width: 96%;
         }
 
         #input_server_ip {
@@ -140,10 +156,15 @@
 
     <!-- Sidebar for Chat Selection -->
     <div class="sidebar">
+        <div id="server-box">
+            <p>Coeus Server</p>
+            <input type="text" value=""  id="input_server_ip">
+        </div>
         <button id="newChatButton" onclick="createConversation()">
             NewChat
         </button>
-        <input type="text" value="10.212.172.128:8081"  id="input_server_ip">
+
+
         <ul class="chat-list">
         </ul>
     </div>
@@ -181,6 +202,7 @@
         const synth = window.speechSynthesis; // Used in converting text to speech
         let voices = synth.getVoices(); // Stores the voices used in text to speech synth
         
+        document.getElementById("input_server_ip").value = window.location.host;
 
         if (SpeechRecognition) {
 
