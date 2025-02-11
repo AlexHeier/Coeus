@@ -30,16 +30,27 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	llm.SetPersona("Respond in the language of the last user message. You are a chatbot with tools for memory and actions. Use them when needed, prioritizing existing results before calling new ones. Keep responses short and natural. ALWAYS use your tools and its results when relevant.")
+	llm.SetPersona("Respond in the language of the last user message. You are a chatbot with tools for memory and actions. Use them when needed, and dont call them multiple times. Keep responses short and natural.")
 
 	llm.MemoryVersion(llm.MemoryAllMessage)
 
-	tool.New("Multiply", "Takes two ints and returns the multiplied result. ALWAYS call this when multiplying two numbers. Example: MULTIPLY 20 40", Multiply)
+	//tool.New("Multiply", "Takes two ints and returns the multiplied result. ALWAYS call this when multiplying two numbers.", Multiply)
+	tool.New("GetMagicData", "Retreives the magic data.", GetMagicData)
+
+	tool.New("GetCurrentTime", "Gets the current time.", GetCurrentTime)
 
 	go TimeOutConversations()
 
 	dashboard.Start("9002")
 
+}
+
+func GetCurrentTime() string {
+	return time.Now().Format("2006-01-02 15:04:05")
+}
+
+func GetMagicData() string {
+	return "69420"
 }
 
 func Multiply(a, b string) int {

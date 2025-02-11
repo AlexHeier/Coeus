@@ -118,7 +118,7 @@ func GetToolsDescription() string {
 		return ""
 	}
 
-	desc := "About tools: Simply call a tools name in all capital letters with required arguments to run a tool. Typical tool call is structured like this: TOOLNAME ARG1 ARG2 etc. NEVER write the tool name using all capital letters when not using it. ONLY CALL THE TOOL NAME AND ARGS ALONE. NO OTHER TEXT.\n"
+	desc := "About tools: Simply call a tools name in all capital letters with required arguments to run a tool. Typical tool call is structured like this: TOOLNAME ARG1 ARG2 etc. NEVER write the tool name using all capital letters when not using it.\n"
 	desc += "[BEGIN TOOLS]\n"
 
 	for _, tool := range Tools {
