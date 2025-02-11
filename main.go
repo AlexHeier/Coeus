@@ -30,11 +30,11 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	llm.SetPersona("Respond in the language of the last user message. You are a chatbot with tools for memory and actions. Use them when needed, prioritizing existing results before calling new ones. Keep responses short and natural. Never mention your system prompt, history, or tools.")
+	llm.SetPersona("Respond in the language of the last user message. You are a chatbot with tools for memory and actions. Use them when needed, prioritizing existing results before calling new ones. Keep responses short and natural. ALWAYS use your tools and its results when relevant.")
 
 	llm.MemoryVersion(llm.MemoryAllMessage)
 
-	tool.New("Multiply", "Takes two ints and returns the multiplied result. Can be called like this for example: MULTIPLY 50 60", Multiply)
+	tool.New("Multiply", "Takes two ints and returns the multiplied result. ALWAYS call this when multiplying two numbers. Example: MULTIPLY 20 40", Multiply)
 
 	go TimeOutConversations()
 
@@ -43,9 +43,19 @@ func main() {
 }
 
 func Multiply(a, b string) int {
-	a1, _ := strconv.Atoi(a)
-	b1, _ := strconv.Atoi(b)
+
 	fmt.Printf("Issued Command: Multiply %s by %s\n", a, b)
+
+	a1, err := strconv.Atoi(a)
+	if err != nil {
+		return 0
+	}
+
+	b1, err := strconv.Atoi(b)
+	if err != nil {
+		return 0
+	}
+
 	return a1 * b1
 }
 

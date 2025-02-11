@@ -14,7 +14,7 @@ var ConvAll ConversationAll
 
 // Struct for containing all the conversations
 type ConversationAll struct {
-	M             sync.Mutex
+	Mutex         sync.Mutex
 	Conversations []*Conversation
 }
 
@@ -22,7 +22,7 @@ type ConversationAll struct {
 type Conversation struct {
 	Mutex      sync.Mutex
 	MainPrompt string
-	ToolsResp  interface{}
+	ToolsResp  []interface{}
 	History    []string
 	Summary    string
 	UserPrompt string
@@ -39,7 +39,7 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 	var toolDesc string
 	var response provider.ResponseStruct
 	var err error
-	var toolResponse []interface{}
+	//var toolResponse []interface{}
 	var toolUsed bool = false
 
 	c.Mutex.Lock()
@@ -56,12 +56,34 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 		toolUsed = false
 
 		// Memory(append([]interface{}{c}, MemArgs...)...) sends the conversation and the arguments to the memory function if the user defined some.
-		prefix := c.MainPrompt + "[BEGIN TOOLS] Always use a tool if its suitable " + tool.ToolDefintion + toolDesc + "Do not send the tool name if you do not need it. Do not reuse the tool name [END TOOLS] \n [BEGIN TOOL RESPONSE] Answers from used tools, always use these resoults " + fmt.Sprintf("%v", toolResponse) + " [END TOOL RESPONSE]\n" + Memory(append([]interface{}{c}, MemArgs...)...) + "\n\n"
+		/* Build the prompt (Structure should look like this)
+		- Systemprompt
+		- Tools Description
+		- Tool results
+		- Prior History (According to memory module)
+		- New userprompt
+		*/
 
-		response, err = provider.Send(prefix + userPrompt)
+		//systemprompt := "[SYSTEMPROMPT]\n" + c.MainPrompt + tool.GetToolsDescription()
+
+		// Adds the tool responses if there exists any.
+		//if len(toolResponse) > 0 {
+		//	systemprompt += "About tool response: contains the results from previous tool calls. Always use these before the history.\n[BEGIN TOOL RESPONSE]\n" + fmt.Sprintf("%v", toolResponse) + "\n[END TOOL RESPONSE]\n"
+		//}
+
+		// Adds the history created by a specified memory function
+		//systemprompt += Memory(append([]interface{}{c}, MemArgs...)...) + "[SYSTEMPROMPT]\n\n"
+
+		//fmt.Println(systemprompt + userPrompt)
+		//fmt.Printf("Systemprompt tokens: %d\n", len(systemprompt)/4)
+		//fmt.Printf("Userprompt tokens: %d\n", len(userPrompt)/4)
+		//fmt.Printf("Total tokens: %d\n", (len(systemprompt)+len(userPrompt))/4)
+
+		response, err = provider.Send(c.BuildPrompt(userPrompt))
 		if err != nil {
 			return response, err
 		}
+		c.AppendHistory(userPrompt, response.Response)
 
 		splitString := strings.Split(response.Response, " ")
 
@@ -74,13 +96,21 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 			}
 		}
 
+		// TO-DO: FÅ LLM TIL Å IKKE SENDE NAVN PÅ KOMMANDOER I FULL CAPS DER DEN IKKE SKAL BRUKE DEN
+
 		for _, t := range tool.Tools {
-			if strings.Contains(response.Response, t.Name) {
-				var startIndex int
-				toolUsed = true
-				for i := range splitString {
-					if splitString[i] == t.Name {
-						startIndex = i + 1
+			// Gets the index of the first letter in the tool name
+			index := strings.Index(response.Response, t.Name)
+			if index >= 0 {
+
+				resArray := strings.Split(response.Response[index:], " ")
+
+				// LLM might include newline chars which can give weird arguments if not handled
+				for arrIndex, arrString := range resArray {
+					newLineIndex := strings.Index(arrString, "\n")
+					if newLineIndex >= 0 {
+						resArray[arrIndex] = arrString[:newLineIndex]
+						resArray = resArray[:arrIndex]
 						break
 					}
 				}
@@ -88,8 +118,9 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 				ft := reflect.ValueOf(t.Function)
 				argCount := ft.Type().NumIn()
 
-				args := splitString[startIndex:]
-				args = args[:argCount]
+				args := resArray[1 : argCount+1]
+
+				fmt.Printf("Arguments: %s\n", args)
 
 				callArgs := make([]interface{}, argCount)
 				for i := 0; i < argCount; i++ {
@@ -100,24 +131,30 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 					return response, err
 				}
 
-				toolResponse = append(toolResponse, fmt.Sprintf("%v %v = %v", t.Name, args, tr))
+				c.ToolsResp = append(c.ToolsResp, fmt.Sprintf("%v %v = %v", t.Name, args, tr))
+
+				response, err = provider.Send(c.BuildPrompt("[SYSTEM:] TOOL RESPONSE UPDATED. USE THIS TO ANSWER THE USERS PREVIOUS PROMPT"))
+				if err != nil {
+					return response, err
+				}
 			}
 		}
 		if !toolUsed {
+			fmt.Println("Breaking")
 			break
 		}
+		fmt.Println("What")
 	}
 
-	fmt.Println(userPrompt)
-	fmt.Println(response.Response)
-	c.AppendHistory(userPrompt, response.Response)
+	fmt.Println(c.BuildPrompt(""))
+
 	return response, err
 }
 
 func (c *Conversation) DumpConversation() string {
 	var temp string
-	c.Mutex.Lock()
-	defer c.Mutex.Unlock()
+	//c.Mutex.Lock()
+	//defer c.Mutex.Unlock()
 
 	for _, h := range c.History {
 		temp += h
@@ -127,10 +164,24 @@ func (c *Conversation) DumpConversation() string {
 }
 
 func BeginConversation() *Conversation {
+	ConvAll.Mutex.Lock()
+	defer ConvAll.Mutex.Unlock()
 	newCon := Conversation{
-		MainPrompt: Persona + "Answer in the language the user is using.\n",
+		MainPrompt: Persona,
 	}
 
 	ConvAll.Conversations = append(ConvAll.Conversations, &newCon)
 	return ConvAll.Conversations[len(ConvAll.Conversations)-1]
+}
+
+func (c *Conversation) BuildPrompt(prompt string) string {
+	systemprompt := "[SYSTEMPROMPT]\n" + c.MainPrompt + tool.GetToolsDescription()
+
+	if len(c.ToolsResp) > 0 {
+		systemprompt += "About tool response: contains the results from previous tool calls. Always use these before the history.\n[BEGIN TOOL RESPONSE]\n" + fmt.Sprintf("%v", c.ToolsResp) + "\n[END TOOL RESPONSE]\n"
+	}
+
+	systemprompt += Memory(append([]interface{}{c}, MemArgs...)...) + "[SYSTEMPROMPT]\n\n"
+
+	return systemprompt + prompt
 }

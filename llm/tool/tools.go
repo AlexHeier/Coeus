@@ -7,7 +7,7 @@ import (
 )
 
 // ToolDefintion defines how the LLM should access the tools
-var ToolDefintion = `To access TOOL resources, respond with the tool name in all caps followed by the required parameters.`
+var ToolUsageDefintion = `To access TOOL resources, respond with the tool name in all caps followed by the required parameters.`
 
 // ToolStruct is the struct of a tool
 type ToolStruct struct {
@@ -104,4 +104,26 @@ func Find(name string) (ToolStruct, error) {
 		}
 	}
 	return ToolStruct{}, fmt.Errorf("tool not found")
+}
+
+/*
+Returns the information about each tool to be used by an LLM. For use within a prompt
+
+@return: Nothing if no tools specified
+@return: Tool names and descriptions with usage information
+*/
+func GetToolsDescription() string {
+
+	if len(Tools) <= 0 {
+		return ""
+	}
+
+	desc := "About tools: Simply call a tools name in all capital letters with required arguments to run a tool. Typical tool call is structured like this: TOOLNAME ARG1 ARG2 etc. NEVER write the tool name using all capital letters when not using it. ONLY CALL THE TOOL NAME AND ARGS ALONE. NO OTHER TEXT.\n"
+	desc += "[BEGIN TOOLS]\n"
+
+	for _, tool := range Tools {
+		desc += tool.Name + ": " + tool.Desc + "\n"
+	}
+
+	return desc + "[END TOOLS]\n"
 }
