@@ -14,7 +14,7 @@ var ConvAll ConversationAll
 
 // Struct for containing all the conversations
 type ConversationAll struct {
-	M             sync.Mutex
+	Mutex         sync.Mutex
 	Conversations []*Conversation
 }
 
