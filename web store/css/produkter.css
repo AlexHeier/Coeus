@@ -1,0 +1,24 @@
+.produkter{
+    flex: 1 1 200px; /* Tar opp minimum 200px per produkt */
+    max-width: 300px; /* Maksimal bredde per produkt */
+    box-sizing: border-box; /* Sørger for at padding og margin ikke ødelegger layouten */
+    padding: 10px;
+    border: 1px solid #ccc; /* Liten kant for å skille produktene */
+    background-color: #f9f9f9; /* Lys bakgrunn for produktdiven */
+}
+
+.produkter > h3{
+    text-align: center;
+    font-size: 17px;
+}
+
+.produkter > a > img{
+    max-width: 100%;  /* Bildet kan aldri være større enn containerens bredde */
+    height: auto;     /* Behold bildets proporsjoner */
+}
+
+#produkter-container{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}

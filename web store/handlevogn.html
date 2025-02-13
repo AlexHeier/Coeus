@@ -1,0 +1,101 @@
+<html>
+   <head>
+      <title>Test </title>
+      <link rel="stylesheet" href="css/style.css">
+      <link rel="stylesheet" href="css/ai.css">
+   </head>
+   <body>
+        <header id="header"></header>
+
+        <h1 style="margin-top: 60px;">Velkommen til handlevogn</h1>
+
+        <div id="cart-container"></div>
+
+        <div id="aiDiv"></div>
+        
+    <script>
+      async function loadHTML(id, file, elementId) {
+  try {
+    const response = await fetch(file);
+    if (!response.ok) throw new Error('Feil ved lasting av ' + file);
+    const content = await response.text();
+    
+    // Parse innholdet til et DOM-objekt
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    
+    // Finn elementet med det spesifikke id-et fra det hentede dokumentet
+    const element = doc.getElementById(elementId);
+    
+    if (element) {
+      document.getElementById(id).innerHTML = element.innerHTML;
+    } else {
+      console.error(`Element med id "${elementId}" ble ikke funnet i ${file}.`);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+      loadHTML('header', 'main.html', 'header');
+      loadHTML('aiDiv', 'main.html', 'aiDiv');
+
+        // Vise handlekurv
+      window.onload = displayCart;
+      function displayCart() {
+      let cart = JSON.parse(sessionStorage.getItem('cart')) || [];
+
+      let cartContainer = document.getElementById('cart-container');
+      let productElement = document.createElement('div');
+      cartContainer.innerHTML = "";
+        console.log(cart.length)
+      if (cart.length == 0) {
+        //document.getElementById('cart').textContent = "Handlekurven er tom.";
+        var totaltPris = 0;
+        productElement.innerHTML = `
+        <p>Handlekurven er tom.</p>
+        <hr>
+        `;
+        cartContainer.appendChild(productElement);
+      }
+      else{
+        console.log("hei")
+        var totaltPris = 0;
+        cart.forEach(produkt => {
+        totaltPris += produkt.price*produkt.antall;
+
+        let productElement = document.createElement('div');
+        productElement.innerHTML = `
+          <p><strong>Navn:</strong> ${produkt.name}</p>
+          <p><strong>Pris:</strong> ${produkt.price*produkt.antall} $</p>
+          <p><strong>Antall:</strong> ${produkt.antall}</p>
+          <button id="${produkt.id}" onclick="removeFromCart(event)">Fjern produkt</button>
+          <hr>
+          `;
+          cartContainer.appendChild(productElement);
+      });
+    }
+    let prisElement = document.createElement('div');
+    prisElement.innerHTML = `
+        <p><strong>Totalpris:</strong> ${totaltPris} $</p>
+        <hr>
+      `;
+      cartContainer.appendChild(prisElement);
+    } 
+
+    // Fjerne produkt fra handlekurv
+    function removeFromCart(evt) {
+      var productId = event.target.id
+      let cart = JSON.parse(sessionStorage.getItem('cart')) || [];
+      cart = cart.filter(product => product.id !== productId);
+      sessionStorage.setItem('cart', JSON.stringify(cart));
+
+      //alert("Produktet er fjernet fra handlekurven.");
+      displayCart();  // Oppdater handlekurven
+    }
+
+
+
+
+    </script>
+    </body>

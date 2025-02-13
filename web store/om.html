@@ -1,0 +1,61 @@
+<html>
+   <head>
+      <title>Test </title>
+      <link rel="stylesheet" href="css/style.css">
+      <link rel="stylesheet" href="css/ai.css">
+   </head>
+   <body>
+    <header id="header"></header>
+
+    <h1 style="margin-top: 60px;">Om oss</h1>
+    <p>Dette er en super butikk med mye forskjellig. Vi startet opp som en liten gjeng, 
+        men nå er vi mange. Vi ønsker å spre arbeidsglede til alle som arbeider på kontor. Dette er vårt store mål
+        Vi ønsker også å følge bærekraft.</p>
+
+    <h2>åpningstider:</h2>
+    <ul>
+        <li>Mandag:  08:00-16:00</li>
+        <li>Tirsdag: 08:00-16:00</li>
+        <li>Onsdag:  08:00-16:00</li>
+        <li>Fredag:  08:00-15:00</li>
+        <li>Lørdag:  12:00-16:00</li>
+        <li>Søndag:  stengt</li>
+    </ul>
+
+    <h2>Adresse:</h2>
+    <p>Bestegaten 21, 2821 Gjøvik, Norge</p>
+
+    <div id="aiDiv"></div>
+    </body>
+
+    <script>
+
+    async function loadHTML(id, file, elementId) {
+  try {
+    const response = await fetch(file);
+    if (!response.ok) throw new Error('Feil ved lasting av ' + file);
+    const content = await response.text();
+    
+    // Parse innholdet til et DOM-objekt
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    
+    // Finn elementet med det spesifikke id-et fra det hentede dokumentet
+    const element = doc.getElementById(elementId);
+    
+    if (element) {
+      document.getElementById(id).innerHTML = element.innerHTML;
+    } else {
+      console.error(`Element med id "${elementId}" ble ikke funnet i ${file}.`);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+    loadHTML('header', 'main.html', 'header');
+    loadHTML('aiDiv', 'main.html', 'aiDiv');
+
+
+
+    </script>

@@ -1,0 +1,80 @@
+<html>
+   <head>
+      <title>Test </title>
+      <link rel="stylesheet" href="css/produkter.css">
+      <link rel="stylesheet" href="css/style.css">
+      <link rel="stylesheet" href="css/ai.css">
+   </head>
+   <body>
+    <header id="header"></header>
+
+    <h1 style="margin-top: 60px;">Produkter test:</h1>
+        <div id="produkter-container"></div>
+
+    <div id="aiDiv"></div>
+
+    <script>
+        async function loadHTML(id, file, elementId) {
+  try {
+    const response = await fetch(file);
+    if (!response.ok) throw new Error('Feil ved lasting av ' + file);
+    const content = await response.text();
+    
+    // Parse innholdet til et DOM-objekt
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    
+    // Finn elementet med det spesifikke id-et fra det hentede dokumentet
+    const element = doc.getElementById(elementId);
+    
+    if (element) {
+      document.getElementById(id).innerHTML = element.innerHTML;
+    } else {
+      console.error(`Element med id "${elementId}" ble ikke funnet i ${file}.`);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+        loadHTML('header', 'main.html', 'header');
+        loadHTML('aiDiv', 'main.html', 'aiDiv');
+        // Hent URL-parameteren
+        const urlParams = new URLSearchParams(window.location.search);
+        const productCat = urlParams.get('category');
+
+        // Hent JSON-filen og vis riktig produkt
+        fetch('https://raw.githubusercontent.com/GoogleChromeLabs/sample-pie-shop/refs/heads/master/src/data/products.json')
+        .then(response => response.json())
+        .then(data => {
+            const produkter = data.products.data.items;
+            const produkterIKat = produkter.filter(p => p.category === productCat);
+
+            visProdukter(produkterIKat);
+        });
+
+        function visProdukter(produkter) {
+            const container = document.getElementById('produkter-container');
+        
+            produkter.forEach(produkter => {
+                // Lager en ny div for hvert møbel
+                const produkterDiv = document.createElement('div');
+                produkterDiv.classList.add('produkter');
+            
+                // Legger til tekst for hvert møbel og knapp som tar oss til produktsiden
+                produkterDiv.innerHTML = `
+                <h3>${produkter.name}</h3>
+                <p>Price: ${produkter.price}$</p>
+                <a href="produkt.html?id=${produkter.id}" >
+                <img src="${"media/polka.jpg"}" alt="${produkter.name}">
+                </a>
+                `;   
+                // Legger div-en til containeren på nettsiden
+                container.appendChild(produkterDiv);
+            });
+
+        }
+
+
+    </script>
+    <script src="js/script.js"></script>
+    </body>

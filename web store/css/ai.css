@@ -1,0 +1,157 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    min-height: 90vh; /* Gir containeren høyde på hele vinduet */
+    position: relative
+}
+
+#aiDiv {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 50%;
+    width: 100%;
+    box-sizing: border-box;
+    position: absolute;
+    bottom: 0;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    width: 25%;
+    height: 100%;
+    background: #f0f0f0;
+    border-right: 1px solid #ccc;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.chat-list {
+    list-style: none;
+}
+
+.chat-list li {
+    padding: 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #ddd;
+    transition: background 0.3s;
+}
+
+.chat-list li:hover, .chat-list .active {
+    background: #d9d9d9;
+}
+
+/* Chat Window Styling */
+.chat-container {
+    width: 75%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+}
+
+.chat-header {
+    padding: 15px;
+    border-bottom: 1px solid #ccc;
+    background: #f0f0f0;
+    font-weight: bold;
+}
+
+.chat-box {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.message {
+    max-width: 70%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+}
+
+.sent {
+    align-self: flex-end;
+    background: #0078ff;
+    color: white;
+}
+
+.received {
+    align-self: flex-start;
+    background: #e0e0e0;
+}
+
+/* Message Input Box */
+.chat-input {
+    display: flex;
+    border-top: 1px solid #ccc;
+    padding: 10px;
+    background: #f9f9f9;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+}
+
+button {
+    padding: 10px 10px;
+    background: #0078ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+#server-box {
+    background: #0078ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    margin: 5px;
+    padding: 5px;
+    align-content: center;
+    width: 96%;
+}
+
+#server-box p {
+    text-align: center;
+}
+
+#newChatButton {
+    width: 96%;
+}
+
+#input_server_ip {
+    width: 93%;
+    padding: 5px;
+    margin-top: 5px;
+    margin-left: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+}
+
+.selector {
+    padding: 10px 15px;
+    background: #0078ff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+    text-overflow: ellipsis;
+    min-width: 120px;
+    max-width: 10%;
+}

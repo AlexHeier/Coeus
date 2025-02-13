@@ -1,0 +1,63 @@
+<!---------- Meta HTML Starts --------->
+<html>
+   <head>
+      <title>Test </title>
+      <link rel="stylesheet" href="css/style.css">
+      <link rel="stylesheet" href="css/ai.css">
+   </head>
+   <body>
+    <header id="header">
+        <nav class="navbar">
+            <ul>
+                <li><a href="#kategori1">Kontorrekvisitta</a></li>
+                <li><a href="produkter.html">Produkter</a></li>
+                <li><a href="#kategori3">Inspirasjon</a></li>
+                <li><a href="om.html">Om</a></li>
+                <li><a href="main.html">Hjem</a></li>
+                <li><a href="handlevogn.html">Handlevogn</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <p style="margin-top: 60px;">Dette er en test nettside</p>
+
+
+<div id="aiDiv">
+    <!-- Sidebar for Chat Selection -->
+    <div class="sidebar">
+        <div id="server-box">
+            <p>Coeus Server</p>
+            <input type="text" value=""  id="input_server_ip">
+        </div>
+        <button id="newChatButton" onclick="createConversation()">
+            NewChat
+        </button>
+
+
+        <ul class="chat-list">
+        </ul>
+    </div>
+
+    <!-- Chat Window -->
+    <div class="chat-container">
+        <div class="chat-header">Create a new chat</div>
+        <div class="chat-box"></div>
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="Type a message...">
+            <button onclick="MessageLLM()">Send</button>
+            <button id="speechButton">Speak</button>
+            <select class="selector" name="languageSelector" id="languageSelector">
+                <option value="en-US">Speech To Text Language</option>
+                <option value="en-US">English US</option>
+                <option value="en-GB">English UK</option>
+                <option value="no-NB">Norwegian</option>
+            </select>
+            <select class="selector" name="voiceSelector" id="voiceSelector">
+                <option value="">No Text To Speech</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+    <script src="script.js"></script>
+    </body>

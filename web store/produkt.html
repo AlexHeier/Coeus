@@ -1,0 +1,161 @@
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produktdetaljer</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/ai.css">
+</head>
+<body>
+  <header id="header"></header>
+
+  <h1 style="margin-top: 60px;" id="product-name">Laster produkt...</h1>
+  <p id="product-description"></p>
+  <p id="price">Price: </p>
+  <img id="product-image" src="" alt="Produktbilde" style="max-width: 300px;">
+  
+
+  <form id="formVogn" onsubmit="handleSubmit(event)">
+    <label for="">Antall: <input id="antallVogn" type="number" value="1"></label>
+    <button type="submit" id="knappVogn">Legg i handlevogn</button>
+  </form>
+
+  <div id="aiDiv"></div>
+  </body>
+
+  <script>
+      async function loadHTML(id, file, elementId) {
+  try {
+    const response = await fetch(file);
+    if (!response.ok) throw new Error('Feil ved lasting av ' + file);
+    const content = await response.text();
+    
+    // Parse innholdet til et DOM-objekt
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    
+    // Finn elementet med det spesifikke id-et fra det hentede dokumentet
+    const element = doc.getElementById(elementId);
+    
+    if (element) {
+      document.getElementById(id).innerHTML = element.innerHTML;
+    } else {
+      console.error(`Element med id "${elementId}" ble ikke funnet i ${file}.`);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+  loadHTML('header', 'main.html', 'header');
+  loadHTML('aiDiv', 'main.html', 'aiDiv');
+    // Hent URL-parameteren
+  const urlParams = new URLSearchParams(window.location.search);
+  const productId = urlParams.get('id');
+
+  // Hent JSON-filen og vis riktig produkt
+  fetch('https://raw.githubusercontent.com/GoogleChromeLabs/sample-pie-shop/refs/heads/master/src/data/products.json')
+  .then(response => response.json())
+  .then(data => {
+    const produkter = data.products.data.items;
+    const produkt = produkter.find(p => p.id === productId);
+
+    if (produkt) {
+      document.getElementById('product-name').textContent = produkt.name;
+      document.getElementById('product-description').textContent = produkt.description;
+      document.getElementById('price').textContent += produkt.price + '$';
+      document.getElementById('product-image').src = produkt.image || "media/polka.jpg";
+
+      // Koble handleSubmit til formens submit-event
+      document.getElementById('formVogn').addEventListener('submit', handleSubmit);
+
+      // Legge til i handlevogn
+      function handleSubmit(event) {
+        event.preventDefault();  // Hindrer at skjemaet sendes og siden reloade
+
+        let cart = JSON.parse(sessionStorage.getItem('cart')) || [];
+
+        var antall = document.getElementById('antallVogn').value;
+
+        vognProdukt = cart.find(p => p.id === productId);
+        if(vognProdukt){
+          vognProdukt.antall = parseInt(vognProdukt.antall) + parseInt(antall);
+        }
+        else{
+          let product = {
+            id: produkt.id,
+            name: produkt.name,
+            price: produkt.price,
+            antall: antall
+          };
+
+          // Hent handlekurv fra sessionStorage, eller lag en ny hvis tom
+        
+          cart.push(product);  // Legg til produktet i handlekurven
+        }
+        // Lagre oppdatert handlekurv i sessionStorage
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+
+        alert(produkt.name + " er lagt til i handlekurven!");
+      }
+    } else {
+      document.getElementById('product-name').textContent = "Produkt ikke funnet!";
+      document.getElementById('formVogn').style.display = "none";
+    }
+  })
+  .catch(error => console.error('Det oppstod en feil:', error));
+
+
+
+    /*
+
+    // Hent URL-parameteren
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('id');
+
+    // Hent JSON-filen og vis riktig produkt
+    fetch('https://raw.githubusercontent.com/GoogleChromeLabs/sample-pie-shop/refs/heads/master/src/data/products.json')
+    .then(response => response.json())
+    .then(data => {
+    const produkter = data.products.data.items;
+    const produkt = produkter.find(p => p.id === productId);
+
+    if (produkt) {
+      document.getElementById('product-name').textContent = produkt.name;
+      document.getElementById('product-description').textContent = produkt.description;
+      document.getElementById('price').textContent += produkt.price+'$';
+      document.getElementById('product-image').src = produkt.image || "media/polka.jpg";
+
+      function handleSubmit(event){
+        event.preventDefault();
+
+        var antall = document.getElementById('antallVogn').value;
+    
+        let product = {
+            id: produkt.id,
+            name: produkt.name,
+            price: produkt.price,
+            antall: antall
+        };
+
+        let cart = JSON.parse(sessionStorage.getItem('cart')) || [];
+        cart.push(product);
+
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+
+        alert(produkt.name + " er lagt til i handlekurven!");
+
+        console.log(cart);
+    }
+    } else {
+      document.getElementById('product-name').textContent = "Produkt ikke funnet!";
+      document.getElementById('formVogn').style.display = "none";
+    }
+  })
+  .catch(error => console.error('Det oppstod en feil:', error));
+
+  
+
+   */
+
+  </script>
+</body>
