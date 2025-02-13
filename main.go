@@ -8,10 +8,12 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -38,8 +40,11 @@ func main() {
 
 	go TimeOutConversations()
 
-	dashboard.Start("9002")
+	go dashboard.Start("9002")
 
+	//BeginWebStore("9003")
+
+	http.ListenAndServe(":9003", BeginWebStoreV2())
 }
 
 func Multiply(a, b string) int {
@@ -79,4 +84,17 @@ func TimeOutConversations() {
 		}
 		llm.ConvAll.Conversations = temp
 	}
+}
+
+func BeginWebStoreV2() *mux.Router {
+
+	r := mux.NewRouter()
+
+	staticFileDir := http.Dir("./webstore/")
+
+	staticFileHandler := http.StripPrefix("/webstore/", http.FileServer(staticFileDir))
+
+	r.PathPrefix("/").Handler(staticFileHandler).Methods("GET")
+
+	return r
 }
