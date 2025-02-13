@@ -42,8 +42,6 @@ func main() {
 
 	go dashboard.Start("9002")
 
-	//BeginWebStore("9003")
-
 	http.ListenAndServe(":9003", BeginWebStoreV2())
 }
 
