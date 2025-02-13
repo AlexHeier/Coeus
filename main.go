@@ -25,7 +25,7 @@ func init() {
 
 func main() {
 
-	err := provider.Ollama(os.Getenv("OLLAMA_IP"), os.Getenv("OLLAMA_PORT"), os.Getenv("OLLAMA_MODEL"))
+	err := provider.Azure(os.Getenv("AZURE_ENDPOINT"), os.Getenv("AZURE_API_KEY"), 1.0, 16)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -36,7 +36,7 @@ func main() {
 
 	tool.New("Multiply", "Takes two ints and returns the multiplied result. Can be called like this for example: MULTIPLY 50 60", Multiply)
 
-	go TimeOutConversations()
+	//go TimeOutConversations()
 
 	dashboard.Start("9002")
 

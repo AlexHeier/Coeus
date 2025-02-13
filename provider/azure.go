@@ -1,41 +1,139 @@
 package provider
 
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+)
+
+// Azure Configuration struct
 type AzureStruct struct {
-	HttpProtocol string
-	ServerIP     string
-	Port         string
-	Model        string
-	Stream       bool
+	Endpoint    string  // Azure API endpoint
+	APIKey      string  // Azure API Key
+	Temperature float64 // How free thinking the LLM should be. Lower equals more free. Can be between 0.1 and 1.0
+	MaxTokens   int     // Max amount of tokens a response can use
 }
 
+// Struct for containing the response from Azure
+type AzureResponse struct {
+	Choices []struct {
+		ContentFilterResults map[string]interface{} `json:"content_filter_results"`
+		FinishReason         string                 `json:"finish_reason"`
+		LogProbs             string                 `json:"logprobs"`
+		Message              struct {
+			Content string `json:"content"`
+			Refusal string `json:"refusal"`
+			Role    string `json:"role"`
+		} `json:"message"`
+	} `json:"choices"`
+	Model               string `json:"model"`
+	PromptFilterResults []struct {
+		PromptIndex          int `json:"prompt_index"`
+		ContentFilterResults map[string]struct {
+			Filtered bool   `json:"filtered"`
+			Severity string `json:"severity"`
+		} `json:"content_filter_results"`
+	} `json:"prompt_filter_results"`
+	Usage struct {
+		CompletionTokens int `json:"completion_tokens"`
+		PromptTokens     int `json:"prompt_tokens"`
+		TotalTokens      int `json:"total_tokens"`
+	} `json:"usage"`
+}
+
+type AzureRequest struct {
+	Messages []struct {
+		Role    string `json:"role"`
+		Content string `json:"content"`
+	} `json:"messages"`
+	MaxTokens   int     `json:"max_tokens"`
+	Temperature float64 `json:"temperature"`
+}
+
+// Creates a new Azure config and sets it as provider
 /*
-func NewAzure(ip, port, model string) (Azure, error) {
-    // Validate IP address
-    if net.ParseIP(ip) == nil {
-        return Azure{}, errors.New("invalid IP address")
-    }
-
-    // Validate port
-    if _, err := strconv.Atoi(port); err != nil {
-        return Azure{}, errors.New("invalid port")
-    }
-
-    // Validate model (example: non-empty string)
-    if model == "" {
-        return Azure{}, errors.New("model cannot be empty")
-    }
-
-    return Azure{
-        Provider:     "Ollama",
-        HttpProtocol: "http",
-        ServerIP:     ip,
-        Port:         port,
-        Model:        model,
-        Stream:       false,
-    }, nil
-}
+@param endpoint: String which contains the URL of Azure endpoint
+@param apikey: Azure API key
+@param temperature: Specifies the amount of freedom an LLM should have when answering
+@param maxTokens: Specifies the max amount of tokens an LLM answer should use
 */
+func Azure(endpoint, apikey string, temperature float64, maxTokens int) error {
+	if endpoint == "" {
+		return fmt.Errorf("no endpoint specified")
+	}
+
+	if apikey == "" {
+		return fmt.Errorf("no apikey specified")
+	}
+
+	if temperature < 0.1 || temperature > 1.0 {
+		return fmt.Errorf("llm temperature set outside acceptable bounds")
+	}
+
+	if maxTokens <= 0 {
+		return fmt.Errorf("maxtokens must be bigger than 0")
+	}
+
+	Provider = AzureStruct{
+		Endpoint:    endpoint,
+		APIKey:      apikey,
+		Temperature: temperature,
+		MaxTokens:   maxTokens,
+	}
+
+	return nil
+}
 
 func SendAzure(prompt string) (ResponseStruct, error) {
-	return ResponseStruct{}, nil
+
+	Config := Provider.(AzureStruct)
+
+	// Cutting out the "Systemprompt" part because Azure thinks we are attempting to hijack the LLM.
+	// Still a work in progress
+	_, userP, _ := strings.Cut(prompt, "[END HISTORY]")
+
+	data := AzureRequest{
+		Temperature: Config.Temperature,
+		MaxTokens:   Config.MaxTokens,
+	}
+
+	data.Messages = append(data.Messages, struct {
+		Role    string "json:\"role\""
+		Content string "json:\"content\""
+	}{Role: "user",
+		Content: userP})
+
+	buf := new(bytes.Buffer)
+
+	json.NewEncoder(buf).Encode(data)
+
+	req, err := http.NewRequest(http.MethodPost, Config.Endpoint, buf)
+	if err != nil {
+		return ResponseStruct{}, err
+	}
+
+	req.Header.Add("api-key", Config.APIKey)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return ResponseStruct{}, err
+	}
+	defer res.Body.Close()
+
+	resData, err := io.ReadAll(res.Body)
+	if err != nil {
+		return ResponseStruct{}, err
+	}
+
+	var azureRes AzureResponse
+
+	err = json.Unmarshal(resData, &azureRes)
+	if err != nil {
+		return ResponseStruct{}, err
+	}
+
+	return ResponseStruct{Response: azureRes.Choices[0].Message.Content}, nil
 }
