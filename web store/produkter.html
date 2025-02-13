@@ -5,52 +5,58 @@
       <link rel="stylesheet" href="css/ai.css">
    </head>
    <body>
+    <!----- Header from main goes here ------>
     <header id="header"></header>
 
     <h1 style="margin-top: 60px;">Produkter:</h1>
     <ul id="kategorier">
     </ul>
 
+    <!----- chat-box goes here ------>
     <div id="aiDiv"></div>
 
     </body>
     <script>
-        async function loadHTML(id, file, elementId) {
-  try {
-    const response = await fetch(file);
-    if (!response.ok) throw new Error('Feil ved lasting av ' + file);
-    const content = await response.text();
+      //used to get element from main.html file
+      async function loadHTML(id, file, elementId) {
+        try {
+          const response = await fetch(file);
+          if (!response.ok) throw new Error('Feil ved lasting av ' + file);
+          const content = await response.text();
     
-    // Parse innholdet til et DOM-objekt
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
+          // Parse innholdet til et DOM-objekt
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(content, 'text/html');
     
-    // Finn elementet med det spesifikke id-et fra det hentede dokumentet
-    const element = doc.getElementById(elementId);
+          // Finn elementet med det spesifikke id-et fra det hentede dokumentet
+          const element = doc.getElementById(elementId);
     
-    if (element) {
-      document.getElementById(id).innerHTML = element.innerHTML;
-    } else {
-      console.error(`Element med id "${elementId}" ble ikke funnet i ${file}.`);
-    }
-  } catch (error) {
-    console.error(error);
-  }
-}
+          if (element) {
+            document.getElementById(id).innerHTML = element.innerHTML;
+          } else {
+            console.error(`Element med id "${elementId}" ble ikke funnet i ${file}.`);
+          }
+          } catch (error) {
+            console.error(error);
+          }
+        }
+
+    //loads elements from main
     loadHTML('header', 'main.html', 'header');
     loadHTML('aiDiv', 'main.html', 'aiDiv');
 
+    // finds all product categories
         fetch('https://raw.githubusercontent.com/GoogleChromeLabs/sample-pie-shop/refs/heads/master/src/data/products.json')
         .then(response => response.json())  // Konverterer JSON til JavaScript-objekter
         .then(produkter => {
-            // henter ut riktig del av fila
+
             const items = produkter.products.data.items;
-            // Nå er 'møbler' en JavaScript-array med objektene fra JSON-filen
+
             lagKategorier(items);
         })
         .catch(error => console.error('Det oppstod en feil:', error));
 
-
+        //makes the categories
         function lagKategorier(produkter) {
             let kategorier = [...new Set(produkter.map(produkt => produkt.category))];
 
@@ -58,8 +64,7 @@
                 var kategoriListe = document.getElementById("kategorier");
                 let nyKategori = document.createElement('li');
 
-                // Bruk backticks for template literals
-                nyKategori.innerHTML = `<a href="mobler.html?category=${kategori}">${kategori}</a>`;
+                nyKategori.innerHTML = `<a href="produkterIKat.html?category=${kategori}">${kategori}</a>`;
     
                 kategoriListe.appendChild(nyKategori);
             });

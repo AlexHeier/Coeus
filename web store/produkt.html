@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="css/ai.css">
 </head>
 <body>
+  <!----- Header from main goes here ------>
   <header id="header"></header>
 
   <h1 style="margin-top: 60px;" id="product-name">Laster produkt...</h1>
@@ -20,10 +21,12 @@
     <button type="submit" id="knappVogn">Legg i handlevogn</button>
   </form>
 
+  <!----- chat-box goes here ------>
   <div id="aiDiv"></div>
   </body>
 
   <script>
+    //used to get element from main.html file
       async function loadHTML(id, file, elementId) {
   try {
     const response = await fetch(file);
@@ -46,13 +49,16 @@
     console.error(error);
   }
 }
+
+  //loads elements from main
   loadHTML('header', 'main.html', 'header');
   loadHTML('aiDiv', 'main.html', 'aiDiv');
-    // Hent URL-parameteren
+
+    // Gets URL to get right product
   const urlParams = new URLSearchParams(window.location.search);
   const productId = urlParams.get('id');
 
-  // Hent JSON-filen og vis riktig produkt
+  // Fetches json file from internet and finds right product
   fetch('https://raw.githubusercontent.com/GoogleChromeLabs/sample-pie-shop/refs/heads/master/src/data/products.json')
   .then(response => response.json())
   .then(data => {
@@ -65,12 +71,11 @@
       document.getElementById('price').textContent += produkt.price + '$';
       document.getElementById('product-image').src = produkt.image || "media/polka.jpg";
 
-      // Koble handleSubmit til formens submit-event
       document.getElementById('formVogn').addEventListener('submit', handleSubmit);
 
-      // Legge til i handlevogn
+      //puts items in shopping cart
       function handleSubmit(event) {
-        event.preventDefault();  // Hindrer at skjemaet sendes og siden reloade
+        event.preventDefault();  
 
         let cart = JSON.parse(sessionStorage.getItem('cart')) || [];
 
@@ -87,12 +92,10 @@
             price: produkt.price,
             antall: antall
           };
-
-          // Hent handlekurv fra sessionStorage, eller lag en ny hvis tom
         
-          cart.push(product);  // Legg til produktet i handlekurven
+          cart.push(product);  // Puts produkt in shopping cart
         }
-        // Lagre oppdatert handlekurv i sessionStorage
+        // saves cart
         sessionStorage.setItem('cart', JSON.stringify(cart));
 
         alert(produkt.name + " er lagt til i handlekurven!");
@@ -103,59 +106,5 @@
     }
   })
   .catch(error => console.error('Det oppstod en feil:', error));
-
-
-
-    /*
-
-    // Hent URL-parameteren
-    const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get('id');
-
-    // Hent JSON-filen og vis riktig produkt
-    fetch('https://raw.githubusercontent.com/GoogleChromeLabs/sample-pie-shop/refs/heads/master/src/data/products.json')
-    .then(response => response.json())
-    .then(data => {
-    const produkter = data.products.data.items;
-    const produkt = produkter.find(p => p.id === productId);
-
-    if (produkt) {
-      document.getElementById('product-name').textContent = produkt.name;
-      document.getElementById('product-description').textContent = produkt.description;
-      document.getElementById('price').textContent += produkt.price+'$';
-      document.getElementById('product-image').src = produkt.image || "media/polka.jpg";
-
-      function handleSubmit(event){
-        event.preventDefault();
-
-        var antall = document.getElementById('antallVogn').value;
-    
-        let product = {
-            id: produkt.id,
-            name: produkt.name,
-            price: produkt.price,
-            antall: antall
-        };
-
-        let cart = JSON.parse(sessionStorage.getItem('cart')) || [];
-        cart.push(product);
-
-        sessionStorage.setItem('cart', JSON.stringify(cart));
-
-        alert(produkt.name + " er lagt til i handlekurven!");
-
-        console.log(cart);
-    }
-    } else {
-      document.getElementById('product-name').textContent = "Produkt ikke funnet!";
-      document.getElementById('formVogn').style.display = "none";
-    }
-  })
-  .catch(error => console.error('Det oppstod en feil:', error));
-
-  
-
-   */
-
   </script>
 </body>

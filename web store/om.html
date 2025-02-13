@@ -5,6 +5,7 @@
       <link rel="stylesheet" href="css/ai.css">
    </head>
    <body>
+    <!----- Header from main goes here ------>
     <header id="header"></header>
 
     <h1 style="margin-top: 60px;">Om oss</h1>
@@ -25,37 +26,37 @@
     <h2>Adresse:</h2>
     <p>Bestegaten 21, 2821 Gjøvik, Norge</p>
 
+    <!----- chat-box goes here ------>
     <div id="aiDiv"></div>
     </body>
 
     <script>
-
+      //used to get element from main.html file
     async function loadHTML(id, file, elementId) {
-  try {
-    const response = await fetch(file);
-    if (!response.ok) throw new Error('Feil ved lasting av ' + file);
-    const content = await response.text();
+      try {
+        const response = await fetch(file);
+        if (!response.ok) throw new Error('Feil ved lasting av ' + file);
+        const content = await response.text();
     
-    // Parse innholdet til et DOM-objekt
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
+        // Parse innholdet til et DOM-objekt
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(content, 'text/html');
     
-    // Finn elementet med det spesifikke id-et fra det hentede dokumentet
-    const element = doc.getElementById(elementId);
+        // Finn elementet med det spesifikke id-et fra det hentede dokumentet
+        const element = doc.getElementById(elementId);
     
-    if (element) {
-      document.getElementById(id).innerHTML = element.innerHTML;
-    } else {
-      console.error(`Element med id "${elementId}" ble ikke funnet i ${file}.`);
+        if (element) {
+          document.getElementById(id).innerHTML = element.innerHTML;
+        } else {
+          console.error(`Element med id "${elementId}" ble ikke funnet i ${file}.`);
+        }
+      } catch (error) {
+      console.error(error);
     }
-  } catch (error) {
-    console.error(error);
   }
-}
 
+  //loads elements from main
     loadHTML('header', 'main.html', 'header');
     loadHTML('aiDiv', 'main.html', 'aiDiv');
-
-
 
     </script>

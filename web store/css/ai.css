@@ -17,8 +17,9 @@ body {
     height: 50%;
     width: 100%;
     box-sizing: border-box;
-    position: absolute;
+    position: relative;
     bottom: 0;
+    clear: both;
 }
 
 /* Sidebar Styling */
