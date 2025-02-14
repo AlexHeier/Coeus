@@ -47,7 +47,7 @@ func Ollama(ip, port, model string) error {
 	return nil
 }
 
-func SendOllama(prompt string) (ResponseStruct, error) {
+func SendOllama(request RequestStruct) (ResponseStruct, error) {
 
 	config := Provider.(OllamaStruct)
 
@@ -57,7 +57,7 @@ func SendOllama(prompt string) (ResponseStruct, error) {
 
 	reqData["model"] = config.Model
 	reqData["stream"] = config.Stream
-	reqData["prompt"] = prompt
+	reqData["prompt"] = request.Systemprompt + request.Userprompt
 
 	data := new(bytes.Buffer)
 

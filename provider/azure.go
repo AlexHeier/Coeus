@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 )
 
 // Azure Configuration struct
@@ -15,6 +14,16 @@ type AzureStruct struct {
 	APIKey      string  // Azure API Key
 	Temperature float64 // How free thinking the LLM should be. Lower equals more free. Can be between 0.1 and 1.0
 	MaxTokens   int     // Max amount of tokens a response can use
+}
+
+// Struct used in sending requests to an Azure endpoint
+type AzureRequest struct {
+	Messages []struct {
+		Role    string `json:"role"`
+		Content string `json:"content"`
+	} `json:"messages"`
+	MaxTokens   int     `json:"max_tokens"`
+	Temperature float64 `json:"temperature"`
 }
 
 // Struct for containing the response from Azure
@@ -42,15 +51,6 @@ type AzureResponse struct {
 		PromptTokens     int `json:"prompt_tokens"`
 		TotalTokens      int `json:"total_tokens"`
 	} `json:"usage"`
-}
-
-type AzureRequest struct {
-	Messages []struct {
-		Role    string `json:"role"`
-		Content string `json:"content"`
-	} `json:"messages"`
-	MaxTokens   int     `json:"max_tokens"`
-	Temperature float64 `json:"temperature"`
 }
 
 // Creates a new Azure config and sets it as provider
@@ -87,13 +87,9 @@ func Azure(endpoint, apikey string, temperature float64, maxTokens int) error {
 	return nil
 }
 
-func SendAzure(prompt string) (ResponseStruct, error) {
+func SendAzure(request RequestStruct) (ResponseStruct, error) {
 
 	Config := Provider.(AzureStruct)
-
-	// Cutting out the "Systemprompt" part because Azure thinks we are attempting to hijack the LLM.
-	// Still a work in progress
-	_, userP, _ := strings.Cut(prompt, "[END HISTORY]")
 
 	data := AzureRequest{
 		Temperature: Config.Temperature,
@@ -103,8 +99,14 @@ func SendAzure(prompt string) (ResponseStruct, error) {
 	data.Messages = append(data.Messages, struct {
 		Role    string "json:\"role\""
 		Content string "json:\"content\""
+	}{Role: "system",
+		Content: request.Systemprompt})
+
+	data.Messages = append(data.Messages, struct {
+		Role    string "json:\"role\""
+		Content string "json:\"content\""
 	}{Role: "user",
-		Content: userP})
+		Content: request.Userprompt})
 
 	buf := new(bytes.Buffer)
 

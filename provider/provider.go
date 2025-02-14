@@ -10,17 +10,22 @@ type ResponseStruct struct {
 	prompt_eval_duration float64
 }
 
+type RequestStruct struct {
+	Systemprompt string
+	Userprompt   string
+}
+
 var Provider interface{}
 
-func Send(prompt string) (ResponseStruct, error) {
+func Send(request RequestStruct) (ResponseStruct, error) {
 
 	switch Provider.(type) {
 	case OllamaStruct:
-		return SendOllama(prompt)
+		return SendOllama(request)
 	case AzureStruct:
-		return SendAzure(prompt)
+		return SendAzure(request)
 	case OpenAIStruct:
-		return SendOpenAI(prompt)
+		return SendOpenAI(request)
 	default:
 		return ResponseStruct{}, fmt.Errorf("no valid provider configured")
 	}

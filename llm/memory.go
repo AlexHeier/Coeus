@@ -45,7 +45,7 @@ func MemoryAllMessage(args ...interface{}) string {
 		temp += h
 	}
 
-	return "[BEGIN HISTORY]\n" + temp + "\n[END HISTORY]\n"
+	return temp
 }
 
 /*

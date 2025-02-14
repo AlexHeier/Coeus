@@ -3,6 +3,7 @@ package llm
 import (
 	"Coeus/llm/tool"
 	"Coeus/provider"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -43,6 +44,7 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
 	c.LastActive = time.Now()
+	c.UserPrompt = userPrompt
 
 	if len(tool.Tools) > 0 {
 		for _, t := range tool.Tools {
@@ -62,26 +64,19 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 		- New userprompt
 		*/
 
-		//systemprompt := "[SYSTEMPROMPT]\n" + c.MainPrompt + tool.GetToolsDescription()
-
-		// Adds the tool responses if there exists any.
-		//if len(toolResponse) > 0 {
-		//	systemprompt += "About tool response: contains the results from previous tool calls. Always use these before the history.\n[BEGIN TOOL RESPONSE]\n" + fmt.Sprintf("%v", toolResponse) + "\n[END TOOL RESPONSE]\n"
-		//}
-
-		// Adds the history created by a specified memory function
-		//systemprompt += Memory(append([]interface{}{c}, MemArgs...)...) + "[SYSTEMPROMPT]\n\n"
-
-		//fmt.Println(systemprompt + userPrompt)
-		//fmt.Printf("Systemprompt tokens: %d\n", len(systemprompt)/4)
-		//fmt.Printf("Userprompt tokens: %d\n", len(userPrompt)/4)
-		//fmt.Printf("Total tokens: %d\n", (len(systemprompt)+len(userPrompt))/4)
-
-		response, err = provider.Send(c.BuildPrompt(userPrompt))
+		response, err = provider.Send(provider.RequestStruct{
+			Userprompt:   c.UserPrompt,
+			Systemprompt: c.BuildSystemPrompt(),
+		})
 		if err != nil {
 			return response, err
 		}
 		c.AppendHistory(userPrompt, response.Response)
+
+		fmt.Println(provider.RequestStruct{
+			Userprompt:   c.UserPrompt,
+			Systemprompt: c.BuildSystemPrompt(),
+		})
 
 		splitString := strings.Split(response.Response, " ")
 
@@ -118,7 +113,7 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 
 				args := resArray[1 : argCount+1]
 
-				fmt.Printf("Arguments: %s\n", args)
+				fmt.Printf("Function: %s Arguments: %s\n", t.Name, args)
 
 				callArgs := make([]interface{}, argCount)
 				for i := 0; i < argCount; i++ {
@@ -131,28 +126,33 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 
 				c.ToolsResp = append(c.ToolsResp, fmt.Sprintf("%v %v = %v", t.Name, args, tr))
 
-				response, err = provider.Send(c.BuildPrompt("[SYSTEM:] TOOL RESPONSE UPDATED. USE THIS TO ANSWER THE USERS PREVIOUS PROMPT"))
+				fmt.Println(provider.RequestStruct{
+					Userprompt:   c.UserPrompt,
+					Systemprompt: c.BuildSystemPrompt(),
+				})
+
+				response, err = provider.Send(provider.RequestStruct{
+					Userprompt:   c.UserPrompt,
+					Systemprompt: c.BuildSystemPrompt(),
+				})
 				if err != nil {
 					return response, err
 				}
+				c.AppendHistory(userPrompt, response.Response)
 			}
 		}
 		if !toolUsed {
-			fmt.Println("Breaking")
 			break
 		}
-		fmt.Println("What")
 	}
-
-	fmt.Println(c.BuildPrompt(""))
 
 	return response, err
 }
 
 func (c *Conversation) DumpConversation() string {
 	var temp string
-	//c.Mutex.Lock()
-	//defer c.Mutex.Unlock()
+	c.Mutex.Lock()
+	defer c.Mutex.Unlock()
 
 	for _, h := range c.History {
 		temp += h
@@ -172,14 +172,53 @@ func BeginConversation() *Conversation {
 	return ConvAll.Conversations[len(ConvAll.Conversations)-1]
 }
 
-func (c *Conversation) BuildPrompt(prompt string) string {
-	systemprompt := "[SYSTEMPROMPT]\n" + c.MainPrompt + tool.GetToolsDescription()
-
-	if len(c.ToolsResp) > 0 {
-		systemprompt += "About tool response: contains the results from previous tool calls. Always use these before the history.\n[BEGIN TOOL RESPONSE]\n" + fmt.Sprintf("%v", c.ToolsResp) + "\n[END TOOL RESPONSE]\n"
+// Finds and deletes the given conversation
+func DeleteConversation(con *Conversation) error {
+	ConvAll.Mutex.Lock()
+	defer ConvAll.Mutex.Unlock()
+	var found bool
+	var temp []*Conversation
+	for i := range ConvAll.Conversations {
+		if !(con == ConvAll.Conversations[i]) {
+			temp = append(temp, con)
+		} else {
+			found = true
+		}
 	}
 
-	systemprompt += Memory(append([]interface{}{c}, MemArgs...)...) + "[SYSTEMPROMPT]\n\n"
+	if !found {
+		return fmt.Errorf("conversation not found")
+	}
 
-	return systemprompt + prompt
+	ConvAll.Conversations = temp
+	return nil
+}
+
+func (c *Conversation) BuildSystemPrompt() string {
+
+	sysP := make(map[string]interface{})
+
+	sysP["systemprompt"] = c.MainPrompt
+	sysP["toolsDescription"] = tool.GetToolsDescription()
+	sysP["toolReturns"] = fmt.Sprintf("%v", c.ToolsResp)
+	sysP["conversationHistory"] = []string{}
+
+	for _, history := range c.History {
+		sysP["conversationHistory"] = append(sysP["conversationHistory"].([]string), history)
+	}
+
+	//systemprompt := "[SYSTEMPROMPT]\n" + c.MainPrompt + tool.GetToolsDescription()
+
+	//if len(c.ToolsResp) > 0 {
+	//	systemprompt += "About tool response: contains the results from previous tool calls. Always use these before the history.\n[BEGIN TOOL RESPONSE]\n" + fmt.Sprintf("%v", c.ToolsResp) + "\n[END TOOL RESPONSE]\n"
+	//}
+
+	//systemprompt += Memory(append([]interface{}{c}, MemArgs...)...) + "[SYSTEMPROMPT]\n\n"
+
+	ret, err := json.Marshal(sysP)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	return string(ret)
 }
