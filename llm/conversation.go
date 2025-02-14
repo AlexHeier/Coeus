@@ -10,10 +10,8 @@ import (
 	"time"
 )
 
-var ConvAll ConversationAll
-
 // Struct for containing all the conversations
-type ConversationAll struct {
+var ConvAll struct {
 	Mutex         sync.Mutex
 	Conversations []*Conversation
 }
