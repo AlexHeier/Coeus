@@ -50,8 +50,8 @@ func GetCurrentTime() string {
 	return time.Now().Format("2006-01-02 15:04:05")
 }
 
-func GetMagicData() string {
-	return "69420"
+func GetMagicData() (string, error) {
+	return "69420", fmt.Errorf("this is an error")
 }
 
 func Multiply(a, b string) int {

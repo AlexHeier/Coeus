@@ -95,36 +95,41 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 			// Gets the index of the first letter in the tool name
 			index := strings.Index(response.Response, t.Name)
 			if index >= 0 {
-
 				resArray := strings.Split(response.Response[index:], " ")
+				for {
 
-				// LLM might include newline chars which can give weird arguments if not handled
-				for arrIndex, arrString := range resArray {
-					newLineIndex := strings.Index(arrString, "\n")
-					if newLineIndex >= 0 {
-						resArray[arrIndex] = arrString[:newLineIndex]
-						resArray = resArray[:arrIndex]
-						break
+					// LLM might include newline chars which can give weird arguments if not handled
+					for arrIndex, arrString := range resArray {
+						newLineIndex := strings.Index(arrString, "\n")
+						if newLineIndex >= 0 {
+							resArray[arrIndex] = arrString[:newLineIndex]
+							resArray = resArray[:arrIndex]
+							break
+						}
 					}
+
+					ft := reflect.ValueOf(t.Function)
+					argCount := ft.Type().NumIn()
+
+					args := resArray[1 : argCount+1]
+
+					fmt.Printf("Function: %s Arguments: %s\n", t.Name, args)
+
+					callArgs := make([]interface{}, argCount)
+					for i := 0; i < argCount; i++ {
+						callArgs[i] = args[i]
+					}
+					tr, err := t.Run(callArgs[0:]...)
+					if err != nil {
+						resArray = resArray[argCount:]
+						fmt.Println("Error running arg")
+						fmt.Println(err.Error())
+						continue
+					}
+
+					c.ToolsResp = append(c.ToolsResp, fmt.Sprintf("%v %v = %v", t.Name, args, tr))
+					break
 				}
-
-				ft := reflect.ValueOf(t.Function)
-				argCount := ft.Type().NumIn()
-
-				args := resArray[1 : argCount+1]
-
-				fmt.Printf("Function: %s Arguments: %s\n", t.Name, args)
-
-				callArgs := make([]interface{}, argCount)
-				for i := 0; i < argCount; i++ {
-					callArgs[i] = args[i]
-				}
-				tr, err := t.Run(callArgs[0:]...)
-				if err != nil {
-					return response, err
-				}
-
-				c.ToolsResp = append(c.ToolsResp, fmt.Sprintf("%v %v = %v", t.Name, args, tr))
 
 				fmt.Println(provider.RequestStruct{
 					Userprompt:   c.UserPrompt,
@@ -139,6 +144,7 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 					return response, err
 				}
 				c.AppendHistory(userPrompt, response.Response)
+
 			}
 		}
 		if !toolUsed {
