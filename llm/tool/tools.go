@@ -7,7 +7,7 @@ import (
 )
 
 // ToolDefintion defines how the LLM should access the tools
-var ToolDefintion = `To access TOOL resources, respond with the tool name in all caps followed by the required parameters.`
+var ToolUsageDefintion = `To access TOOL resources, respond with the tool name in all caps followed by the required parameters.`
 
 // ToolStruct is the struct of a tool
 type ToolStruct struct {
@@ -104,4 +104,25 @@ func Find(name string) (ToolStruct, error) {
 		}
 	}
 	return ToolStruct{}, fmt.Errorf("tool not found")
+}
+
+/*
+Returns the information about each tool to be used by an LLM. For use within a prompt
+
+@return: Nothing if no tools specified
+@return: Tool names and descriptions with usage information
+*/
+func GetToolsDescription() string {
+
+	if len(Tools) <= 0 {
+		return ""
+	}
+
+	var desc string
+
+	for _, tool := range Tools {
+		desc += tool.Name + ": " + tool.Desc + " "
+	}
+
+	return desc
 }

@@ -19,14 +19,14 @@ func OpenAI(model, api_key string) error {
 	return nil
 }
 
-func SendOpenAI(prompt string) (ResponseStruct, error) {
+func SendOpenAI(request RequestStruct) (ResponseStruct, error) {
 	config := Provider.(OpenAIStruct)
 	client := openai.NewClient(config.API_KEY)
 
 	resp, err := client.CreateChatCompletion(context.TODO(), openai.ChatCompletionRequest{
 		Model: config.Model,
 		Messages: []openai.ChatCompletionMessage{
-			{Role: "user", Content: prompt},
+			{Role: "user", Content: request.Systemprompt + request.Userprompt},
 		},
 	})
 	if err != nil {
