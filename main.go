@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -26,7 +25,7 @@ func init() {
 func main() {
 
 	//err := provider.Azure(os.Getenv("AZURE_ENDPOINT"), os.Getenv("AZURE_API_KEY"), 1.0, 16)
-	err := provider.Ollama(os.Getenv("OLLAMA_IP"), os.Getenv("OLLAMA_PORT"), os.Getenv("OLLAMA_MODEL"))
+	err := provider.OpenAI("gpt-4", os.Getenv("OPENAI_API_KEY"))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -35,40 +34,27 @@ func main() {
 
 	llm.MemoryVersion(llm.MemoryAllMessage)
 
-	//tool.New("Multiply", "Takes two ints and returns the multiplied result. ALWAYS call this when multiplying two numbers.", Multiply)
+	tool.New("Multiply", "Takes two ints and returns the multiplied result.", Multiply)
+	tool.New("GetCurrentTime", "Gets the current time.", GetCurrentTime)
 	tool.New("GetMagicData", "Retreives the magic data.", GetMagicData)
 
-	tool.New("GetCurrentTime", "Gets the current time.", GetCurrentTime)
-
-	//go TimeOutConversations()
+	go TimeOutConversations()
 
 	dashboard.Start("9002")
-
 }
 
 func GetCurrentTime() string {
 	return time.Now().Format("2006-01-02 15:04:05")
 }
 
-func GetMagicData() (string, error) {
-	return "69420", fmt.Errorf("this is an error")
+func Multiply(a, b int) int {
+
+	fmt.Printf("Issued Command: Multiply %v by %v\n", a, b)
+	return a * b
 }
 
-func Multiply(a, b string) int {
-
-	fmt.Printf("Issued Command: Multiply %s by %s\n", a, b)
-
-	a1, err := strconv.Atoi(a)
-	if err != nil {
-		return 0
-	}
-
-	b1, err := strconv.Atoi(b)
-	if err != nil {
-		return 0
-	}
-
-	return a1 * b1
+func GetMagicData() (string, error) {
+	return "69420", fmt.Errorf("this is an error")
 }
 
 func TimeOutConversations() {

@@ -1,11 +1,9 @@
 package llm
 
 import (
-	"Coeus/llm/tool"
 	"Coeus/provider"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -35,119 +33,32 @@ func (c *Conversation) AppendHistory(user, llm string) {
 }
 
 func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error) {
-	var toolDesc string
-	var response provider.ResponseStruct
-	var err error
-	//var toolResponse []interface{}
-	var toolUsed bool = false
-
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
 	c.LastActive = time.Now()
 	c.UserPrompt = userPrompt
 
-	if len(tool.Tools) > 0 {
-		for _, t := range tool.Tools {
-			toolDesc += t.Name + ": " + t.Desc + "\n"
-		}
+	response, err := provider.Send(provider.RequestStruct{
+		Userprompt:   c.UserPrompt,
+		Systemprompt: c.systemPrompt(),
+	})
+	if err != nil {
+		return response, err
 	}
+	c.AppendHistory(userPrompt, response.Response)
 
-	for {
-		toolUsed = false
+	fmt.Println(provider.RequestStruct{
+		Userprompt:   c.UserPrompt,
+		Systemprompt: c.systemPrompt(),
+	})
 
-		// Memory(append([]interface{}{c}, MemArgs...)...) sends the conversation and the arguments to the memory function if the user defined some.
-		/* Build the prompt (Structure should look like this)
-		- Systemprompt
-		- Tools Description
-		- Tool results
-		- Prior History (According to memory module)
-		- New userprompt
-		*/
+	splitString := strings.Split(response.Response, " ")
 
-		response, err = provider.Send(provider.RequestStruct{
-			Userprompt:   c.UserPrompt,
-			Systemprompt: c.BuildSystemPrompt(),
-		})
-		if err != nil {
-			return response, err
-		}
-		c.AppendHistory(userPrompt, response.Response)
-
-		fmt.Println(provider.RequestStruct{
-			Userprompt:   c.UserPrompt,
-			Systemprompt: c.BuildSystemPrompt(),
-		})
-
-		splitString := strings.Split(response.Response, " ")
-
-		// Check for if the response contains a summary and extract it
-		for i, w := range splitString {
-			if strings.Contains(w, "SUMMARY") {
-				c.Summary = strings.Join(splitString[i+1:], " ")
-				response.Response = strings.Join(splitString[:i], " ")
-				break
-			}
-		}
-
-		// TO-DO: FÅ LLM TIL Å IKKE SENDE NAVN PÅ KOMMANDOER I FULL CAPS DER DEN IKKE SKAL BRUKE DEN
-
-		for _, t := range tool.Tools {
-			// Gets the index of the first letter in the tool name
-			index := strings.Index(response.Response, t.Name)
-			if index >= 0 {
-				resArray := strings.Split(response.Response[index:], " ")
-				for {
-
-					// LLM might include newline chars which can give weird arguments if not handled
-					for arrIndex, arrString := range resArray {
-						newLineIndex := strings.Index(arrString, "\n")
-						if newLineIndex >= 0 {
-							resArray[arrIndex] = arrString[:newLineIndex]
-							resArray = resArray[:arrIndex]
-							break
-						}
-					}
-
-					ft := reflect.ValueOf(t.Function)
-					argCount := ft.Type().NumIn()
-
-					args := resArray[1 : argCount+1]
-
-					fmt.Printf("Function: %s Arguments: %s\n", t.Name, args)
-
-					callArgs := make([]interface{}, argCount)
-					for i := 0; i < argCount; i++ {
-						callArgs[i] = args[i]
-					}
-					tr, err := t.Run(callArgs[0:]...)
-					if err != nil {
-						resArray = resArray[argCount:]
-						fmt.Println("Error running arg")
-						fmt.Println(err.Error())
-						continue
-					}
-
-					c.ToolsResp = append(c.ToolsResp, fmt.Sprintf("%v %v = %v", t.Name, args, tr))
-					break
-				}
-
-				fmt.Println(provider.RequestStruct{
-					Userprompt:   c.UserPrompt,
-					Systemprompt: c.BuildSystemPrompt(),
-				})
-
-				response, err = provider.Send(provider.RequestStruct{
-					Userprompt:   c.UserPrompt,
-					Systemprompt: c.BuildSystemPrompt(),
-				})
-				if err != nil {
-					return response, err
-				}
-				c.AppendHistory(userPrompt, response.Response)
-
-			}
-		}
-		if !toolUsed {
+	// Check for if the response contains a summary and extract it
+	for i, w := range splitString {
+		if strings.Contains(w, "SUMMARY") {
+			c.Summary = strings.Join(splitString[i+1:], " ")
+			response.Response = strings.Join(splitString[:i], " ")
 			break
 		}
 	}
@@ -200,26 +111,12 @@ func DeleteConversation(con *Conversation) error {
 	return nil
 }
 
-func (c *Conversation) BuildSystemPrompt() string {
+func (c *Conversation) systemPrompt() string {
 
 	sysP := make(map[string]interface{})
 
 	sysP["systemprompt"] = c.MainPrompt
-	sysP["toolsDescription"] = tool.GetToolsDescription()
-	sysP["toolReturns"] = fmt.Sprintf("%v", c.ToolsResp)
-	sysP["conversationHistory"] = []string{}
-
-	for _, history := range c.History {
-		sysP["conversationHistory"] = append(sysP["conversationHistory"].([]string), history)
-	}
-
-	//systemprompt := "[SYSTEMPROMPT]\n" + c.MainPrompt + tool.GetToolsDescription()
-
-	//if len(c.ToolsResp) > 0 {
-	//	systemprompt += "About tool response: contains the results from previous tool calls. Always use these before the history.\n[BEGIN TOOL RESPONSE]\n" + fmt.Sprintf("%v", c.ToolsResp) + "\n[END TOOL RESPONSE]\n"
-	//}
-
-	//systemprompt += Memory(append([]interface{}{c}, MemArgs...)...) + "[SYSTEMPROMPT]\n\n"
+	sysP["conversationHistory"] = Memory(append([]interface{}{c}, MemArgs...)...)
 
 	ret, err := json.Marshal(sysP)
 	if err != nil {

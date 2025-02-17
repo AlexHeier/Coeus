@@ -37,7 +37,7 @@ func MemoryAllMessage(args ...interface{}) string {
 	}
 
 	if len(con.History) <= 0 {
-		return ""
+		return "No History"
 	}
 
 	var temp string
