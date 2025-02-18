@@ -1,9 +1,11 @@
 package provider
 
 import (
+	"Coeus/llm/tool"
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -18,6 +20,20 @@ type OllamaStruct struct {
 	Port         string
 	Model        string
 	Stream       bool
+}
+
+type ollamaTool struct {
+	Type     string `json:"type"`
+	Function struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Parameters  []struct {
+			Type       string `json:"type"`
+			Properties struct {
+			} `json:"properties"`
+		} `json:"parameters"`
+		Required []string `json:"required"`
+	}
 }
 
 func Ollama(ip, port, model string) error {
@@ -58,6 +74,9 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 	reqData["model"] = config.Model
 	reqData["stream"] = config.Stream
 	reqData["prompt"] = request.Systemprompt + request.Userprompt
+	reqData["tools"] = ollamaToolsWrapper()
+
+	fmt.Println(reqData["tools"])
 
 	data := new(bytes.Buffer)
 
@@ -93,4 +112,26 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 		prompt_eval_count:    jData["prompt_eval_count"].(float64),
 		prompt_eval_duration: jData["prompt_eval_duration"].(float64),
 	}, nil
+}
+
+func ollamaToolsWrapper() string {
+	var ollamaTools []ollamaTool
+
+	for _, t := range tool.Tools {
+		temp := ollamaTool{
+			Type: "function",
+		}
+		temp.Function.Name = t.Name
+		temp.Function.Description = t.Desc
+		for _, p := range t.Params {
+			temp.Function.Parameters = append(temp.Function.Parameters, struct {
+				Type       string `json:"type"`
+				Properties struct {
+				} `json:"properties"`
+			}{Type: "object", Properties: struct {
+			}})
+		}
+	}
+
+	return fmt.Sprintf("%v", ollamaTools)
 }

@@ -47,11 +47,6 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 	}
 	c.AppendHistory(userPrompt, response.Response)
 
-	fmt.Println(provider.RequestStruct{
-		Userprompt:   c.UserPrompt,
-		Systemprompt: c.systemPrompt(),
-	})
-
 	splitString := strings.Split(response.Response, " ")
 
 	// Check for if the response contains a summary and extract it

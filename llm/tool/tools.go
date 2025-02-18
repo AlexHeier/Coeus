@@ -30,40 +30,6 @@ func New(name, desc string, function interface{}) {
 	Tools = append(Tools, newTool)
 }
 
-func extractFunctionParams(fn interface{}) map[string]interface{} {
-	fnType := reflect.TypeOf(fn)
-	if fnType.Kind() != reflect.Func {
-		panic("Function must be of type func")
-	}
-
-	params := make(map[string]interface{})
-	properties := make(map[string]interface{})
-	var required []string
-
-	// Extract parameter information
-	for i := 0; i < fnType.NumIn(); i++ {
-		paramName := fmt.Sprintf("param%d", i+1)
-		paramType := fnType.In(i).Kind().String()
-
-		if paramType == "int" {
-			paramType = "number"
-		}
-
-		properties[paramName] = map[string]string{
-			"type": paramType,
-		}
-		required = append(required, paramName)
-	}
-
-	params["type"] = "object"
-	params["properties"] = properties
-	if len(required) > 0 {
-		params["required"] = required
-	}
-
-	return params
-}
-
 /*
 Run runs the function of the tool its called upon.
 
@@ -155,4 +121,38 @@ func GetToolsDescription() string {
 	}
 
 	return desc
+}
+
+func extractFunctionParams(fn interface{}) map[string]interface{} {
+	fnType := reflect.TypeOf(fn)
+	if fnType.Kind() != reflect.Func {
+		panic("Function must be of type func")
+	}
+
+	params := make(map[string]interface{})
+	properties := make(map[string]interface{})
+	var required []string
+
+	// Extract parameter information
+	for i := 0; i < fnType.NumIn(); i++ {
+		paramName := fmt.Sprintf("param%d", i+1)
+		paramType := fnType.In(i).Kind().String()
+
+		if paramType == "int" {
+			paramType = "number"
+		}
+
+		properties[paramName] = map[string]string{
+			"type": paramType,
+		}
+		required = append(required, paramName)
+	}
+
+	params["type"] = "object"
+	params["properties"] = properties
+	if len(required) > 0 {
+		params["required"] = required
+	}
+
+	return params
 }
