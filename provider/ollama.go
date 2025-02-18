@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-const OLLAMA_GENERATE_SUFFIX = "/api/generate"
+const OLLAMA_GENERATE_SUFFIX = "/api/chat"
 
 type OllamaStruct struct {
 	HttpProtocol string
@@ -25,10 +25,9 @@ type OllamaStruct struct {
 type ollamaTool struct {
 	Type     string `json:"type"`
 	Function struct {
-		Name        string   `json:"name"`
-		Description string   `json:"description"`
-		Parameters  any      `json:"parameters"`
-		Required    []string `json:"required"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Parameters  any    `json:"parameters"`
 	}
 }
 
@@ -71,9 +70,12 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 	reqData["messages"] = []struct {
 		Role    string `json:"role"`
 		Content string `json:"content"`
-	}{{Role: "user", Content: request.Userprompt}, {Role: "system", Content: request.Systemprompt}}
+	}{{Role: "system", Content: request.Systemprompt}, {Role: "user", Content: request.Userprompt}}
 	reqData["stream"] = config.Stream
 	reqData["tools"] = ollamaToolsWrapper()
+
+	hmm, _ := json.MarshalIndent(reqData, "", " ")
+	fmt.Println(string(hmm))
 
 	data := new(bytes.Buffer)
 
@@ -105,15 +107,15 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 	fmt.Printf("Response: %v\n", jData)
 
 	return ResponseStruct{
-		Response:             jData["response"].(string),
-		LoadDuration:         jData["load_duration"].(float64),
-		eval_count:           jData["eval_count"].(float64),
-		prompt_eval_count:    jData["prompt_eval_count"].(float64),
-		prompt_eval_duration: jData["prompt_eval_duration"].(float64),
+		Response: jData["message"].(map[string]interface{})["content"].(string),
+		//LoadDuration:         jData["load_duration"].(float64),
+		//eval_count:           jData["eval_count"].(float64),
+		//prompt_eval_count:    jData["prompt_eval_count"].(float64),
+		//prompt_eval_duration: jData["prompt_eval_duration"].(float64),
 	}, nil
 }
 
-func ollamaToolsWrapper() string {
+func ollamaToolsWrapper() []ollamaTool {
 	var ollamaTools []ollamaTool
 
 	for _, t := range tool.Tools {
@@ -124,5 +126,6 @@ func ollamaToolsWrapper() string {
 		temp.Function.Parameters = t.Params
 		ollamaTools = append(ollamaTools, temp)
 	}
-	return fmt.Sprintf("%v", ollamaTools)
+
+	return ollamaTools
 }

@@ -151,7 +151,7 @@ func extractFunctionParams(fn interface{}) map[string]interface{} {
 	params["type"] = "object"
 	params["properties"] = properties
 	if len(required) > 0 {
-		params["required"] = required
+		//params["required"] = required
 	}
 
 	return params
