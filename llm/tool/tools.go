@@ -112,16 +112,16 @@ Returns the information about each tool to be used by an LLM. For use within a p
 @return: Nothing if no tools specified
 @return: Tool names and descriptions with usage information
 */
-func GetToolsDescription() string {
+func GetToolsDescription() []string {
 
 	if len(Tools) <= 0 {
-		return ""
+		return []string{}
 	}
 
-	var desc string
+	var desc []string
 
 	for _, tool := range Tools {
-		desc += tool.Name + ": " + tool.Desc + " "
+		desc = append(desc, tool.Name+": "+tool.Desc)
 	}
 
 	return desc

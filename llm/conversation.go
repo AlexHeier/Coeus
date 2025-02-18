@@ -28,18 +28,27 @@ type Conversation struct {
 	LastActive time.Time
 }
 
+type SystemPrompt struct {
+	Context struct {
+		SystemPrompt string `json:"systemPrompt"`
+		Tools        []struct {
+			ToolName        string `json:"toolName"`
+			ToolDescription string `json:"toolDescription"`
+		} `json:"tools"`
+		AboutTools  string        `json:"aboutTools"`
+		ToolReturns []interface{} `json:"toolReturns"`
+		History     []string      `json:"history"`
+	} `json:"context"`
+}
+
 // Appends a prompt and section to the history within the conversation
 func (c *Conversation) AppendHistory(user, llm string) {
-	newHistory := "[USER:] " + user + "[LLM:] " + llm
+	newHistory := "[USER:] " + user + " [LLM:] " + llm
 	c.History = append(c.History, newHistory)
 }
 
 func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error) {
 	var toolDesc string
-	var response provider.ResponseStruct
-	var err error
-	//var toolResponse []interface{}
-	var toolUsed bool = false
 
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
@@ -52,17 +61,71 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 		}
 	}
 
-	for {
-		toolUsed = false
+	response, err := provider.Send(provider.RequestStruct{
+		Userprompt:   c.UserPrompt,
+		Systemprompt: c.BuildSystemPrompt(),
+	})
+	if err != nil {
+		return response, err
+	}
 
-		// Memory(append([]interface{}{c}, MemArgs...)...) sends the conversation and the arguments to the memory function if the user defined some.
-		/* Build the prompt (Structure should look like this)
-		- Systemprompt
-		- Tools Description
-		- Tool results
-		- Prior History (According to memory module)
-		- New userprompt
-		*/
+	fmt.Println(provider.RequestStruct{
+		Userprompt:   c.UserPrompt,
+		Systemprompt: c.BuildSystemPrompt(),
+	})
+
+	splitString := strings.Split(response.Response, " ")
+
+	// Check for if the response contains a summary and extract it
+	for i, w := range splitString {
+		if strings.Contains(w, "SUMMARY") {
+			c.Summary = strings.Join(splitString[i+1:], " ")
+			response.Response = strings.Join(splitString[:i], " ")
+			break
+		}
+	}
+
+	res := response.Response
+
+	for {
+		command, _, endIndex := ParseTool(res)
+		if command == nil {
+			break
+		}
+
+		fmt.Println(command)
+
+		args := command[1:]
+
+		t, err := tool.Find(command[0])
+		if err != nil {
+			fmt.Println(err.Error())
+			break
+		}
+
+		ft := reflect.ValueOf(t.Function)
+		argCount := ft.Type().NumIn()
+
+		callArgs := make([]interface{}, argCount)
+		for i := 0; i < argCount; i++ {
+			callArgs[i] = args[i]
+		}
+
+		tr, err := t.Run(callArgs[0:]...)
+		if err != nil {
+			fmt.Println(err.Error())
+			continue
+		}
+
+		// Gets the last index in function result array which SHOULD be of type error
+		err, ok := tr[len(tr)-1].(error)
+		if ok {
+			fmt.Println(err.Error())
+			res = res[endIndex:]
+			continue
+		}
+
+		c.ToolsResp = append(c.ToolsResp, fmt.Sprintf("%v %v = %v", t.Name, args, tr[:len(tr)-1]))
 
 		response, err = provider.Send(provider.RequestStruct{
 			Userprompt:   c.UserPrompt,
@@ -71,88 +134,48 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 		if err != nil {
 			return response, err
 		}
-		c.AppendHistory(userPrompt, response.Response)
+		break
+	}
+	c.AppendHistory(userPrompt, response.Response)
 
-		fmt.Println(provider.RequestStruct{
-			Userprompt:   c.UserPrompt,
-			Systemprompt: c.BuildSystemPrompt(),
-		})
+	return response, nil
+}
 
-		splitString := strings.Split(response.Response, " ")
+/*
+Parses the first found command within a string by checking if it contains the correct name and format
+@param []string: Contains the command name and its args
+@param int: Beginning index of where command begins inside string
+@param int: End index of where command ends inside string
+*/
+func ParseTool(s string) ([]string, int, int) {
+	s = strings.ReplaceAll(s, "\n", " ")
 
-		// Check for if the response contains a summary and extract it
-		for i, w := range splitString {
-			if strings.Contains(w, "SUMMARY") {
-				c.Summary = strings.Join(splitString[i+1:], " ")
-				response.Response = strings.Join(splitString[:i], " ")
-				break
-			}
-		}
+	for _, t := range tool.Tools {
 
-		// TO-DO: FÅ LLM TIL Å IKKE SENDE NAVN PÅ KOMMANDOER I FULL CAPS DER DEN IKKE SKAL BRUKE DEN
+		beginIndex := strings.Index(s, t.Name)
+		var endIndex int
+		if beginIndex >= 0 {
+			s = s[beginIndex:]
 
-		for _, t := range tool.Tools {
-			// Gets the index of the first letter in the tool name
-			index := strings.Index(response.Response, t.Name)
-			if index >= 0 {
-				resArray := strings.Split(response.Response[index:], " ")
-				for {
+			ft := reflect.ValueOf(t.Function)
+			argCount := ft.Type().NumIn()
 
-					// LLM might include newline chars which can give weird arguments if not handled
-					for arrIndex, arrString := range resArray {
-						newLineIndex := strings.Index(arrString, "\n")
-						if newLineIndex >= 0 {
-							resArray[arrIndex] = arrString[:newLineIndex]
-							resArray = resArray[:arrIndex]
-							break
-						}
-					}
+			var v int
+			for end, r := range s {
+				if r == ' ' || end == len(s) {
+					v++
+				}
 
-					ft := reflect.ValueOf(t.Function)
-					argCount := ft.Type().NumIn()
-
-					args := resArray[1 : argCount+1]
-
-					fmt.Printf("Function: %s Arguments: %s\n", t.Name, args)
-
-					callArgs := make([]interface{}, argCount)
-					for i := 0; i < argCount; i++ {
-						callArgs[i] = args[i]
-					}
-					tr, err := t.Run(callArgs[0:]...)
-					if err != nil {
-						resArray = resArray[argCount:]
-						fmt.Println("Error running arg")
-						fmt.Println(err.Error())
-						continue
-					}
-
-					c.ToolsResp = append(c.ToolsResp, fmt.Sprintf("%v %v = %v", t.Name, args, tr))
+				if v > argCount {
+					s = s[:end]
+					endIndex = end
 					break
 				}
-
-				fmt.Println(provider.RequestStruct{
-					Userprompt:   c.UserPrompt,
-					Systemprompt: c.BuildSystemPrompt(),
-				})
-
-				response, err = provider.Send(provider.RequestStruct{
-					Userprompt:   c.UserPrompt,
-					Systemprompt: c.BuildSystemPrompt(),
-				})
-				if err != nil {
-					return response, err
-				}
-				c.AppendHistory(userPrompt, response.Response)
-
 			}
-		}
-		if !toolUsed {
-			break
+			return strings.Split(s, " "), beginIndex, (endIndex + beginIndex - 1)
 		}
 	}
-
-	return response, err
+	return nil, -1, -1
 }
 
 func (c *Conversation) DumpConversation() string {
@@ -202,26 +225,21 @@ func DeleteConversation(con *Conversation) error {
 
 func (c *Conversation) BuildSystemPrompt() string {
 
-	sysP := make(map[string]interface{})
+	sysP := SystemPrompt{}
 
-	sysP["systemprompt"] = c.MainPrompt
-	sysP["toolsDescription"] = tool.GetToolsDescription()
-	sysP["toolReturns"] = fmt.Sprintf("%v", c.ToolsResp)
-	sysP["conversationHistory"] = []string{}
-
-	for _, history := range c.History {
-		sysP["conversationHistory"] = append(sysP["conversationHistory"].([]string), history)
+	sysP.Context.History = append(sysP.Context.History, c.History...)
+	sysP.Context.SystemPrompt = c.MainPrompt
+	for _, t := range tool.Tools {
+		sysP.Context.Tools = append(sysP.Context.Tools, struct {
+			ToolName        string "json:\"toolName\""
+			ToolDescription string "json:\"toolDescription\""
+		}{ToolName: t.Name, ToolDescription: t.Desc})
 	}
 
-	//systemprompt := "[SYSTEMPROMPT]\n" + c.MainPrompt + tool.GetToolsDescription()
+	sysP.Context.AboutTools = "Always use tools before using information from your history. To call a tool simply respond with the tool name in all capital letters and its arguments after without any brackets. Example THISISATOOL ARG1 ARG2 ARG... When asked about tool results only answer with the result without brackets and nothing else."
+	sysP.Context.ToolReturns = c.ToolsResp
 
-	//if len(c.ToolsResp) > 0 {
-	//	systemprompt += "About tool response: contains the results from previous tool calls. Always use these before the history.\n[BEGIN TOOL RESPONSE]\n" + fmt.Sprintf("%v", c.ToolsResp) + "\n[END TOOL RESPONSE]\n"
-	//}
-
-	//systemprompt += Memory(append([]interface{}{c}, MemArgs...)...) + "[SYSTEMPROMPT]\n\n"
-
-	ret, err := json.Marshal(sysP)
+	ret, err := json.MarshalIndent(sysP, "", " ")
 	if err != nil {
 		fmt.Println(err.Error())
 	}
