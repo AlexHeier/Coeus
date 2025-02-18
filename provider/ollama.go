@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 const OLLAMA_GENERATE_SUFFIX = "/api/chat"
@@ -29,6 +30,18 @@ type ollamaTool struct {
 		Description string `json:"description"`
 		Parameters  any    `json:"parameters"`
 	}
+}
+
+type ollamaMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type ollamaFunctionCall struct {
+	Function struct {
+		Name      string                   `json:"name"`
+		Arguments []map[string]interface{} `json:"arguments"`
+	} `json:"function"`
 }
 
 func Ollama(ip, port, model string) error {
@@ -67,51 +80,51 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 	reqData := make(map[string]interface{})
 
 	reqData["model"] = config.Model
-	reqData["messages"] = []struct {
-		Role    string `json:"role"`
-		Content string `json:"content"`
-	}{{Role: "system", Content: request.Systemprompt}, {Role: "user", Content: request.Userprompt}}
+	reqData["messages"] = []ollamaMessage{
+		{Role: "system", Content: request.Systemprompt},
+		{Role: "user", Content: request.Userprompt},
+	}
 	reqData["stream"] = config.Stream
 	reqData["tools"] = ollamaToolsWrapper()
 
-	hmm, _ := json.MarshalIndent(reqData, "", " ")
-	fmt.Println(string(hmm))
-
-	data := new(bytes.Buffer)
-
-	json.NewEncoder(data).Encode(reqData)
-
-	req, err := http.NewRequest(http.MethodPost, url, data)
+	jData, err := ollamaNetworkSender(reqData, url)
 	if err != nil {
 		return ResponseStruct{}, err
 	}
 
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return ResponseStruct{}, err
+	print(jData)
+
+	_, ok := jData["message"].(map[string]interface{})["tool_calls"]
+	if ok {
+		calls := 
+		for _, t := range calls {
+			fmt.Printf("\n\n%v\n\n", t)
+			time.Sleep(2 * time.Second)
+			tool, err := tool.Find(t.Function.Name)
+			if err != nil {
+				continue
+			}
+
+			var args []interface{}
+			args = append(args, t.Function.Arguments)
+
+			toolResponse, err := tool.Run(args...)
+			if err != nil {
+				continue
+			}
+
+			reqData["messages"] = append(reqData["messages"].([]ollamaMessage),
+				ollamaMessage{Role: "Tools", Content: string(toolResponse)})
+		}
+		jData, err = ollamaNetworkSender(reqData, url)
+		if err != nil {
+			return ResponseStruct{}, err
+		}
+
 	}
-	defer res.Body.Close()
-
-	resData, err := io.ReadAll(res.Body)
-	if err != nil {
-		return ResponseStruct{}, err
-	}
-
-	jData := make(map[string]interface{})
-
-	err = json.Unmarshal(resData, &jData)
-	if err != nil {
-		return ResponseStruct{}, err
-	}
-
-	fmt.Printf("Response: %v\n", jData)
 
 	return ResponseStruct{
 		Response: jData["message"].(map[string]interface{})["content"].(string),
-		//LoadDuration:         jData["load_duration"].(float64),
-		//eval_count:           jData["eval_count"].(float64),
-		//prompt_eval_count:    jData["prompt_eval_count"].(float64),
-		//prompt_eval_duration: jData["prompt_eval_duration"].(float64),
 	}, nil
 }
 
@@ -128,4 +141,38 @@ func ollamaToolsWrapper() []ollamaTool {
 	}
 
 	return ollamaTools
+}
+
+// Does Ollamas network handling
+func ollamaNetworkSender(reqData map[string]interface{}, url string) (map[string]interface{}, error) {
+	data, err := json.Marshal(reqData)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(data))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	resData, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var jData map[string]interface{}
+	if err := json.Unmarshal(resData, &jData); err != nil {
+		return nil, err
+	}
+
+	fmt.Println(jData)
+
+	return jData, nil
 }
