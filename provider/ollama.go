@@ -74,9 +74,6 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 	reqData["stream"] = config.Stream
 	reqData["tools"] = ollamaToolsWrapper()
 
-	hmm, _ := json.MarshalIndent(reqData, "", " ")
-	fmt.Println(string(hmm))
-
 	data := new(bytes.Buffer)
 
 	json.NewEncoder(data).Encode(reqData)

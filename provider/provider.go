@@ -11,8 +11,14 @@ type ResponseStruct struct {
 }
 
 type RequestStruct struct {
+	History      []HistoryStruct
 	Systemprompt string
 	Userprompt   string
+}
+
+type HistoryStruct struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
 }
 
 var Provider interface{}

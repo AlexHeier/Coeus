@@ -4,7 +4,6 @@ import (
 	"Coeus/provider"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 )
@@ -15,21 +14,25 @@ var ConvAll struct {
 	Conversations []*Conversation
 }
 
+type HistoryStruct struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
 // Struct for a single conversation.
 type Conversation struct {
 	Mutex      sync.Mutex
 	MainPrompt string
 	ToolsResp  []interface{}
-	History    []string
+	History    []provider.HistoryStruct
 	Summary    string
 	UserPrompt string
 	LastActive time.Time
 }
 
 // Appends a prompt and section to the history within the conversation
-func (c *Conversation) AppendHistory(user, llm string) {
-	newHistory := "[USER:] " + user + "[LLM:] " + llm
-	c.History = append(c.History, newHistory)
+func (c *Conversation) AppendHistory(role, content string) {
+	c.History = append(c.History, provider.HistoryStruct{Role: role, Content: content})
 }
 
 func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error) {
@@ -41,22 +44,30 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 	response, err := provider.Send(provider.RequestStruct{
 		Userprompt:   c.UserPrompt,
 		Systemprompt: c.systemPrompt(),
+		History:      c.History,
 	})
+
 	if err != nil {
+		fmt.Println(err.Error())
+		fmt.Println("wtf")
 		return response, err
 	}
-	c.AppendHistory(userPrompt, response.Response)
 
-	splitString := strings.Split(response.Response, " ")
+	c.AppendHistory("user", c.UserPrompt)
+	c.AppendHistory("assistant", response.Response)
+
+	//splitString := strings.Split(response.Response, " ")
 
 	// Check for if the response contains a summary and extract it
-	for i, w := range splitString {
-		if strings.Contains(w, "SUMMARY") {
-			c.Summary = strings.Join(splitString[i+1:], " ")
-			response.Response = strings.Join(splitString[:i], " ")
-			break
+	/*
+		for i, w := range splitString {
+			if strings.Contains(w, "SUMMARY") {
+				c.Summary = strings.Join(splitString[i+1:], " ")
+				response.Response = strings.Join(splitString[:i], " ")
+				break
+			}
 		}
-	}
+	*/
 
 	return response, err
 }
@@ -67,7 +78,7 @@ func (c *Conversation) DumpConversation() string {
 	defer c.Mutex.Unlock()
 
 	for _, h := range c.History {
-		temp += h
+		temp += h.Role + ": " + h.Content + "\n"
 	}
 
 	return temp
