@@ -25,14 +25,10 @@ type OllamaStruct struct {
 type ollamaTool struct {
 	Type     string `json:"type"`
 	Function struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
-		Parameters  []struct {
-			Type       string `json:"type"`
-			Properties struct {
-			} `json:"properties"`
-		} `json:"parameters"`
-		Required []string `json:"required"`
+		Name        string   `json:"name"`
+		Description string   `json:"description"`
+		Parameters  any      `json:"parameters"`
+		Required    []string `json:"required"`
 	}
 }
 
@@ -72,11 +68,12 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 	reqData := make(map[string]interface{})
 
 	reqData["model"] = config.Model
+	reqData["messages"] = []struct {
+		Role    string `json:"role"`
+		Content string `json:"content"`
+	}{{Role: "user", Content: request.Userprompt}, {Role: "system", Content: request.Systemprompt}}
 	reqData["stream"] = config.Stream
-	reqData["prompt"] = request.Systemprompt + request.Userprompt
 	reqData["tools"] = ollamaToolsWrapper()
-
-	fmt.Println(reqData["tools"])
 
 	data := new(bytes.Buffer)
 
@@ -105,6 +102,8 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 		return ResponseStruct{}, err
 	}
 
+	fmt.Printf("Response: %v\n", jData)
+
 	return ResponseStruct{
 		Response:             jData["response"].(string),
 		LoadDuration:         jData["load_duration"].(float64),
@@ -118,20 +117,12 @@ func ollamaToolsWrapper() string {
 	var ollamaTools []ollamaTool
 
 	for _, t := range tool.Tools {
-		temp := ollamaTool{
-			Type: "function",
-		}
+		temp := ollamaTool{}
+		temp.Type = "function"
 		temp.Function.Name = t.Name
 		temp.Function.Description = t.Desc
-		for _, p := range t.Params {
-			temp.Function.Parameters = append(temp.Function.Parameters, struct {
-				Type       string `json:"type"`
-				Properties struct {
-				} `json:"properties"`
-			}{Type: "object", Properties: struct {
-			}})
-		}
+		temp.Function.Parameters = t.Params
+		ollamaTools = append(ollamaTools, temp)
 	}
-
 	return fmt.Sprintf("%v", ollamaTools)
 }
