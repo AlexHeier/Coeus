@@ -5,12 +5,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 const OLLAMA_GENERATE_SUFFIX = "/api/chat"
@@ -32,16 +30,36 @@ type ollamaTool struct {
 	}
 }
 
-type ollamaMessage struct {
+type ollamaRole struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
-type ollamaFunctionCall struct {
+type ollamaToolCall struct {
 	Function struct {
-		Name      string                   `json:"name"`
-		Arguments []map[string]interface{} `json:"arguments"`
+		Arguments map[string]interface{} `json:"arguments"`
+		Name      string                 `json:"name"`
 	} `json:"function"`
+}
+
+type ollamaMessage struct {
+	Content   string           `json:"content"`
+	Role      string           `json:"role"`
+	ToolCalls []ollamaToolCall `json:"tool_calls"`
+}
+
+type ollamaResponse struct {
+	CreatedAt          string        `json:"created_at"`
+	Done               bool          `json:"done"`
+	DoneReason         string        `json:"done_reason"`
+	EvalCount          int           `json:"eval_count"`
+	EvalDuration       int64         `json:"eval_duration"`
+	LoadDuration       int64         `json:"load_duration"`
+	Message            ollamaMessage `json:"message"`
+	Model              string        `json:"model"`
+	PromptEvalCount    int           `json:"prompt_eval_count"`
+	PromptEvalDuration int64         `json:"prompt_eval_duration"`
+	TotalDuration      int64         `json:"total_duration"`
 }
 
 func Ollama(ip, port, model string) error {
@@ -80,7 +98,7 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 	reqData := make(map[string]interface{})
 
 	reqData["model"] = config.Model
-	reqData["messages"] = []ollamaMessage{
+	reqData["messages"] = []ollamaRole{
 		{Role: "system", Content: request.Systemprompt},
 		{Role: "user", Content: request.Userprompt},
 	}
@@ -92,30 +110,38 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 		return ResponseStruct{}, err
 	}
 
-	print(jData)
-
-	_, ok := jData["message"].(map[string]interface{})["tool_calls"]
-	if ok {
-		calls := 
+	if len(jData.Message.ToolCalls) > 0 {
+		calls := jData.Message.ToolCalls
 		for _, t := range calls {
-			fmt.Printf("\n\n%v\n\n", t)
-			time.Sleep(2 * time.Second)
 			tool, err := tool.Find(t.Function.Name)
 			if err != nil {
 				continue
 			}
 
 			var args []interface{}
-			args = append(args, t.Function.Arguments)
+			for _, a := range t.Function.Arguments {
+				args = append(args, a)
+			}
 
 			toolResponse, err := tool.Run(args...)
 			if err != nil {
 				continue
 			}
 
-			reqData["messages"] = append(reqData["messages"].([]ollamaMessage),
-				ollamaMessage{Role: "Tools", Content: string(toolResponse)})
+			reqData["messages"] = append(reqData["messages"].([]ollamaRole),
+				ollamaRole{Role: "tool", Content: string(toolResponse)})
 		}
+
+		// Printer ut reqData["messages"] til terminalen
+		/**
+		messagesJSON, err := json.MarshalIndent(reqData["messages"], "", "  ")
+		if err != nil {
+			fmt.Println("Error marshalling messages:", err)
+		} else {
+			fmt.Println("Updated messages:", string(messagesJSON))
+		}
+		*/
+
 		jData, err = ollamaNetworkSender(reqData, url)
 		if err != nil {
 			return ResponseStruct{}, err
@@ -124,7 +150,7 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 	}
 
 	return ResponseStruct{
-		Response: jData["message"].(map[string]interface{})["content"].(string),
+		Response: jData.Message.Content,
 	}, nil
 }
 
@@ -144,35 +170,33 @@ func ollamaToolsWrapper() []ollamaTool {
 }
 
 // Does Ollamas network handling
-func ollamaNetworkSender(reqData map[string]interface{}, url string) (map[string]interface{}, error) {
+func ollamaNetworkSender(reqData map[string]interface{}, url string) (ollamaResponse, error) {
 	data, err := json.Marshal(reqData)
 	if err != nil {
-		return nil, err
+		return ollamaResponse{}, err
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(data))
 	if err != nil {
-		return nil, err
+		return ollamaResponse{}, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, err
+		return ollamaResponse{}, err
 	}
 	defer res.Body.Close()
 
 	resData, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return ollamaResponse{}, err
 	}
 
-	var jData map[string]interface{}
+	var jData ollamaResponse
 	if err := json.Unmarshal(resData, &jData); err != nil {
-		return nil, err
+		return ollamaResponse{}, err
 	}
-
-	fmt.Println(jData)
 
 	return jData, nil
 }
