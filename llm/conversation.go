@@ -4,6 +4,7 @@ import (
 	"Coeus/provider"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -51,18 +52,17 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 	c.AppendHistory("user", c.UserPrompt)
 	c.AppendHistory("assistant", response.Response)
 
-	//splitString := strings.Split(response.Response, " ")
+	splitString := strings.Split(response.Response, " ")
 
-	// Check for if the response contains a summary and extract it
-	/*
-		for i, w := range splitString {
-			if strings.Contains(w, "SUMMARY") {
-				c.Summary = strings.Join(splitString[i+1:], " ")
-				response.Response = strings.Join(splitString[:i], " ")
-				break
-			}
+	//Check for if the response contains a summary and extract it
+
+	for i, w := range splitString {
+		if strings.Contains(w, "SUMMARY") {
+			c.Summary = strings.Join(splitString[i+1:], " ")
+			response.Response = strings.Join(splitString[:i], " ")
+			break
 		}
-	*/
+	}
 
 	return response, err
 }
