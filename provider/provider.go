@@ -16,6 +16,13 @@ type RequestStruct struct {
 	Userprompt   string
 }
 
+type HistoryStruct struct {
+	Role       string     `json:"role"`
+	Content    string     `json:"content"`
+	ToolCallID string     `json:"tool_call_id,omitempty"`
+	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
+}
+
 type ToolCall struct {
 	Index    *int   `json:"index,omitempty"`
 	ID       string `json:"id,omitempty"`
@@ -26,13 +33,6 @@ type ToolCall struct {
 	} `json:"function"`
 }
 
-type HistoryStruct struct {
-	Role       string     `json:"role"`
-	Content    string     `json:"content"`
-	ToolCallID string     `json:"tool_call_id,omitempty"`
-	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
-}
-
 var Provider interface{}
 
 func Send(request RequestStruct) (ResponseStruct, error) {
@@ -41,7 +41,7 @@ func Send(request RequestStruct) (ResponseStruct, error) {
 	case OllamaStruct:
 		return SendOllama(request)
 	case AzureProviderStruct:
-		return SendAzure(request)
+		return sendAzure(request)
 	case OpenAIStruct:
 		return SendOpenAI(request)
 	default:

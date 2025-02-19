@@ -43,20 +43,20 @@ func Azure(endpoint, apikey string, temperature float64, maxTokens int) error {
 	return nil
 }
 
-func SendAzure(request RequestStruct) (ResponseStruct, error) {
+func sendAzure(request RequestStruct) (ResponseStruct, error) {
 
-	azureRes, err := AzureSendRequest(CreateAzureRequest(request))
+	azureRes, err := azureSendRequest(createAzureRequest(request))
 	if err != nil {
 		return ResponseStruct{}, err
 	}
 
 	if len(azureRes.Choices[0].Message.ToolCalls) > 0 {
 
-		*request.History = append(*request.History, HistoryStruct{Role: "assistant", ToolCalls: azureRes.Choices[0].Message.ToolCalls})
+		// Push LLM tool calls to the history
+		*request.History = append(*request.History, HistoryStruct{Role: "assistant",
+			ToolCalls: azureRes.Choices[0].Message.ToolCalls})
 
 		for _, toolCall := range azureRes.Choices[0].Message.ToolCalls {
-
-			//*request.History = append(*request.History, HistoryStruct{Role: "assistant", Content: fmt.Sprintf("%v", toolCall)})
 
 			t, err := tool.Find(toolCall.Function.Name)
 			if err != nil {
@@ -79,28 +79,23 @@ func SendAzure(request RequestStruct) (ResponseStruct, error) {
 				return ResponseStruct{}, fmt.Errorf("error during tool execution: %v", err)
 			}
 
-			//*request.History = append(*request.History, HistoryStruct{Role: "function", Content: fmt.Sprintf("%v", toolCall), ToolCallID: toolCall.ID})
-			*request.History = append(*request.History, HistoryStruct{Role: "tool", Content: toolResponse, ToolCallID: toolCall.ID})
-
+			*request.History = append(*request.History, HistoryStruct{
+				Role:       "tool",
+				Content:    toolResponse,
+				ToolCallID: toolCall.ID})
 		}
 
-		fmt.Print(request.History)
-
-		fmt.Println(CreateAzureRequest(request))
-
-		azureRes, err = AzureSendRequest(CreateAzureRequest(request))
+		azureRes, err = azureSendRequest(createAzureRequest(request))
 		if err != nil {
 			return ResponseStruct{}, err
 		}
-
-		fmt.Println(azureRes)
 
 	}
 
 	return ResponseStruct{Response: azureRes.Choices[0].Message.Content}, nil
 }
 
-func CreateAzureRequest(request RequestStruct) azureRequest {
+func createAzureRequest(request RequestStruct) azureRequest {
 	Config := Provider.(AzureProviderStruct)
 
 	AzureReq := azureRequest{
@@ -109,7 +104,12 @@ func CreateAzureRequest(request RequestStruct) azureRequest {
 	}
 
 	for _, h := range *request.History {
-		AzureReq.Messages = append(AzureReq.Messages, azureMessage{Role: h.Role, Content: h.Content, ToolCallID: h.ToolCallID, ToolCalls: h.ToolCalls})
+		AzureReq.Messages = append(AzureReq.Messages,
+			azureMessage{
+				Role:       h.Role,
+				Content:    h.Content,
+				ToolCallID: h.ToolCallID,
+				ToolCalls:  h.ToolCalls})
 	}
 
 	for _, t := range tool.Tools {
@@ -123,12 +123,18 @@ func CreateAzureRequest(request RequestStruct) azureRequest {
 			Parameters:  t.Params}})
 	}
 
-	AzureReq.Messages = append(AzureReq.Messages, azureMessage{Role: "system", Content: request.Systemprompt}, azureMessage{Role: "user", Content: request.Userprompt})
+	AzureReq.Messages = append(AzureReq.Messages, azureMessage{
+		Role:    "system",
+		Content: request.Systemprompt},
+		azureMessage{
+			Role:    "user",
+			Content: request.Userprompt,
+		})
 
 	return AzureReq
 }
 
-func AzureSendRequest(AzureReq azureRequest) (azureResponse, error) {
+func azureSendRequest(AzureReq azureRequest) (azureResponse, error) {
 	Config := Provider.(AzureProviderStruct)
 
 	buf := new(bytes.Buffer)
@@ -152,8 +158,6 @@ func AzureSendRequest(AzureReq azureRequest) (azureResponse, error) {
 	if err != nil {
 		return azureResponse{}, err
 	}
-
-	//fmt.Println(string(resData))
 
 	var azureRes azureResponse
 
