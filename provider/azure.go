@@ -114,10 +114,10 @@ func createAzureRequest(request RequestStruct) azureRequest {
 
 	for _, t := range tool.Tools {
 		AzureReq.Tools = append(AzureReq.Tools, azureTool{Type: "function", Function: struct {
-			Name        string   "json:\"name\""
-			Description string   "json:\"description\""
-			Parameters  any      "json:\"parameters\""
-			Required    []string "json:\"required\""
+			Name        string   `json:"name"`
+			Description string   `json:"description"`
+			Parameters  any      `json:"parameters"`
+			Required    []string `json:"required"`
 		}{Name: t.Name,
 			Description: t.Desc,
 			Parameters:  t.Params}})
