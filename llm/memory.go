@@ -2,7 +2,6 @@ package llm
 
 import (
 	"fmt"
-	"strings"
 )
 
 /* Default memory function is All. This function will use all messages as memory. */
@@ -37,12 +36,12 @@ func MemoryAllMessage(args ...interface{}) string {
 	}
 
 	if len(con.History) <= 0 {
-		return ""
+		return "No History"
 	}
 
 	var temp string
 	for _, h := range con.History {
-		temp += h
+		temp += h.Role + ": " + h.Content
 	}
 
 	return temp
@@ -71,7 +70,12 @@ func MemoryLastMessage(args ...interface{}) string {
 	}
 
 	lastMessages := con.History[historyLen-x:]
-	return "[BEGIN HISTORY]" + strings.Join(lastMessages, "\n") + "[END HISTORY]"
+	var hist string
+	for _, h := range lastMessages {
+		hist += h.Role + ": " + h.Content + "\n"
+	}
+
+	return "[BEGIN HISTORY]" + hist + "[END HISTORY]"
 }
 
 /*
@@ -90,7 +94,7 @@ func MemorySummary(args ...interface{}) string {
 
 	if con.Summary == "" {
 		for _, h := range con.History {
-			tempSummary += h + "\n"
+			tempSummary += h.Role + ": " + h.Content + "\n"
 		}
 		con.Summary = tempSummary
 	}
