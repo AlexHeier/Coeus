@@ -11,56 +11,7 @@ import (
 	"strconv"
 )
 
-const OLLAMA_GENERATE_SUFFIX = "/api/chat"
-
-type OllamaStruct struct {
-	HttpProtocol string
-	ServerIP     string
-	Port         string
-	Model        string
-	Stream       bool
-}
-
-type ollamaTool struct {
-	Type     string `json:"type"`
-	Function struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
-		Parameters  any    `json:"parameters"`
-	}
-}
-
-type ollamaRole struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-type ollamaToolCall struct {
-	Function struct {
-		Arguments map[string]interface{} `json:"arguments"`
-		Name      string                 `json:"name"`
-	} `json:"function"`
-}
-
-type ollamaMessage struct {
-	Content   string           `json:"content"`
-	Role      string           `json:"role"`
-	ToolCalls []ollamaToolCall `json:"tool_calls"`
-}
-
-type ollamaResponse struct {
-	CreatedAt          string        `json:"created_at"`
-	Done               bool          `json:"done"`
-	DoneReason         string        `json:"done_reason"`
-	EvalCount          int           `json:"eval_count"`
-	EvalDuration       int64         `json:"eval_duration"`
-	LoadDuration       int64         `json:"load_duration"`
-	Message            ollamaMessage `json:"message"`
-	Model              string        `json:"model"`
-	PromptEvalCount    int           `json:"prompt_eval_count"`
-	PromptEvalDuration int64         `json:"prompt_eval_duration"`
-	TotalDuration      int64         `json:"total_duration"`
-}
+const OLLAMA_SUFFIX = "/api/chat"
 
 func Ollama(ip, port, model string) error {
 	// Validate IP address
@@ -93,7 +44,7 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 
 	config := Provider.(OllamaStruct)
 
-	url := "http://" + config.ServerIP + ":" + config.Port + OLLAMA_GENERATE_SUFFIX
+	url := "http://" + config.ServerIP + ":" + config.Port + OLLAMA_SUFFIX
 
 	reqData := make(map[string]interface{})
 
@@ -132,25 +83,18 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 				ollamaRole{Role: "tool", Content: string(toolResponse)})
 		}
 
-		// Printer ut reqData["messages"] til terminalen
-		/**
-		messagesJSON, err := json.MarshalIndent(reqData["messages"], "", "  ")
-		if err != nil {
-			fmt.Println("Error marshalling messages:", err)
-		} else {
-			fmt.Println("Updated messages:", string(messagesJSON))
-		}
-		*/
-
 		jData, err = ollamaNetworkSender(reqData, url)
 		if err != nil {
 			return ResponseStruct{}, err
 		}
-
 	}
 
 	return ResponseStruct{
-		Response: jData.Message.Content,
+		Response:             jData.Message.Content,
+		TotalLoadDuration:    float64(jData.TotalDuration),
+		Eval_count:           float64(jData.EvalCount),
+		Prompt_eval_count:    float64(jData.PromptEvalCount),
+		Prompt_eval_duration: float64(jData.PromptEvalDuration),
 	}, nil
 }
 

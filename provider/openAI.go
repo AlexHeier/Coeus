@@ -9,11 +9,6 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-type OpenAIStruct struct {
-	Model   string
-	API_KEY string
-}
-
 func OpenAI(model, api_key string) error {
 	Provider = OpenAIStruct{
 		Model:   model,
