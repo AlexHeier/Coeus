@@ -44,7 +44,7 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 	response, err := provider.Send(provider.RequestStruct{
 		Userprompt:   c.UserPrompt,
 		Systemprompt: c.systemPrompt(),
-		History:      c.History,
+		History:      &c.History,
 	})
 
 	if err != nil {

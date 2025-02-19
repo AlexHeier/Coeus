@@ -11,7 +11,7 @@ type ResponseStruct struct {
 }
 
 type RequestStruct struct {
-	History      []HistoryStruct
+	History      *[]HistoryStruct
 	Systemprompt string
 	Userprompt   string
 }
@@ -28,7 +28,7 @@ func Send(request RequestStruct) (ResponseStruct, error) {
 	switch Provider.(type) {
 	case OllamaStruct:
 		return SendOllama(request)
-	case AzureStruct:
+	case AzureProviderStruct:
 		return SendAzure(request)
 	case OpenAIStruct:
 		return SendOpenAI(request)

@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"Coeus/llm/tool"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -9,7 +10,7 @@ import (
 )
 
 // Azure Configuration struct
-type AzureStruct struct {
+type AzureProviderStruct struct {
 	Endpoint    string  // Azure API endpoint
 	APIKey      string  // Azure API Key
 	Temperature float64 // How free thinking the LLM should be. Lower equals more free. Can be between 0.1 and 1.0
@@ -19,6 +20,7 @@ type AzureStruct struct {
 // Struct used in sending requests to an Azure endpoint
 type AzureRequest struct {
 	Messages    []AzureMessage `json:"messages"`
+	Tools       []AzureTool    `json:"tools"`
 	MaxTokens   int            `json:"max_tokens"`
 	Temperature float64        `json:"temperature"`
 }
@@ -47,9 +49,20 @@ type AzureResponse struct {
 }
 
 type AzureMessage struct {
-	Content string `json:"content"`
-	Refusal string `json:"refusal"`
-	Role    string `json:"role"`
+	Content   string                   `json:"content"`
+	Refusal   string                   `json:"refusal"`
+	Role      string                   `json:"role"`
+	ToolCalls []map[string]interface{} `json:"tool_calls"`
+}
+
+type AzureTool struct {
+	Type     string `json:"type"`
+	Function struct {
+		Name        string                 `json:"name"`
+		Description string                 `json:"description"`
+		Parameters  map[string]interface{} `json:"parameters"`
+		Required    []string               `json:"required"`
+	} `json:"function"`
 }
 
 // Creates a new Azure config and sets it as provider
@@ -76,7 +89,7 @@ func Azure(endpoint, apikey string, temperature float64, maxTokens int) error {
 		return fmt.Errorf("maxtokens must be bigger than 0")
 	}
 
-	Provider = AzureStruct{
+	Provider = AzureProviderStruct{
 		Endpoint:    endpoint,
 		APIKey:      apikey,
 		Temperature: temperature,
@@ -88,21 +101,9 @@ func Azure(endpoint, apikey string, temperature float64, maxTokens int) error {
 
 func SendAzure(request RequestStruct) (ResponseStruct, error) {
 
-	Config := Provider.(AzureStruct)
+	Config := Provider.(AzureProviderStruct)
 
-	AzureReq := AzureRequest{
-		Temperature: Config.Temperature,
-		MaxTokens:   Config.MaxTokens,
-	}
-
-	for _, h := range request.History {
-		AzureReq.Messages = append(AzureReq.Messages, AzureMessage{Role: h.Role, Content: h.Content})
-	}
-
-	AzureReq.Messages = append(AzureReq.Messages, AzureMessage{Role: "system", Content: request.Systemprompt}, AzureMessage{Role: "user", Content: request.Userprompt})
-
-	yes, _ := json.MarshalIndent(AzureReq, "", " ")
-	fmt.Println(string(yes))
+	AzureReq := CreateAzureRequest(request)
 
 	buf := new(bytes.Buffer)
 
@@ -132,8 +133,73 @@ func SendAzure(request RequestStruct) (ResponseStruct, error) {
 	if err != nil {
 		return ResponseStruct{}, err
 	}
-	yep, _ := json.MarshalIndent(azureRes, "", " ")
-	fmt.Println(string(yep))
 
-	return ResponseStruct{Response: azureRes.Choices[0].Message.Content}, nil
+	switch azureRes.Choices[0].FinishReason {
+	case "tool_calls":
+		messages, err := AzureRunTools(azureRes)
+		if err != nil {
+			return ResponseStruct{}, err
+		}
+		*request.History = append(*request.History, messages...)
+		return SendAzure(request)
+	default:
+		return ResponseStruct{Response: azureRes.Choices[0].Message.Content}, nil
+	}
+}
+
+func AzureRunTools(res AzureResponse) ([]HistoryStruct, error) {
+	var messages []HistoryStruct
+
+	for _, call := range res.Choices[0].Message.ToolCalls {
+		fmt.Println(call)
+
+		f := call["function"].(map[string]interface{})
+		args := make(map[string]interface{})
+
+		jsonArgs := f["arguments"]
+		toolName := f["name"]
+
+		err := json.Unmarshal([]byte(jsonArgs.(string)), &args)
+		if err != nil {
+			return messages, err
+		}
+
+		_ = toolName
+
+		//t, err := tool.Find(toolCall.Name)
+		//if err != nil {
+		//	return []AzureMessage{}, err
+		//}
+
+	}
+
+	return messages, nil
+}
+
+func CreateAzureRequest(request RequestStruct) AzureRequest {
+	Config := Provider.(AzureProviderStruct)
+
+	AzureReq := AzureRequest{
+		Temperature: Config.Temperature,
+		MaxTokens:   Config.MaxTokens,
+	}
+
+	for _, h := range *request.History {
+		AzureReq.Messages = append(AzureReq.Messages, AzureMessage{Role: h.Role, Content: h.Content})
+	}
+
+	for _, t := range tool.Tools {
+		AzureReq.Tools = append(AzureReq.Tools, AzureTool{Type: "function", Function: struct {
+			Name        string                 "json:\"name\""
+			Description string                 "json:\"description\""
+			Parameters  map[string]interface{} "json:\"parameters\""
+			Required    []string               "json:\"required\""
+		}{Name: t.Name,
+			Description: t.Desc,
+			Parameters:  t.Params}})
+	}
+
+	AzureReq.Messages = append(AzureReq.Messages, AzureMessage{Role: "system", Content: request.Systemprompt}, AzureMessage{Role: "user", Content: request.Userprompt})
+
+	return AzureReq
 }
