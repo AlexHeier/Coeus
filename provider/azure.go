@@ -9,6 +9,12 @@ import (
 	"net/http"
 )
 
+const AZURE_ROLE_USER = "user"
+const AZURE_ROLE_TOOL = "tool"
+const AZURE_ROLE_SYSTEM = "system"
+const AZURE_ROLE_ASSISTANT = "assistant"
+const AZURE_TYPE_FUNCTION = "function"
+
 // Creates a new Azure config and sets it as provider
 /*
 @param endpoint: String which contains the URL of Azure endpoint
@@ -45,7 +51,6 @@ func Azure(endpoint, apikey string, temperature float64, maxTokens int) error {
 
 func sendAzure(request RequestStruct) (ResponseStruct, error) {
 
-	*request.History = append(*request.History, HistoryStruct{Role: "user", Content: request.Userprompt})
 	azureRes, err := azureSendRequest(createAzureRequest(request))
 	if err != nil {
 		return ResponseStruct{}, err
@@ -54,7 +59,7 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 	if len(azureRes.Choices[0].Message.ToolCalls) > 0 {
 
 		// Push LLM tool calls to the history
-		*request.History = append(*request.History, HistoryStruct{Role: "assistant",
+		*request.History = append(*request.History, HistoryStruct{Role: AZURE_ROLE_ASSISTANT,
 			ToolCalls: azureRes.Choices[0].Message.ToolCalls})
 
 		for _, toolCall := range azureRes.Choices[0].Message.ToolCalls {
@@ -81,7 +86,7 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 			}
 
 			*request.History = append(*request.History, HistoryStruct{
-				Role:       "tool",
+				Role:       AZURE_ROLE_TOOL,
 				Content:    toolResponse,
 				ToolCallID: toolCall.ID})
 		}
@@ -90,9 +95,7 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 		if err != nil {
 			return ResponseStruct{}, err
 		}
-
 	}
-
 	return ResponseStruct{Response: azureRes.Choices[0].Message.Content}, nil
 }
 
@@ -105,8 +108,12 @@ func createAzureRequest(request RequestStruct) azureRequest {
 	}
 
 	AzureReq.Messages = append(AzureReq.Messages, azureMessage{
-		Role:    "system",
+		Role:    AZURE_ROLE_SYSTEM,
 		Content: request.Systemprompt})
+
+	*request.History = append(*request.History, HistoryStruct{
+		Role:    AZURE_ROLE_USER,
+		Content: request.Userprompt})
 
 	for _, h := range *request.History {
 		AzureReq.Messages = append(AzureReq.Messages,
@@ -118,7 +125,7 @@ func createAzureRequest(request RequestStruct) azureRequest {
 	}
 
 	for _, t := range tool.Tools {
-		AzureReq.Tools = append(AzureReq.Tools, azureTool{Type: "function", Function: struct {
+		AzureReq.Tools = append(AzureReq.Tools, azureTool{Type: AZURE_TYPE_FUNCTION, Function: struct {
 			Name        string   `json:"name"`
 			Description string   `json:"description"`
 			Parameters  any      `json:"parameters"`
@@ -151,6 +158,11 @@ func azureSendRequest(AzureReq azureRequest) (azureResponse, error) {
 	}
 	defer res.Body.Close()
 
+	err = azureParseStatusCode(res)
+	if err != nil {
+		return azureResponse{}, err
+	}
+
 	resData, err := io.ReadAll(res.Body)
 	if err != nil {
 		return azureResponse{}, err
@@ -164,4 +176,16 @@ func azureSendRequest(AzureReq azureRequest) (azureResponse, error) {
 	}
 
 	return azureRes, nil
+}
+
+func azureParseStatusCode(res *http.Response) error {
+	switch res.StatusCode {
+	case 429: // Token limit reached
+		return fmt.Errorf("token rate limit reached")
+	case 200: // OK
+		return nil
+	default:
+		fmt.Printf("unhandled status code: %d\n", res.StatusCode)
+		return nil
+	}
 }
