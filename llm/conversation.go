@@ -90,28 +90,6 @@ func BeginConversation() *Conversation {
 	return ConvAll.Conversations[len(ConvAll.Conversations)-1]
 }
 
-// Finds and deletes the given conversation
-func DeleteConversation(con *Conversation) error {
-	ConvAll.Mutex.Lock()
-	defer ConvAll.Mutex.Unlock()
-	var found bool
-	var temp []*Conversation
-	for i := range ConvAll.Conversations {
-		if !(con == ConvAll.Conversations[i]) {
-			temp = append(temp, con)
-		} else {
-			found = true
-		}
-	}
-
-	if !found {
-		return fmt.Errorf("conversation not found")
-	}
-
-	ConvAll.Conversations = temp
-	return nil
-}
-
 func (c *Conversation) systemPrompt() string {
 
 	sysP := make(map[string]interface{})

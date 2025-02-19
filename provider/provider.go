@@ -4,10 +4,10 @@ import "fmt"
 
 type ResponseStruct struct {
 	Response             string
-	LoadDuration         float64
-	eval_count           float64
-	prompt_eval_count    float64
-	prompt_eval_duration float64
+	TotalLoadDuration    float64
+	Eval_count           float64
+	Prompt_eval_count    float64
+	Prompt_eval_duration float64
 }
 
 type RequestStruct struct {
