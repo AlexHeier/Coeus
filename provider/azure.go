@@ -18,20 +18,20 @@ type AzureProviderStruct struct {
 }
 
 // Struct used in sending requests to an Azure endpoint
-type AzureRequest struct {
-	Messages    []AzureMessage `json:"messages"`
-	Tools       []AzureTool    `json:"tools"`
+type azureRequest struct {
+	Messages    []azureMessage `json:"messages"`
+	Tools       []azureTool    `json:"tools"`
 	MaxTokens   int            `json:"max_tokens"`
 	Temperature float64        `json:"temperature"`
 }
 
 // Struct for containing the response from Azure
-type AzureResponse struct {
+type azureResponse struct {
 	Choices []struct {
 		ContentFilterResults map[string]interface{} `json:"content_filter_results"`
 		FinishReason         string                 `json:"finish_reason"`
 		LogProbs             string                 `json:"logprobs"`
-		Message              AzureMessage           `json:"message"`
+		Message              azureMessage           `json:"message"`
 	} `json:"choices"`
 	Model               string `json:"model"`
 	PromptFilterResults []struct {
@@ -48,7 +48,7 @@ type AzureResponse struct {
 	} `json:"usage"`
 }
 
-type AzureMessage struct {
+type azureMessage struct {
 	Content    string     `json:"content"`
 	Refusal    string     `json:"refusal"`
 	Role       string     `json:"role"`
@@ -56,7 +56,7 @@ type AzureMessage struct {
 	ToolCallID string     `json:"tool_call_id,omitempty"`
 }
 
-type AzureTool struct {
+type azureTool struct {
 	Type     string `json:"type"`
 	Function struct {
 		Name        string   `json:"name"`
@@ -157,10 +157,10 @@ func SendAzure(request RequestStruct) (ResponseStruct, error) {
 	return ResponseStruct{Response: azureRes.Choices[0].Message.Content}, nil
 }
 
-func CreateAzureRequest(request RequestStruct) AzureRequest {
+func CreateAzureRequest(request RequestStruct) azureRequest {
 	Config := Provider.(AzureProviderStruct)
 
-	AzureReq := AzureRequest{
+	AzureReq := azureRequest{
 		Temperature: Config.Temperature,
 		MaxTokens:   Config.MaxTokens,
 	}
@@ -170,7 +170,7 @@ func CreateAzureRequest(request RequestStruct) AzureRequest {
 	}
 
 	for _, t := range tool.Tools {
-		AzureReq.Tools = append(AzureReq.Tools, AzureTool{Type: "function", Function: struct {
+		AzureReq.Tools = append(AzureReq.Tools, azureTool{Type: "function", Function: struct {
 			Name        string   "json:\"name\""
 			Description string   "json:\"description\""
 			Parameters  any      "json:\"parameters\""
@@ -180,12 +180,12 @@ func CreateAzureRequest(request RequestStruct) AzureRequest {
 			Parameters:  t.Params}})
 	}
 
-	AzureReq.Messages = append(AzureReq.Messages, AzureMessage{Role: "system", Content: request.Systemprompt}, AzureMessage{Role: "user", Content: request.Userprompt})
+	AzureReq.Messages = append(AzureReq.Messages, azureMessage{Role: "system", Content: request.Systemprompt}, azureMessage{Role: "user", Content: request.Userprompt})
 
 	return AzureReq
 }
 
-func AzureSendRequest(AzureReq AzureRequest) (AzureResponse, error) {
+func AzureSendRequest(AzureReq azureRequest) (azureResponse, error) {
 	Config := Provider.(AzureProviderStruct)
 
 	buf := new(bytes.Buffer)
@@ -194,29 +194,29 @@ func AzureSendRequest(AzureReq AzureRequest) (AzureResponse, error) {
 
 	req, err := http.NewRequest(http.MethodPost, Config.Endpoint, buf)
 	if err != nil {
-		return AzureResponse{}, err
+		return azureResponse{}, err
 	}
 
 	req.Header.Add("api-key", Config.APIKey)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return AzureResponse{}, err
+		return azureResponse{}, err
 	}
 	defer res.Body.Close()
 
 	resData, err := io.ReadAll(res.Body)
 	if err != nil {
-		return AzureResponse{}, err
+		return azureResponse{}, err
 	}
 
 	//fmt.Println(string(resData))
 
-	var azureRes AzureResponse
+	var azureRes azureResponse
 
 	err = json.Unmarshal(resData, &azureRes)
 	if err != nil {
-		return AzureResponse{}, err
+		return azureResponse{}, err
 	}
 
 	return azureRes, nil

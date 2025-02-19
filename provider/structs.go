@@ -73,4 +73,69 @@ type OpenAIStruct struct {
  	/_/    \_\/___|\__,_|_|  \___|
 */
 
-//Azure structs here
+// Azure Configuration struct
+type AzureProviderStruct struct {
+	Endpoint    string  // Azure API endpoint
+	APIKey      string  // Azure API Key
+	Temperature float64 // How free thinking the LLM should be. Lower equals more free. Can be between 0.1 and 1.0
+	MaxTokens   int     // Max amount of tokens a response can use
+}
+
+// Struct used in sending requests to an Azure endpoint
+type azureRequest struct {
+	Messages    []azureMessage `json:"messages"`
+	Tools       []azureTool    `json:"tools"`
+	MaxTokens   int            `json:"max_tokens"`
+	Temperature float64        `json:"temperature"`
+}
+
+// Struct for containing the response from Azure
+type azureResponse struct {
+	Choices []struct {
+		ContentFilterResults map[string]interface{} `json:"content_filter_results"`
+		FinishReason         string                 `json:"finish_reason"`
+		LogProbs             string                 `json:"logprobs"`
+		Message              azureMessage           `json:"message"`
+	} `json:"choices"`
+	Model               string `json:"model"`
+	PromptFilterResults []struct {
+		PromptIndex          int `json:"prompt_index"`
+		ContentFilterResults map[string]struct {
+			Filtered bool   `json:"filtered"`
+			Severity string `json:"severity"`
+		} `json:"content_filter_results"`
+	} `json:"prompt_filter_results"`
+	Usage struct {
+		CompletionTokens int `json:"completion_tokens"`
+		PromptTokens     int `json:"prompt_tokens"`
+		TotalTokens      int `json:"total_tokens"`
+	} `json:"usage"`
+}
+
+type azureMessage struct {
+	Content    string          `json:"content"`
+	Refusal    string          `json:"refusal"`
+	Role       string          `json:"role"`
+	ToolCalls  []azureToolCall `json:"tool_calls,omitempty"`
+	ToolCallID string          `json:"tool_call_id,omitempty"`
+}
+
+type azureToolCall struct {
+	Index    *int   `json:"index,omitempty"`
+	ID       string `json:"id,omitempty"`
+	Type     string `json:"type"`
+	Function struct {
+		Name      string `json:"name,omitempty"`
+		Arguments string `json:"arguments,omitempty"`
+	} `json:"function"`
+}
+
+type azureTool struct {
+	Type     string `json:"type"`
+	Function struct {
+		Name        string   `json:"name"`
+		Description string   `json:"description"`
+		Parameters  any      `json:"parameters"`
+		Required    []string `json:"required"`
+	} `json:"function"`
+}
