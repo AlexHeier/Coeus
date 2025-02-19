@@ -79,7 +79,7 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 
 		}
 	}
-	return nil, -1, -1
+	return response, err
 }
 
 func (c *Conversation) DumpConversation() string {
@@ -107,12 +107,12 @@ func BeginConversation() *Conversation {
 
 func (c *Conversation) systemPrompt() string {
 
-	sysP := SystemPrompt{}
+	sysP := make(map[string]interface{})
+
 	sysP["systemprompt"] = c.MainPrompt
 	sysP["conversationHistory"] = Memory(append([]interface{}{c}, MemArgs...)...)
 
-
-	ret, err := json.MarshalIndent(sysP, "", " ")
+	ret, err := json.Marshal(sysP)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
