@@ -113,21 +113,11 @@ type azureResponse struct {
 }
 
 type azureMessage struct {
-	Content    string          `json:"content"`
-	Refusal    string          `json:"refusal"`
-	Role       string          `json:"role"`
-	ToolCalls  []azureToolCall `json:"tool_calls,omitempty"`
-	ToolCallID string          `json:"tool_call_id,omitempty"`
-}
-
-type azureToolCall struct {
-	Index    *int   `json:"index,omitempty"`
-	ID       string `json:"id,omitempty"`
-	Type     string `json:"type"`
-	Function struct {
-		Name      string `json:"name,omitempty"`
-		Arguments string `json:"arguments,omitempty"`
-	} `json:"function"`
+	Content    string     `json:"content"`
+	Refusal    string     `json:"refusal"`
+	Role       string     `json:"role"`
+	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
+	ToolCallID string     `json:"tool_call_id,omitempty"`
 }
 
 type azureTool struct {
