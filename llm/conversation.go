@@ -14,11 +14,6 @@ var ConvAll struct {
 	Conversations []*Conversation
 }
 
-type HistoryStruct struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
 // Struct for a single conversation.
 type Conversation struct {
 	Mutex      sync.Mutex

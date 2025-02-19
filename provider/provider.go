@@ -17,8 +17,9 @@ type RequestStruct struct {
 }
 
 type HistoryStruct struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role       string `json:"role"`
+	Content    string `json:"content"`
+	ToolCallID string `json:"tool_call_id,omitempty"`
 }
 
 var Provider interface{}
