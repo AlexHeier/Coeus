@@ -26,12 +26,27 @@ type Conversation struct {
 	LastActive time.Time
 }
 
+type SystemPrompt struct {
+	Context struct {
+		SystemPrompt string `json:"systemPrompt"`
+		Tools        []struct {
+			ToolName        string `json:"toolName"`
+			ToolDescription string `json:"toolDescription"`
+		} `json:"tools"`
+		AboutTools  string        `json:"aboutTools"`
+		ToolReturns []interface{} `json:"toolReturns"`
+		History     []string      `json:"history"`
+	} `json:"context"`
+}
+
 // Appends a prompt and section to the history within the conversation
+
 func (c *Conversation) AppendHistory(role, content string) {
 	c.History = append(c.History, provider.HistoryStruct{Role: role, Content: content})
 }
 
 func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error) {
+
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
 	c.LastActive = time.Now()
@@ -61,10 +76,10 @@ func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error
 			c.Summary = strings.Join(splitString[i+1:], " ")
 			response.Response = strings.Join(splitString[:i], " ")
 			break
+
 		}
 	}
-
-	return response, err
+	return nil, -1, -1
 }
 
 func (c *Conversation) DumpConversation() string {
@@ -92,12 +107,12 @@ func BeginConversation() *Conversation {
 
 func (c *Conversation) systemPrompt() string {
 
-	sysP := make(map[string]interface{})
-
+	sysP := SystemPrompt{}
 	sysP["systemprompt"] = c.MainPrompt
 	sysP["conversationHistory"] = Memory(append([]interface{}{c}, MemArgs...)...)
 
-	ret, err := json.Marshal(sysP)
+
+	ret, err := json.MarshalIndent(sysP, "", " ")
 	if err != nil {
 		fmt.Println(err.Error())
 	}
