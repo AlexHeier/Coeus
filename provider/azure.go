@@ -45,6 +45,7 @@ func Azure(endpoint, apikey string, temperature float64, maxTokens int) error {
 
 func sendAzure(request RequestStruct) (ResponseStruct, error) {
 
+	*request.History = append(*request.History, HistoryStruct{Role: "user", Content: request.Userprompt})
 	azureRes, err := azureSendRequest(createAzureRequest(request))
 	if err != nil {
 		return ResponseStruct{}, err
@@ -103,6 +104,10 @@ func createAzureRequest(request RequestStruct) azureRequest {
 		MaxTokens:   Config.MaxTokens,
 	}
 
+	AzureReq.Messages = append(AzureReq.Messages, azureMessage{
+		Role:    "system",
+		Content: request.Systemprompt})
+
 	for _, h := range *request.History {
 		AzureReq.Messages = append(AzureReq.Messages,
 			azureMessage{
@@ -122,14 +127,6 @@ func createAzureRequest(request RequestStruct) azureRequest {
 			Description: t.Desc,
 			Parameters:  t.Params}})
 	}
-
-	AzureReq.Messages = append(AzureReq.Messages, azureMessage{
-		Role:    "system",
-		Content: request.Systemprompt},
-		azureMessage{
-			Role:    "user",
-			Content: request.Userprompt,
-		})
 
 	return AzureReq
 }
