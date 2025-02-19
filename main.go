@@ -35,12 +35,11 @@ func main() {
 
 	llm.MemoryVersion(llm.MemoryAllMessage)
 
-	tool.New("Multiply", "Takes two ints and returns the multiplied result.", Multiply)
+	//tool.New("Multiply", "Takes two ints and returns the multiplied result.", Multiply)
 	//tool.New("GetCurrentTime", "Gets the current time.", GetCurrentTime)
-	//tool.New("GetMagicData", "Retreives the magic data.", GetMagicData)
+	tool.New("GetMagicData", "Retreives the magic data.", GetMagicData)
 
 	go TimeOutConversations()
-
 
 	dashboard.Start("9002")
 }
@@ -56,7 +55,7 @@ func Multiply(a, b int) int {
 }
 
 func GetMagicData() (string, error) {
-	return "69420", fmt.Errorf("this is an error")
+	return "69420", nil
 }
 
 func TimeOutConversations() {

@@ -49,21 +49,11 @@ type AzureResponse struct {
 }
 
 type AzureMessage struct {
-	Content    string          `json:"content"`
-	Refusal    string          `json:"refusal"`
-	Role       string          `json:"role"`
-	ToolCalls  []AzureToolCall `json:"tool_calls,omitempty"`
-	ToolCallID string          `json:"tool_call_id,omitempty"`
-}
-
-type AzureToolCall struct {
-	Index    *int   `json:"index,omitempty"`
-	ID       string `json:"id,omitempty"`
-	Type     string `json:"type"`
-	Function struct {
-		Name      string `json:"name,omitempty"`
-		Arguments string `json:"arguments,omitempty"`
-	} `json:"function"`
+	Content    string     `json:"content"`
+	Refusal    string     `json:"refusal"`
+	Role       string     `json:"role"`
+	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
+	ToolCallID string     `json:"tool_call_id,omitempty"`
 }
 
 type AzureTool struct {
@@ -118,7 +108,13 @@ func SendAzure(request RequestStruct) (ResponseStruct, error) {
 	}
 
 	if len(azureRes.Choices[0].Message.ToolCalls) > 0 {
+
+		*request.History = append(*request.History, HistoryStruct{Role: "assistant", ToolCalls: azureRes.Choices[0].Message.ToolCalls})
+
 		for _, toolCall := range azureRes.Choices[0].Message.ToolCalls {
+
+			//*request.History = append(*request.History, HistoryStruct{Role: "assistant", Content: fmt.Sprintf("%v", toolCall)})
+
 			t, err := tool.Find(toolCall.Function.Name)
 			if err != nil {
 				return ResponseStruct{}, fmt.Errorf("could not find the tool %s", t.Name)
@@ -140,9 +136,12 @@ func SendAzure(request RequestStruct) (ResponseStruct, error) {
 				return ResponseStruct{}, fmt.Errorf("error during tool execution: %v", err)
 			}
 
+			//*request.History = append(*request.History, HistoryStruct{Role: "function", Content: fmt.Sprintf("%v", toolCall), ToolCallID: toolCall.ID})
 			*request.History = append(*request.History, HistoryStruct{Role: "tool", Content: toolResponse, ToolCallID: toolCall.ID})
 
 		}
+
+		fmt.Print(request.History)
 
 		fmt.Println(CreateAzureRequest(request))
 
@@ -167,7 +166,7 @@ func CreateAzureRequest(request RequestStruct) AzureRequest {
 	}
 
 	for _, h := range *request.History {
-		AzureReq.Messages = append(AzureReq.Messages, AzureMessage{Role: h.Role, Content: h.Content})
+		AzureReq.Messages = append(AzureReq.Messages, AzureMessage{Role: h.Role, Content: h.Content, ToolCallID: h.ToolCallID, ToolCalls: h.ToolCalls})
 	}
 
 	for _, t := range tool.Tools {
@@ -211,7 +210,7 @@ func AzureSendRequest(AzureReq AzureRequest) (AzureResponse, error) {
 		return AzureResponse{}, err
 	}
 
-	fmt.Println(string(resData))
+	//fmt.Println(string(resData))
 
 	var azureRes AzureResponse
 

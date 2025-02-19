@@ -16,10 +16,21 @@ type RequestStruct struct {
 	Userprompt   string
 }
 
+type ToolCall struct {
+	Index    *int   `json:"index,omitempty"`
+	ID       string `json:"id,omitempty"`
+	Type     string `json:"type"`
+	Function struct {
+		Name      string `json:"name,omitempty"`
+		Arguments string `json:"arguments,omitempty"`
+	} `json:"function"`
+}
+
 type HistoryStruct struct {
-	Role       string `json:"role"`
-	Content    string `json:"content"`
-	ToolCallID string `json:"tool_call_id,omitempty"`
+	Role       string     `json:"role"`
+	Content    string     `json:"content"`
+	ToolCallID string     `json:"tool_call_id,omitempty"`
+	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
 }
 
 var Provider interface{}
