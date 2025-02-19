@@ -9,74 +9,6 @@ import (
 	"net/http"
 )
 
-// Azure Configuration struct
-type AzureProviderStruct struct {
-	Endpoint    string  // Azure API endpoint
-	APIKey      string  // Azure API Key
-	Temperature float64 // How free thinking the LLM should be. Lower equals more free. Can be between 0.1 and 1.0
-	MaxTokens   int     // Max amount of tokens a response can use
-}
-
-// Struct used in sending requests to an Azure endpoint
-type AzureRequest struct {
-	Messages    []AzureMessage `json:"messages"`
-	Tools       []AzureTool    `json:"tools"`
-	MaxTokens   int            `json:"max_tokens"`
-	Temperature float64        `json:"temperature"`
-}
-
-// Struct for containing the response from Azure
-type AzureResponse struct {
-	Choices []struct {
-		ContentFilterResults map[string]interface{} `json:"content_filter_results"`
-		FinishReason         string                 `json:"finish_reason"`
-		LogProbs             string                 `json:"logprobs"`
-		Message              AzureMessage           `json:"message"`
-	} `json:"choices"`
-	Model               string `json:"model"`
-	PromptFilterResults []struct {
-		PromptIndex          int `json:"prompt_index"`
-		ContentFilterResults map[string]struct {
-			Filtered bool   `json:"filtered"`
-			Severity string `json:"severity"`
-		} `json:"content_filter_results"`
-	} `json:"prompt_filter_results"`
-	Usage struct {
-		CompletionTokens int `json:"completion_tokens"`
-		PromptTokens     int `json:"prompt_tokens"`
-		TotalTokens      int `json:"total_tokens"`
-	} `json:"usage"`
-}
-
-type AzureMessage struct {
-	Content    string          `json:"content"`
-	Refusal    string          `json:"refusal"`
-	Role       string          `json:"role"`
-	ToolCalls  []AzureToolCall `json:"tool_calls,omitempty"`
-	ToolCallID string          `json:"tool_call_id,omitempty"`
-}
-
-type AzureToolCall struct {
-	Index    *int   `json:"index,omitempty"`
-	ID       string `json:"id,omitempty"`
-	Type     string `json:"type"`
-	Function struct {
-		Name      string `json:"name,omitempty"`
-		Arguments string `json:"arguments,omitempty"`
-	} `json:"function"`
-}
-
-type AzureTool struct {
-	Type     string `json:"type"`
-	Function struct {
-		Name        string   `json:"name"`
-		Description string   `json:"description"`
-		Parameters  any      `json:"parameters"`
-		Required    []string `json:"required"`
-	} `json:"function"`
-}
-
-// Creates a new Azure config and sets it as provider
 /*
 @param endpoint: String which contains the URL of Azure endpoint
 @param apikey: Azure API key
@@ -158,20 +90,20 @@ func SendAzure(request RequestStruct) (ResponseStruct, error) {
 	return ResponseStruct{Response: azureRes.Choices[0].Message.Content}, nil
 }
 
-func CreateAzureRequest(request RequestStruct) AzureRequest {
+func CreateAzureRequest(request RequestStruct) azureRequest {
 	Config := Provider.(AzureProviderStruct)
 
-	AzureReq := AzureRequest{
+	AzureReq := azureRequest{
 		Temperature: Config.Temperature,
 		MaxTokens:   Config.MaxTokens,
 	}
 
 	for _, h := range *request.History {
-		AzureReq.Messages = append(AzureReq.Messages, AzureMessage{Role: h.Role, Content: h.Content})
+		AzureReq.Messages = append(AzureReq.Messages, azureMessage{Role: h.Role, Content: h.Content})
 	}
 
 	for _, t := range tool.Tools {
-		AzureReq.Tools = append(AzureReq.Tools, AzureTool{Type: "function", Function: struct {
+		AzureReq.Tools = append(AzureReq.Tools, azureTool{Type: "function", Function: struct {
 			Name        string   "json:\"name\""
 			Description string   "json:\"description\""
 			Parameters  any      "json:\"parameters\""
@@ -181,12 +113,12 @@ func CreateAzureRequest(request RequestStruct) AzureRequest {
 			Parameters:  t.Params}})
 	}
 
-	AzureReq.Messages = append(AzureReq.Messages, AzureMessage{Role: "system", Content: request.Systemprompt}, AzureMessage{Role: "user", Content: request.Userprompt})
+	AzureReq.Messages = append(AzureReq.Messages, azureMessage{Role: "system", Content: request.Systemprompt}, azureMessage{Role: "user", Content: request.Userprompt})
 
 	return AzureReq
 }
 
-func AzureSendRequest(AzureReq AzureRequest) (AzureResponse, error) {
+func AzureSendRequest(AzureReq azureRequest) (azureResponse, error) {
 	Config := Provider.(AzureProviderStruct)
 
 	buf := new(bytes.Buffer)
@@ -195,29 +127,29 @@ func AzureSendRequest(AzureReq AzureRequest) (AzureResponse, error) {
 
 	req, err := http.NewRequest(http.MethodPost, Config.Endpoint, buf)
 	if err != nil {
-		return AzureResponse{}, err
+		return azureResponse{}, err
 	}
 
 	req.Header.Add("api-key", Config.APIKey)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return AzureResponse{}, err
+		return azureResponse{}, err
 	}
 	defer res.Body.Close()
 
 	resData, err := io.ReadAll(res.Body)
 	if err != nil {
-		return AzureResponse{}, err
+		return azureResponse{}, err
 	}
 
 	fmt.Println(string(resData))
 
-	var azureRes AzureResponse
+	var azureRes azureResponse
 
 	err = json.Unmarshal(resData, &azureRes)
 	if err != nil {
-		return AzureResponse{}, err
+		return azureResponse{}, err
 	}
 
 	return azureRes, nil
