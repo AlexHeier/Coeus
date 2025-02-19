@@ -166,7 +166,7 @@ func CreateAzureRequest(request RequestStruct) azureRequest {
 	}
 
 	for _, h := range *request.History {
-		AzureReq.Messages = append(AzureReq.Messages, AzureMessage{Role: h.Role, Content: h.Content, ToolCallID: h.ToolCallID, ToolCalls: h.ToolCalls})
+		AzureReq.Messages = append(AzureReq.Messages, azureMessage{Role: h.Role, Content: h.Content, ToolCallID: h.ToolCallID, ToolCalls: h.ToolCalls})
 	}
 
 	for _, t := range tool.Tools {
