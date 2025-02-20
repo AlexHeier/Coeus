@@ -42,23 +42,25 @@
         }
 
     //loads elements from main
-    loadHTML('header', 'main.html', 'header');
-    loadHTML('aiDiv', 'main.html', 'aiDiv');
+    loadHTML('header', 'index.html', 'header');
+    loadHTML('aiDiv', 'index.html', 'aiDiv');
 
     // finds all product categories
-        fetch('https://raw.githubusercontent.com/GoogleChromeLabs/sample-pie-shop/refs/heads/master/src/data/products.json')
-        .then(response => response.json())  // Konverterer JSON til JavaScript-objekter
-        .then(produkter => {
-
-            const items = produkter.products.data.items;
-
-            lagKategorier(items);
-        })
-        .catch(error => console.error('Det oppstod en feil:', error));
+    async function fetchCat() {
+            try {
+                const response = await fetch("http://localhost:3000/category");
+                const kategorier = await response.json();
+                
+                lagKategorier(kategorier);
+            } catch (error) {
+                console.error("Feil ved henting av produkter:", error);
+            }
+          }
+          document.addEventListener("DOMContentLoaded", fetchCat);
 
         //makes the categories
-        function lagKategorier(produkter) {
-            let kategorier = [...new Set(produkter.map(produkt => produkt.category))];
+        function lagKategorier(kategoriene) {
+            let kategorier = [...new Set(kategoriene.map(kategori => kategori.name))];
 
             kategorier.forEach(kategori => {
                 var kategoriListe = document.getElementById("kategorier");

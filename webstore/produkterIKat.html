@@ -9,7 +9,7 @@
     <!----- Header from main goes here ------>
     <header id="header"></header>
 
-    <h1 style="margin-top: 60px;">Produkter test:</h1>
+    <h1 id="title" style="margin-top: 60px;"></h1>
         <div id="produkter-container"></div>
 
     <!----- chat-box goes here ------>
@@ -41,8 +41,8 @@
       }
 
         //loads elements from main
-        loadHTML('header', 'main.html', 'header');
-        loadHTML('aiDiv', 'main.html', 'aiDiv');
+        loadHTML('header', 'index.html', 'header');
+        loadHTML('aiDiv', 'index.html', 'aiDiv');
 
 
         // Gets url to know what category we are in
@@ -50,17 +50,24 @@
         const productCat = urlParams.get('category');
 
         // Gets all the products in category
-        fetch('https://raw.githubusercontent.com/GoogleChromeLabs/sample-pie-shop/refs/heads/master/src/data/products.json')
-        .then(response => response.json())
-        .then(data => {
-            const produkter = data.products.data.items;
-            const produkterIKat = produkter.filter(p => p.category === productCat);
+        async function fetchProducts() {
+            try {
+                const response = await fetch("http://localhost:3000/products/full");
+                const produkter = await response.json();
+                
+                const produkterIKat = produkter.filter(p => p.category == productCat);
 
-            visProdukter(produkterIKat);
-        });
+                visProdukter(produkterIKat);
+            } catch (error) {
+                console.error("Feil ved henting av produkter:", error);
+            }
+        }
+        document.addEventListener("DOMContentLoaded", fetchProducts);
 
         function visProdukter(produkter) {
             const container = document.getElementById('produkter-container');
+            const title = document.getElementById('title');
+            title.innerHTML = productCat;
         
             produkter.forEach(produkter => {
    
@@ -69,10 +76,10 @@
             
                 // text and button that takes us to product's page
                 produkterDiv.innerHTML = `
-                <h3>${produkter.name}</h3>
-                <p>Price: ${produkter.price}$</p>
+                <h3>${produkter.productname}</h3>
+                <p>Price: ${produkter.price}kr</p>
                 <a href="produkt.html?id=${produkter.id}" >
-                <img src="${"media/polka.jpg"}" alt="${produkter.name}">
+                <img src="${produkter.imageurl}" alt="${produkter.name}">
                 </a>
                 `;   
 

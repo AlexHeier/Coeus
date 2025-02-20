@@ -41,8 +41,8 @@
     }
 
       //loads elements from main
-      loadHTML('header', 'main.html', 'header');
-      loadHTML('aiDiv', 'main.html', 'aiDiv');
+      loadHTML('header', 'index.html', 'header');
+      loadHTML('aiDiv', 'index.html', 'aiDiv');
 
       // Shows shopping cart
       window.onload = displayCart;
@@ -62,15 +62,15 @@
         cartContainer.appendChild(productElement);
       }
       else{
-        console.log("hei")
         var totaltPris = 0;
         cart.forEach(produkt => {
         totaltPris += produkt.price*produkt.antall;
-
+          console.log(produkt.productname);
+          
         let productElement = document.createElement('div');
         productElement.innerHTML = `
-          <p><strong>Navn:</strong> ${produkt.name}</p>
-          <p><strong>Pris:</strong> ${produkt.price*produkt.antall} $</p>
+          <p><strong>Navn:</strong> ${produkt.productname}</p>
+          <p><strong>Pris:</strong> ${produkt.price*produkt.antall} kr</p>
           <p><strong>Antall:</strong> ${produkt.antall}</p>
           <button id="${produkt.id}" onclick="removeFromCart(event)">Fjern produkt</button>
           <hr>
@@ -80,7 +80,7 @@
     }
     let prisElement = document.createElement('div');
     prisElement.innerHTML = `
-        <p><strong>Totalpris:</strong> ${totaltPris} $</p>
+        <p><strong>Totalpris:</strong> ${totaltPris} kr</p>
         <hr>
       `;
       cartContainer.appendChild(prisElement);
@@ -88,16 +88,18 @@
 
     // removes products from shopping cart
     function removeFromCart(evt) {
-      var productId = event.target.id
+      var productId = parseInt(event.target.id, 10);
       let cart = JSON.parse(sessionStorage.getItem('cart')) || [];
-      cart = cart.filter(product => product.id !== productId);
+      vognProdukt = cart.find(p => p.id === productId);
+      if (vognProdukt.antall <= 1) {
+        cart = cart.filter(product => product.id !== productId);
+      }
+      else {
+        vognProdukt.antall = parseInt(vognProdukt.antall) - 1;
+      }
       sessionStorage.setItem('cart', JSON.stringify(cart));
 
       displayCart();  // updates shopping cart
     }
-
-
-
-
     </script>
     </body>
