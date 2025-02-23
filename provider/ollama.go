@@ -1,7 +1,6 @@
 package provider
 
 import (
-	"Coeus/llm/tool"
 	"bytes"
 	"encoding/json"
 	"errors"
@@ -9,6 +8,8 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+
+	"github.com/AlexHeier/Coeus/llm/tool"
 )
 
 const OLLAMA_SUFFIX = "/api/chat"

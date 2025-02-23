@@ -1,10 +1,11 @@
 package provider
 
 import (
-	"Coeus/llm/tool"
 	"context"
 	"encoding/json"
 	"fmt"
+
+	"github.com/AlexHeier/Coeus/llm/tool"
 
 	"github.com/sashabaranov/go-openai"
 )

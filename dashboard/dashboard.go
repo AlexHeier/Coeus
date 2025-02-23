@@ -1,12 +1,13 @@
 package dashboard
 
 import (
-	"Coeus/llm"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/AlexHeier/Coeus/llm"
 )
 
 var cons map[string]*llm.Conversation

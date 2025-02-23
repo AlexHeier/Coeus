@@ -1,15 +1,16 @@
 package main
 
 import (
-	"Coeus/dashboard"
-	"Coeus/llm"
-	"Coeus/llm/tool"
-	"Coeus/provider"
 	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"time"
+
+	"github.com/AlexHeier/Coeus/dashboard"
+	"github.com/AlexHeier/Coeus/llm"
+	"github.com/AlexHeier/Coeus/llm/tool"
+	"github.com/AlexHeier/Coeus/provider"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"

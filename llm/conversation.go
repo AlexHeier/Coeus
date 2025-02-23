@@ -1,12 +1,13 @@
 package llm
 
 import (
-	"Coeus/provider"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/AlexHeier/Coeus/provider"
 )
 
 // Struct for containing all the conversations
