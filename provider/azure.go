@@ -1,12 +1,13 @@
 package provider
 
 import (
-	"Coeus/llm/tool"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/AlexHeier/Coeus/llm/tool"
 )
 
 const AZURE_ROLE_USER = "user"
@@ -84,6 +85,8 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 			if err != nil {
 				return ResponseStruct{}, fmt.Errorf("error during tool execution: %v", err)
 			}
+
+			fmt.Println(toolResponse)
 
 			*request.History = append(*request.History, HistoryStruct{
 				Role:       AZURE_ROLE_TOOL,
