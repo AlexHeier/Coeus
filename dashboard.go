@@ -35,7 +35,7 @@ func webHandler(w http.ResponseWriter, r *http.Request) {
 
 func webGetHandler(w http.ResponseWriter, r *http.Request) {
 	_ = r
-	data, err := os.ReadFile("./dashboard/index.html")
+	data, err := os.ReadFile("index.html")
 	if err != nil {
 		http.Error(w, "", http.StatusInternalServerError)
 		fmt.Println(err.Error())
@@ -96,3 +96,5 @@ func chatPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte(res.Response))
 }
+
+var dashboard_page string = ``
