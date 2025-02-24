@@ -1,4 +1,4 @@
-package llm
+package coeus
 
 import (
 	"encoding/json"
@@ -6,8 +6,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/AlexHeier/Coeus/provider"
 )
 
 // Struct for containing all the conversations
@@ -21,7 +19,7 @@ type Conversation struct {
 	Mutex      sync.Mutex
 	MainPrompt string
 	ToolsResp  []interface{}
-	History    []provider.HistoryStruct
+	History    []HistoryStruct
 	Summary    string
 	UserPrompt string
 	LastActive time.Time
@@ -43,17 +41,17 @@ type SystemPrompt struct {
 // Appends a prompt and section to the history within the conversation
 
 func (c *Conversation) AppendHistory(role, content string) {
-	c.History = append(c.History, provider.HistoryStruct{Role: role, Content: content})
+	c.History = append(c.History, HistoryStruct{Role: role, Content: content})
 }
 
-func (c *Conversation) Prompt(userPrompt string) (provider.ResponseStruct, error) {
+func (c *Conversation) Prompt(userPrompt string) (ResponseStruct, error) {
 
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
 	c.LastActive = time.Now()
 	c.UserPrompt = userPrompt
 
-	response, err := provider.Send(provider.RequestStruct{
+	response, err := Send(RequestStruct{
 		Userprompt:   c.UserPrompt,
 		Systemprompt: c.systemPrompt(),
 		History:      &c.History,

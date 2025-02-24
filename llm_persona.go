@@ -1,4 +1,4 @@
-package llm
+package coeus
 
 var Persona string
 

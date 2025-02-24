@@ -1,4 +1,4 @@
-package provider
+package coeus
 
 /*	  ____  _ _
 	 / __ \| | |

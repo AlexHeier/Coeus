@@ -1,11 +1,9 @@
-package provider
+package coeus
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-
-	"github.com/AlexHeier/Coeus/llm/tool"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -39,7 +37,7 @@ func SendOpenAI(request RequestStruct) (ResponseStruct, error) {
 		var newMessage []openai.ChatCompletionMessage
 		newMessage = append(newMessage, resp.Choices[0].Message)
 		for _, t := range resp.Choices[0].Message.ToolCalls {
-			tool, err := tool.Find(t.Function.Name)
+			tool, err := FindTool(t.Function.Name)
 			if err != nil {
 				return ResponseStruct{}, err
 			}
@@ -55,7 +53,7 @@ func SendOpenAI(request RequestStruct) (ResponseStruct, error) {
 				args = append(args, val)
 			}
 
-			toolResponse, err := tool.Run(args...)
+			toolResponse, err := tool.RunTool(args...)
 			if err != nil {
 				return ResponseStruct{}, err
 			}
@@ -82,7 +80,7 @@ func SendOpenAI(request RequestStruct) (ResponseStruct, error) {
 func convertToOpenAITools() []openai.Tool {
 	var openAITools []openai.Tool
 
-	for _, t := range tool.Tools {
+	for _, t := range Tools {
 		openAITools = append(openAITools, openai.Tool{
 			Type: "function",
 			Function: &openai.FunctionDefinition{

@@ -1,4 +1,4 @@
-package provider
+package coeus
 
 import (
 	"bytes"
@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-
-	"github.com/AlexHeier/Coeus/llm/tool"
 )
 
 const AZURE_ROLE_USER = "user"
@@ -65,7 +63,7 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 
 		for _, toolCall := range azureRes.Choices[0].Message.ToolCalls {
 
-			t, err := tool.Find(toolCall.Function.Name)
+			t, err := FindTool(toolCall.Function.Name)
 			if err != nil {
 				return ResponseStruct{}, fmt.Errorf("could not find the tool %s", t.Name)
 			}
@@ -81,7 +79,7 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 				args = append(args, val)
 			}
 
-			toolResponse, err := t.Run(args...)
+			toolResponse, err := t.RunTool(args...)
 			if err != nil {
 				return ResponseStruct{}, fmt.Errorf("error during tool execution: %v", err)
 			}
@@ -127,7 +125,7 @@ func createAzureRequest(request RequestStruct) azureRequest {
 				ToolCalls:  h.ToolCalls})
 	}
 
-	for _, t := range tool.Tools {
+	for _, t := range Tools {
 		AzureReq.Tools = append(AzureReq.Tools, azureTool{Type: AZURE_TYPE_FUNCTION, Function: struct {
 			Name        string   `json:"name"`
 			Description string   `json:"description"`

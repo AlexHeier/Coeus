@@ -1,4 +1,4 @@
-package dashboard
+package coeus
 
 import (
 	"encoding/json"
@@ -6,11 +6,9 @@ import (
 	"io"
 	"net/http"
 	"os"
-
-	"github.com/AlexHeier/Coeus/llm"
 )
 
-var cons map[string]*llm.Conversation
+var cons map[string]*Conversation
 
 /*
 Start starts the dashboard on the specified port.
@@ -20,7 +18,7 @@ The dashboard is a web interface for the LLM chatbot used for trubleshooting and
 @return error - Returns an error if the server could not start.
 */
 func Start(Port string) error {
-	cons = make(map[string]*llm.Conversation)
+	cons = make(map[string]*Conversation)
 	http.HandleFunc("/api/chat", chatHandler)
 	http.HandleFunc("/", webHandler)
 	return http.ListenAndServe(":"+Port, nil)
@@ -88,7 +86,7 @@ func chatPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, exist := cons[userid]
 	if !exist {
-		cons[userid] = llm.BeginConversation()
+		cons[userid] = BeginConversation()
 	}
 
 	res, err := cons[userid].Prompt(prompt)

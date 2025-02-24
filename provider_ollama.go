@@ -1,4 +1,4 @@
-package provider
+package coeus
 
 import (
 	"bytes"
@@ -8,8 +8,6 @@ import (
 	"net"
 	"net/http"
 	"strconv"
-
-	"github.com/AlexHeier/Coeus/llm/tool"
 )
 
 const OLLAMA_SUFFIX = "/api/chat"
@@ -65,7 +63,7 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 	if len(jData.Message.ToolCalls) > 0 {
 		calls := jData.Message.ToolCalls
 		for _, t := range calls {
-			tool, err := tool.Find(t.Function.Name)
+			tool, err := FindTool(t.Function.Name)
 			if err != nil {
 				continue
 			}
@@ -75,7 +73,7 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 				args = append(args, a)
 			}
 
-			toolResponse, err := tool.Run(args...)
+			toolResponse, err := tool.RunTool(args...)
 			if err != nil {
 				continue
 			}
@@ -102,7 +100,7 @@ func SendOllama(request RequestStruct) (ResponseStruct, error) {
 func ollamaToolsWrapper() []ollamaTool {
 	var ollamaTools []ollamaTool
 
-	for _, t := range tool.Tools {
+	for _, t := range Tools {
 		temp := ollamaTool{}
 		temp.Type = "function"
 		temp.Function.Name = t.Name

@@ -1,4 +1,4 @@
-package tool
+package coeus
 
 import (
 	"encoding/json"
@@ -17,7 +17,7 @@ type ToolStruct struct {
 // Tools is a list of all the tools
 var Tools []ToolStruct
 
-func New(name, desc string, function interface{}) {
+func NewTool(name, desc string, function interface{}) {
 	paramSchema := extractFunctionParams(function)
 
 	newTool := ToolStruct{
@@ -37,7 +37,7 @@ Run runs the function of the tool its called upon.
 @return: the result of the function
 @return: an error if the function fails
 */
-func (t *ToolStruct) Run(args ...interface{}) (string, error) {
+func (t *ToolStruct) RunTool(args ...interface{}) (string, error) {
 	f := reflect.ValueOf(t.Function)
 	if f.Kind() != reflect.Func {
 		return "", fmt.Errorf("function is not a function")
@@ -93,7 +93,7 @@ Find finds a tool by its name and returns the tool struct.
 @return: the tool struct
 @return: an error if the tool is not found
 */
-func Find(name string) (ToolStruct, error) {
+func FindTool(name string) (ToolStruct, error) {
 	for _, tool := range Tools {
 		if tool.Name == name {
 			return tool, nil
