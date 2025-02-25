@@ -18,7 +18,7 @@
   
 
   <form id="formVogn" onsubmit="handleSubmit(event)">
-    <label for="">Antall: <input id="antallVogn" type="number" value="1"></label>
+    <label for="">Antall: <input id="antallVogn" type="number" value="1" min="1"></label>
     <button type="submit" id="knappVogn">Legg i handlevogn</button>
   </form>
 
@@ -83,6 +83,7 @@
         document.getElementById('price').textContent += produkt.price + 'kr';
         document.getElementById('product-image').src = produkt.imageurl;
         formVogn = document.getElementById('formVogn');
+        antallVogn = document.getElementById('antallVogn');
         
         if (produkt.quantity == 0) {
           document.getElementById('quantity').textContent += "tomt";
@@ -90,6 +91,7 @@
         }
         else if(produkt.quantity < 4) {document.getElementById('quantity').textContent += "få igjen";}
         else {document.getElementById('quantity').textContent += "på lager";}
+        antallVogn.max = produkt.quantity;
 
         formVogn.addEventListener('submit', handleSubmit);
 
