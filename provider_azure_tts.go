@@ -23,7 +23,7 @@ func AzureTTS(model, endpoint, apikey, apiversion string) error {
 	return nil
 }
 
-func AzureSendTTS(request RequestStruct) (ResponseStruct, error) {
+func AzureSendTTS(text, voice, format string) (base64Audio []byte, err error) {
 
 	config := TTSProvider.(AzureTTSProvider)
 
@@ -32,26 +32,14 @@ func AzureSendTTS(request RequestStruct) (ResponseStruct, error) {
 		Audio: struct {
 			Voice  string "json:\"voice\""
 			Format string "json:\"format\""
-		}{Voice: "alloy", Format: "wav"},
+		}{Voice: voice, Format: format},
 		Modalities: []string{"text", "audio"},
 	}
 
 	// Appends the system message to request
-	azureRes.Messages = append(azureRes.Messages, azureTTSMessage{
-		Role: "system",
-		Content: struct {
-			Type       string "json:\"type\""
-			Text       string "json:\"text,omitempty\""
-			InputAudio struct {
-				Data   string "json:\"data\""
-				Format string "json:\"format\""
-			} "json:\"input_audio,omitempty\""
-		}{Type: "text", Text: Persona}})
-
-	// Appends the remaining messages from the conversation history
-	for _, history := range *request.History {
-		azureRes.Messages = append(azureRes.Messages, azureTTSMessage{
-			Role: history.Role,
+	azureRes.Messages = append(azureRes.Messages,
+		azureTTSMessage{
+			Role: "system",
 			Content: struct {
 				Type       string "json:\"type\""
 				Text       string "json:\"text,omitempty\""
@@ -59,8 +47,17 @@ func AzureSendTTS(request RequestStruct) (ResponseStruct, error) {
 					Data   string "json:\"data\""
 					Format string "json:\"format\""
 				} "json:\"input_audio,omitempty\""
-			}{Type: "text", Text: history.Content}})
-	}
+			}{Type: "text", Text: "Convert user text to speech in the same language as the user."}},
+		azureTTSMessage{
+			Role: "user",
+			Content: struct {
+				Type       string "json:\"type\""
+				Text       string "json:\"text,omitempty\""
+				InputAudio struct {
+					Data   string "json:\"data\""
+					Format string "json:\"format\""
+				} "json:\"input_audio,omitempty\""
+			}{Type: "text", Text: text}})
 
 	buf := new(bytes.Buffer)
 
@@ -68,26 +65,30 @@ func AzureSendTTS(request RequestStruct) (ResponseStruct, error) {
 
 	req, err := http.NewRequest(http.MethodPost, config.Endpoint, buf)
 	if err != nil {
-		return ResponseStruct{}, err
+		return nil, err
 	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return ResponseStruct{}, err
+		return nil, err
 	}
 	defer res.Body.Close()
 
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
-		return ResponseStruct{}, err
+		return nil, err
 	}
 
 	var ttsRes azureTTSResponse
 
 	err = json.Unmarshal(data, &ttsRes)
 	if err != nil {
-		return ResponseStruct{}, err
+		return nil, err
 	}
 
-	return ResponseStruct{}, fmt.Errorf("error function not implemented")
+	if len(ttsRes.Choices) > 0 {
+		return []byte(ttsRes.Choices[0].Message.Audio.Data), nil
+	}
+
+	return nil, fmt.Errorf("error function not implemented")
 }

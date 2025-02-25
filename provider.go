@@ -50,11 +50,11 @@ func Send(request RequestStruct) (ResponseStruct, error) {
 	}
 }
 
-func TTSSend(request RequestStruct) (ResponseStruct, error) {
+func TTSSend(text, voice, format string) (base64Audio []byte, err error) {
 	switch TTSProvider.(type) {
 	case AzureTTSProvider:
-		return AzureSendTTS(request)
+		return AzureSendTTS(text, voice, format)
 	default:
-		return ResponseStruct{}, fmt.Errorf("no valid tts provider configured")
+		return nil, fmt.Errorf("no valid tts provider configured")
 	}
 }
