@@ -81,12 +81,32 @@ type AzureProviderStruct struct {
 	MaxTokens   int     // Max amount of tokens a response can use
 }
 
+type AzureTTSProvider struct {
+	Endpoint   string
+	APIKey     string
+	APIVersion string
+	Model      string
+}
+
 // Struct used in sending requests to an Azure endpoint
 type azureRequest struct {
 	Messages    []azureMessage `json:"messages"`
 	Tools       []azureTool    `json:"tools"`
 	MaxTokens   int            `json:"max_tokens"`
 	Temperature float64        `json:"temperature"`
+}
+
+type azureTTSRequest struct {
+	Model       string            `json:"model"`
+	Modalities  []string          `json:"modalities"`
+	Messages    []azureTTSMessage `json:"messages"`
+	Tools       []azureTool       `json:"tools"`
+	MaxTokens   int               `json:"max_tokens,omitempty"`
+	Temperature float64           `json:"temperature,omitempty"`
+	Audio       struct {
+		Voice  string `json:"voice"`
+		Format string `json:"format"`
+	} `json:"audio"`
 }
 
 // Struct for containing the response from Azure
@@ -112,9 +132,52 @@ type azureResponse struct {
 	} `json:"usage"`
 }
 
+type azureTTSResponse struct {
+	Choices []struct {
+		ContentFilterResults map[string]interface{} `json:"content_filter_results"`
+		FinishReason         string                 `json:"finish_reason"`
+		LogProbs             string                 `json:"logprobs"`
+		Message              azureTTSMessage        `json:"message"`
+	} `json:"choices"`
+	Model               string `json:"model"`
+	PromptFilterResults []struct {
+		PromptIndex          int `json:"prompt_index"`
+		ContentFilterResults map[string]struct {
+			Filtered bool   `json:"filtered"`
+			Severity string `json:"severity"`
+		} `json:"content_filter_results"`
+	} `json:"prompt_filter_results"`
+	Usage struct {
+		CompletionTokens int `json:"completion_tokens"`
+		PromptTokens     int `json:"prompt_tokens"`
+		TotalTokens      int `json:"total_tokens"`
+	} `json:"usage"`
+}
+
 type azureMessage struct {
 	Content    string     `json:"content"`
-	Refusal    string     `json:"refusal"`
+	Refusal    string     `json:"refusal,omitempty"`
+	Role       string     `json:"role"`
+	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
+	ToolCallID string     `json:"tool_call_id,omitempty"`
+}
+
+type azureTTSMessage struct {
+	Content struct {
+		Type       string `json:"type"`
+		Text       string `json:"text,omitempty"`
+		InputAudio struct {
+			Data   string `json:"data"`
+			Format string `json:"format"`
+		} `json:"input_audio,omitempty"`
+	} `json:"content"`
+	Audio struct {
+		Data       string `json:"data"`
+		ExpiresAt  int    `json:"expires_at"`
+		ID         string `json:"id"`
+		Transcript string `json:"transcript"`
+	} `json:"audio,omitempty"`
+	Refusal    string     `json:"refusal,omitempty"`
 	Role       string     `json:"role"`
 	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
 	ToolCallID string     `json:"tool_call_id,omitempty"`

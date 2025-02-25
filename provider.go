@@ -34,6 +34,7 @@ type ToolCall struct {
 }
 
 var Provider interface{}
+var TTSProvider interface{}
 
 func Send(request RequestStruct) (ResponseStruct, error) {
 
@@ -46,5 +47,14 @@ func Send(request RequestStruct) (ResponseStruct, error) {
 		return SendOpenAI(request)
 	default:
 		return ResponseStruct{}, fmt.Errorf("no valid provider configured")
+	}
+}
+
+func TTSSend(text, voice, format string) (base64Audio []byte, err error) {
+	switch TTSProvider.(type) {
+	case AzureTTSProvider:
+		return AzureSendTTS(text, voice, format)
+	default:
+		return nil, fmt.Errorf("no valid tts provider configured")
 	}
 }
