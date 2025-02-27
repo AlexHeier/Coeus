@@ -39,12 +39,12 @@ var TTSProvider interface{}
 func Send(request RequestStruct) (ResponseStruct, error) {
 
 	switch Provider.(type) {
-	case OllamaStruct:
-		return SendOllama(request)
-	case AzureProviderStruct:
+	case ollamaStruct:
+		return sendOllama(request)
+	case azureProviderStruct:
 		return sendAzure(request)
-	case OpenAIStruct:
-		return SendOpenAI(request)
+	case openAIStruct:
+		return sendOpenAI(request)
 	default:
 		return ResponseStruct{}, fmt.Errorf("no valid provider configured")
 	}

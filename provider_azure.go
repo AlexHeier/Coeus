@@ -38,7 +38,7 @@ func Azure(endpoint, apikey string, temperature float64, maxTokens int) error {
 		return fmt.Errorf("maxtokens must be bigger than 0")
 	}
 
-	Provider = AzureProviderStruct{
+	Provider = azureProviderStruct{
 		Endpoint:    endpoint,
 		APIKey:      apikey,
 		Temperature: temperature,
@@ -101,7 +101,7 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 }
 
 func createAzureRequest(request RequestStruct) azureRequest {
-	Config := Provider.(AzureProviderStruct)
+	Config := Provider.(azureProviderStruct)
 
 	AzureReq := azureRequest{
 		Temperature: Config.Temperature,
@@ -140,7 +140,7 @@ func createAzureRequest(request RequestStruct) azureRequest {
 }
 
 func azureSendRequest(AzureReq azureRequest) (azureResponse, error) {
-	Config := Provider.(AzureProviderStruct)
+	Config := Provider.(azureProviderStruct)
 
 	buf := new(bytes.Buffer)
 

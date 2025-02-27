@@ -5,20 +5,20 @@ import (
 )
 
 /* Default memory function is All. This function will use all messages as memory. */
-var Memory func(args ...interface{}) string = MemoryAllMessage
-var MemArgs []interface{}
+var memory func(args ...interface{}) string = MemoryAllMessage
+var memArgs []interface{}
 
 /* Changes the function used for memory managment. Default is All messages. */
 func MemoryVersion(newFunc ...interface{}) {
 	if len(newFunc) > 0 {
 		if fn, ok := newFunc[0].(func(args ...interface{}) string); ok {
-			Memory = fn
+			memory = fn
 			if len(newFunc) > 1 {
-				MemArgs = newFunc[1:]
+				memArgs = newFunc[1:]
 			}
 		}
 	} else {
-		Memory = MemoryAllMessage // Default
+		memory = MemoryAllMessage // Default
 		return
 	}
 }

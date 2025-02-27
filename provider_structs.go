@@ -8,7 +8,7 @@ package coeus
  	 \____/|_|_|\__,_|_| |_| |_|\__,_|
 */
 
-type OllamaStruct struct {
+type ollamaStruct struct {
 	HttpProtocol string
 	ServerIP     string
 	Port         string
@@ -60,7 +60,7 @@ type ollamaResponse struct {
            | |
            |_|
 */
-type OpenAIStruct struct {
+type openAIStruct struct {
 	Model   string
 	API_KEY string
 }
@@ -74,7 +74,7 @@ type OpenAIStruct struct {
 */
 
 // Azure Configuration struct
-type AzureProviderStruct struct {
+type azureProviderStruct struct {
 	Endpoint    string  // Azure API endpoint
 	APIKey      string  // Azure API Key
 	Temperature float64 // How free thinking the LLM should be. Lower equals more free. Can be between 0.1 and 1.0

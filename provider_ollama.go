@@ -28,7 +28,7 @@ func Ollama(ip, port, model string) error {
 		return errors.New("model cannot be empty")
 	}
 
-	Provider = OllamaStruct{
+	Provider = ollamaStruct{
 		HttpProtocol: "http",
 		ServerIP:     ip,
 		Port:         port,
@@ -39,9 +39,9 @@ func Ollama(ip, port, model string) error {
 	return nil
 }
 
-func SendOllama(request RequestStruct) (ResponseStruct, error) {
+func sendOllama(request RequestStruct) (ResponseStruct, error) {
 
-	config := Provider.(OllamaStruct)
+	config := Provider.(ollamaStruct)
 
 	url := "http://" + config.ServerIP + ":" + config.Port + OLLAMA_SUFFIX
 

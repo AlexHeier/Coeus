@@ -40,7 +40,7 @@ type SystemPrompt struct {
 
 // Appends a prompt and section to the history within the conversation
 
-func (c *Conversation) AppendHistory(role, content string) {
+func (c *Conversation) appendHistory(role, content string) {
 	c.History = append(c.History, HistoryStruct{Role: role, Content: content})
 }
 
@@ -63,8 +63,8 @@ func (c *Conversation) Prompt(userPrompt string) (ResponseStruct, error) {
 		return response, err
 	}
 
-	c.AppendHistory("user", c.UserPrompt)
-	c.AppendHistory("assistant", response.Response)
+	c.appendHistory("user", c.UserPrompt)
+	c.appendHistory("assistant", response.Response)
 
 	splitString := strings.Split(response.Response, " ")
 
@@ -109,7 +109,7 @@ func (c *Conversation) systemPrompt() string {
 	sysP := make(map[string]interface{})
 
 	sysP["systemprompt"] = c.MainPrompt
-	sysP["conversationHistory"] = Memory(append([]interface{}{c}, MemArgs...)...)
+	sysP["conversationHistory"] = memory(append([]interface{}{c}, memArgs...)...)
 
 	ret, err := json.Marshal(sysP)
 	if err != nil {

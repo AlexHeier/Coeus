@@ -9,15 +9,15 @@ import (
 )
 
 func OpenAI(model, api_key string) error {
-	Provider = OpenAIStruct{
+	Provider = openAIStruct{
 		Model:   model,
 		API_KEY: api_key,
 	}
 	return nil
 }
 
-func SendOpenAI(request RequestStruct) (ResponseStruct, error) {
-	config := Provider.(OpenAIStruct)
+func sendOpenAI(request RequestStruct) (ResponseStruct, error) {
+	config := Provider.(openAIStruct)
 	client := openai.NewClient(config.API_KEY)
 
 	openAITools := convertToOpenAITools()

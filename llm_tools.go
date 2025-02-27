@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type ToolStruct struct {
+type toolStruct struct {
 	Name     string                 `json:"name"`
 	Desc     string                 `json:"description"`
 	Params   map[string]interface{} `json:"parameters"`
@@ -15,12 +15,12 @@ type ToolStruct struct {
 }
 
 // Tools is a list of all the tools
-var Tools []ToolStruct
+var Tools []toolStruct
 
 func NewTool(name, desc string, function interface{}) {
 	paramSchema := extractFunctionParams(function)
 
-	newTool := ToolStruct{
+	newTool := toolStruct{
 		Name:     strings.ToUpper(name),
 		Desc:     desc,
 		Params:   paramSchema,
@@ -37,7 +37,7 @@ Run runs the function of the tool its called upon.
 @return: the result of the function
 @return: an error if the function fails
 */
-func (t *ToolStruct) RunTool(args ...interface{}) (string, error) {
+func (t *toolStruct) RunTool(args ...interface{}) (string, error) {
 	f := reflect.ValueOf(t.Function)
 	if f.Kind() != reflect.Func {
 		return "", fmt.Errorf("function is not a function")
@@ -93,13 +93,13 @@ Find finds a tool by its name and returns the tool struct.
 @return: the tool struct
 @return: an error if the tool is not found
 */
-func FindTool(name string) (ToolStruct, error) {
+func FindTool(name string) (toolStruct, error) {
 	for _, tool := range Tools {
 		if tool.Name == name {
 			return tool, nil
 		}
 	}
-	return ToolStruct{}, fmt.Errorf("tool not found")
+	return toolStruct{}, fmt.Errorf("tool not found")
 }
 
 /*
@@ -108,7 +108,7 @@ Returns the information about each tool to be used by an LLM. For use within a p
 @return: Nothing if no tools specified
 @return: Tool names and descriptions with usage information
 */
-func GetToolsDescription() []string {
+func getToolsDescription() []string {
 
 	if len(Tools) <= 0 {
 		return []string{}
@@ -151,7 +151,7 @@ func extractFunctionParams(fn interface{}) map[string]interface{} {
 	params["type"] = "object"
 	params["properties"] = properties
 	if len(required) > 0 {
-		//params["required"] = required
+		params["required"] = required
 	}
 
 	return params
