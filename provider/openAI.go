@@ -34,6 +34,8 @@ func SendOpenAI(request RequestStruct) (ResponseStruct, error) {
 		return ResponseStruct{}, err
 	}
 
+	fmt.Printf("%v\n", resp.Choices[0].Message.ToolCalls)
+
 	if len(resp.Choices[0].Message.ToolCalls) > 0 {
 		var newMessage []openai.ChatCompletionMessage
 		newMessage = append(newMessage, resp.Choices[0].Message)
@@ -65,6 +67,9 @@ func SendOpenAI(request RequestStruct) (ResponseStruct, error) {
 				Content:    string(toolResponse),
 			})
 		}
+
+		fmt.Printf("%v\n", newMessage)
+
 		resp, err = client.CreateChatCompletion(context.TODO(), openai.ChatCompletionRequest{
 			Model:    config.Model,
 			Messages: newMessage,

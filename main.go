@@ -25,8 +25,8 @@ func init() {
 func main() {
 
 	//err := provider.Azure(os.Getenv("AZURE_ENDPOINT"), os.Getenv("AZURE_API_KEY"), 1.0, 16)
-	//err := provider.OpenAI("gpt-4", os.Getenv("OPENAI_API_KEY"))
-	err := provider.Ollama(os.Getenv("OLLAMA_IP"), os.Getenv("OLLAMA_PORT"), os.Getenv("OLLAMA_MODEL"))
+	err := provider.OpenAI("gpt-4-turbo", os.Getenv("OPENAI_API_KEY"))
+	//err := provider.Ollama(os.Getenv("OLLAMA_IP"), os.Getenv("OLLAMA_PORT"), os.Getenv("OLLAMA_MODEL"))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
