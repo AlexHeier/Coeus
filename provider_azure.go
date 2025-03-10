@@ -8,17 +8,21 @@ import (
 	"net/http"
 )
 
-const AZURE_ROLE_USER = "user"
-const AZURE_ROLE_TOOL = "tool"
-const AZURE_ROLE_SYSTEM = "system"
-const AZURE_ROLE_ASSISTANT = "assistant"
-const AZURE_TYPE_FUNCTION = "function"
+const azureRoleUser = "user"
+const azureRoleTool = "tool"
+const azureRoleSystem = "system"
+const azureRoleAssistant = "assistant"
+const azureTypeFunction = "function"
 
-// Creates a new Azure config and sets it as provider
 /*
+Azure sets the provider to Azure.
+
 @param endpoint: String which contains the URL of Azure endpoint
+
 @param apikey: Azure API key
+
 @param temperature: Specifies the amount of freedom an LLM should have when answering
+
 @param maxTokens: Specifies the max amount of tokens an LLM answer should use
 */
 func Azure(endpoint, apikey string, temperature float64, maxTokens int) error {
@@ -48,6 +52,13 @@ func Azure(endpoint, apikey string, temperature float64, maxTokens int) error {
 	return nil
 }
 
+/*
+sendAzure sends a request to Azure.
+
+@param request: the request to send
+
+@return A response and an error if the request fails
+*/
 func sendAzure(request RequestStruct) (ResponseStruct, error) {
 
 	azureRes, err := azureSendRequest(createAzureRequest(request))
@@ -58,7 +69,7 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 	if len(azureRes.Choices[0].Message.ToolCalls) > 0 {
 
 		// Push LLM tool calls to the history
-		*request.History = append(*request.History, HistoryStruct{Role: AZURE_ROLE_ASSISTANT,
+		*request.History = append(*request.History, HistoryStruct{Role: azureRoleAssistant,
 			ToolCalls: azureRes.Choices[0].Message.ToolCalls})
 
 		for _, toolCall := range azureRes.Choices[0].Message.ToolCalls {
@@ -87,7 +98,7 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 			fmt.Println(toolResponse)
 
 			*request.History = append(*request.History, HistoryStruct{
-				Role:       AZURE_ROLE_TOOL,
+				Role:       azureRoleTool,
 				Content:    toolResponse,
 				ToolCallID: toolCall.ID})
 		}
@@ -100,6 +111,13 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 	return ResponseStruct{Response: azureRes.Choices[0].Message.Content}, nil
 }
 
+/*
+createAzureRequest creates an Azure request.
+
+@param request: the request to send
+
+@return: an azureRequest struct
+*/
 func createAzureRequest(request RequestStruct) azureRequest {
 	Config := Provider.(azureProviderStruct)
 
@@ -109,11 +127,11 @@ func createAzureRequest(request RequestStruct) azureRequest {
 	}
 
 	AzureReq.Messages = append(AzureReq.Messages, azureMessage{
-		Role:    AZURE_ROLE_SYSTEM,
+		Role:    azureRoleSystem,
 		Content: request.Systemprompt})
 
 	*request.History = append(*request.History, HistoryStruct{
-		Role:    AZURE_ROLE_USER,
+		Role:    azureRoleUser,
 		Content: request.Userprompt})
 
 	for _, h := range *request.History {
@@ -126,7 +144,7 @@ func createAzureRequest(request RequestStruct) azureRequest {
 	}
 
 	for _, t := range Tools {
-		AzureReq.Tools = append(AzureReq.Tools, azureTool{Type: AZURE_TYPE_FUNCTION, Function: struct {
+		AzureReq.Tools = append(AzureReq.Tools, azureTool{Type: azureTypeFunction, Function: struct {
 			Name        string   `json:"name"`
 			Description string   `json:"description"`
 			Parameters  any      `json:"parameters"`
@@ -139,6 +157,13 @@ func createAzureRequest(request RequestStruct) azureRequest {
 	return AzureReq
 }
 
+/*
+azureSendRequest sends a request to Azure.
+
+@param AzureReq: the request to send
+
+@return: an azureResponse struct and an error if the request fails
+*/
 func azureSendRequest(AzureReq azureRequest) (azureResponse, error) {
 	Config := Provider.(azureProviderStruct)
 
@@ -179,6 +204,13 @@ func azureSendRequest(AzureReq azureRequest) (azureResponse, error) {
 	return azureRes, nil
 }
 
+/*
+azureParseStatusCode parses the status code of an Azure response.
+
+@param res: the response to parse
+
+@return: an error if the status code is not 200
+*/
 func azureParseStatusCode(res *http.Response) error {
 	switch res.StatusCode {
 	case 429: // Token limit reached

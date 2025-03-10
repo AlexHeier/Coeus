@@ -25,25 +25,20 @@ type Conversation struct {
 	LastActive time.Time
 }
 
-type SystemPrompt struct {
-	Context struct {
-		SystemPrompt string `json:"systemPrompt"`
-		Tools        []struct {
-			ToolName        string `json:"toolName"`
-			ToolDescription string `json:"toolDescription"`
-		} `json:"tools"`
-		AboutTools  string        `json:"aboutTools"`
-		ToolReturns []interface{} `json:"toolReturns"`
-		History     []string      `json:"history"`
-	} `json:"context"`
-}
-
 // Appends a prompt and section to the history within the conversation
-
 func (c *Conversation) appendHistory(role, content string) {
 	c.History = append(c.History, HistoryStruct{Role: role, Content: content})
 }
 
+/*
+Prompt is a function that sends a prompt to the LLM and returns the response.
+
+@receiver c: The conversation to send the prompt from
+
+@param userPrompt: The prompt to send to the LLM
+
+@return A ResponseStruct and an error if the request fails
+*/
 func (c *Conversation) Prompt(userPrompt string) (ResponseStruct, error) {
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
@@ -52,7 +47,7 @@ func (c *Conversation) Prompt(userPrompt string) (ResponseStruct, error) {
 
 	response, err := Send(RequestStruct{
 		Userprompt:   c.UserPrompt,
-		Systemprompt: c.systemPrompt(),
+		Systemprompt: c.getSystemPrompt(),
 		History:      &c.History,
 	})
 
@@ -79,6 +74,11 @@ func (c *Conversation) Prompt(userPrompt string) (ResponseStruct, error) {
 	return response, err
 }
 
+/*
+DumpConversation is a function that returns the conversation history as a string.
+
+@receiver c: The conversation to dump
+*/
 func (c *Conversation) DumpConversation() string {
 	var temp string
 	c.Mutex.Lock()
@@ -90,17 +90,29 @@ func (c *Conversation) DumpConversation() string {
 	return temp
 }
 
+/*
+BeginConversation is a function that creates a new conversation and returns it.
+
+@return A pointer to the new conversation
+*/
 func BeginConversation() *Conversation {
 	ConvAll.Mutex.Lock()
 	defer ConvAll.Mutex.Unlock()
 	newCon := Conversation{
-		MainPrompt: Persona,
+		MainPrompt: sp,
 	}
 	ConvAll.Conversations = append(ConvAll.Conversations, &newCon)
 	return ConvAll.Conversations[len(ConvAll.Conversations)-1]
 }
 
-func (c *Conversation) systemPrompt() string {
+/*
+getSystemPrompt is a function that returns the system prompt as a string.
+
+@receiver c: The conversation to get the system prompt from
+
+@return A string of the system prompt
+*/
+func (c *Conversation) getSystemPrompt() string {
 	sysP := make(map[string]interface{})
 
 	sysP["systemprompt"] = c.MainPrompt

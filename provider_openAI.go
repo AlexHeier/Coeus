@@ -8,6 +8,15 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
+/*
+OpenAI is a function that sets the provider to OpenAI.
+
+@param model: the model to use
+
+@param apikey: the api key to use
+
+@return An error if the model or api key is empty
+*/
 func OpenAI(model, apikey string) error {
 	Provider = openAIStruct{
 		Model:  model,
@@ -16,6 +25,13 @@ func OpenAI(model, apikey string) error {
 	return nil
 }
 
+/*
+sendOpenAI is a function that sends a request to OpenAI.
+
+@param request: the request to send
+
+@return A response and an error if the request fails
+*/
 func sendOpenAI(request RequestStruct) (ResponseStruct, error) {
 	config := Provider.(openAIStruct)
 	client := openai.NewClient(config.ApiKey)
@@ -77,6 +93,11 @@ func sendOpenAI(request RequestStruct) (ResponseStruct, error) {
 	return ResponseStruct{Response: resp.Choices[0].Message.Content}, nil
 }
 
+/*
+convertToOpenAITools is a function that converts the tools to fit OpenAI tools.
+
+@return A list of OpenAI tools
+*/
 func convertToOpenAITools() []openai.Tool {
 	var openAITools []openai.Tool
 

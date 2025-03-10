@@ -8,6 +8,7 @@ package coeus
  	 \____/|_|_|\__,_|_| |_| |_|\__,_|
 */
 
+// Struct for Ollama definition
 type ollamaStruct struct {
 	HTTPProtocol string
 	ServerIP     string
@@ -16,18 +17,13 @@ type ollamaStruct struct {
 	Stream       bool
 }
 
+// Struct used in sending requests to Ollama
 type ollamaRole struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
-type ollamaToolCall struct {
-	Function struct {
-		Arguments map[string]interface{} `json:"arguments"`
-		Name      string                 `json:"name"`
-	} `json:"function"`
-}
-
+// Struct used in defineing the tools in the request to Ollama
 type ollamaTool struct {
 	Type     string `json:"type"`
 	Function struct {
@@ -37,12 +33,22 @@ type ollamaTool struct {
 	}
 }
 
+// Struct used for tool calls in the response from Ollama
+type ollamaToolCall struct {
+	Function struct {
+		Arguments map[string]interface{} `json:"arguments"`
+		Name      string                 `json:"name"`
+	} `json:"function"`
+}
+
+// Struct used in resonse from Ollama
 type ollamaMessage struct {
 	Content   string           `json:"content"`
 	Role      string           `json:"role"`
 	ToolCalls []ollamaToolCall `json:"tool_calls"`
 }
 
+// Struct for containing the response from Ollama
 type ollamaResponse struct {
 	EvalCount          int           `json:"eval_count"`
 	Message            ollamaMessage `json:"message"`
@@ -60,6 +66,8 @@ type ollamaResponse struct {
            | |
            |_|
 */
+
+// Struct for OpenAI definition
 type openAIStruct struct {
 	Model  string
 	ApiKey string

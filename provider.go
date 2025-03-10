@@ -33,9 +33,16 @@ type ToolCall struct {
 	} `json:"function"`
 }
 
+// Provider will change to the provider struct of the chosen provider
 var Provider interface{}
-var TTSProvider interface{}
 
+/*
+Send function will send the request to any provider and return the response
+
+@param request RequestStruct
+
+@return ResponseStruct, error
+*/
 func Send(request RequestStruct) (ResponseStruct, error) {
 
 	switch Provider.(type) {

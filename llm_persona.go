@@ -1,7 +1,13 @@
 package coeus
 
-var Persona string
+// sp is the system prompt the LLM will use
+var sp string
 
-func SetPersona(s string) {
-	Persona = s + "\n"
+/*
+SetSystemPrompt is a function that sets the system prompt for the LLM.
+
+@param prompt: the system prompt to set
+*/
+func SetSystemPrompt(prompt string) {
+	sp = prompt + "\n"
 }

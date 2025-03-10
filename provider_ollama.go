@@ -10,8 +10,20 @@ import (
 	"strconv"
 )
 
+// Sufix for the Ollama API endpoint
 const ollamaSuffix = "/api/chat"
 
+/*
+Ollama is a function that sets the provider to Ollama.
+
+@param ip: the IP address of the Ollama server
+
+@param port: the port of the Ollama server
+
+@param model: the model to use
+
+@return An error if the IP address, port or model is invalid
+*/
 func Ollama(ip, port, model string) error {
 	// Validate IP address
 	if net.ParseIP(ip) == nil {
@@ -39,11 +51,18 @@ func Ollama(ip, port, model string) error {
 	return nil
 }
 
+/*
+sendOllama is a function that setups and sends a request to Ollama.
+
+@param request: the request to send
+
+@return A response and an error if the request fails
+*/
 func sendOllama(request RequestStruct) (ResponseStruct, error) {
 
 	config := Provider.(ollamaStruct)
 
-	url := "http://" + config.ServerIP + ":" + config.Port + ollamaSuffix
+	url := config.HTTPProtocol + "://" + config.ServerIP + ":" + config.Port + ollamaSuffix
 
 	reqData := make(map[string]interface{})
 
@@ -97,6 +116,11 @@ func sendOllama(request RequestStruct) (ResponseStruct, error) {
 	}, nil
 }
 
+/*
+ollaToolsWrapper is a function that wraps the tools in the request to Ollama.
+
+@return A list of tools in the request to Ollama
+*/
 func ollamaToolsWrapper() []ollamaTool {
 	var ollamaTools []ollamaTool
 
@@ -112,7 +136,15 @@ func ollamaToolsWrapper() []ollamaTool {
 	return ollamaTools
 }
 
-// Does Ollamas network handling
+/*
+ollaNetworkSender is a function that sends a request to Ollama.
+
+@param reqData: the data to send
+
+@param url: the URL to send the data to
+
+@return A response and an error if the request fails
+*/
 func ollamaNetworkSender(reqData map[string]interface{}, url string) (ollamaResponse, error) {
 	data, err := json.Marshal(reqData)
 	if err != nil {

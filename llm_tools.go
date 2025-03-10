@@ -17,6 +17,15 @@ type toolStruct struct {
 // Tools is a list of all the tools
 var Tools []toolStruct
 
+/*
+NewTool creates a new tool and adds it to the list of tools.
+
+@param name: the name of the tool
+
+@param desc: the description of the tool sendt to the LLM
+
+@param function: the function to be executed
+*/
 func NewTool(name, desc string, function interface{}) {
 	paramSchema := extractFunctionParams(function)
 
@@ -34,7 +43,9 @@ func NewTool(name, desc string, function interface{}) {
 Run runs the function of the tool its called upon.
 
 @param args: the arguments of the function
+
 @return: the result of the function
+
 @return: an error if the function fails
 */
 func (t *toolStruct) RunTool(args ...interface{}) (string, error) {
@@ -90,7 +101,9 @@ func (t *toolStruct) RunTool(args ...interface{}) (string, error) {
 Find finds a tool by its name and returns the tool struct.
 
 @param name: the name of the tool
+
 @return: the tool struct
+
 @return: an error if the tool is not found
 */
 func FindTool(name string) (toolStruct, error) {
@@ -102,6 +115,13 @@ func FindTool(name string) (toolStruct, error) {
 	return toolStruct{}, fmt.Errorf("tool not found")
 }
 
+/*
+extractFunctionParams extracts the parameters of a function and returns a JSON schema.
+
+@param fn: the function to extract the parameters from
+
+@return: the JSON schema of the function parameters
+*/
 func extractFunctionParams(fn interface{}) map[string]interface{} {
 	fnType := reflect.TypeOf(fn)
 	if fnType.Kind() != reflect.Func {
