@@ -102,27 +102,6 @@ func FindTool(name string) (toolStruct, error) {
 	return toolStruct{}, fmt.Errorf("tool not found")
 }
 
-/*
-Returns the information about each tool to be used by an LLM. For use within a prompt
-
-@return: Nothing if no tools specified
-@return: Tool names and descriptions with usage information
-*/
-func getToolsDescription() []string {
-
-	if len(Tools) <= 0 {
-		return []string{}
-	}
-
-	var desc []string
-
-	for _, tool := range Tools {
-		desc = append(desc, tool.Name+": "+tool.Desc)
-	}
-
-	return desc
-}
-
 func extractFunctionParams(fn interface{}) map[string]interface{} {
 	fnType := reflect.TypeOf(fn)
 	if fnType.Kind() != reflect.Func {

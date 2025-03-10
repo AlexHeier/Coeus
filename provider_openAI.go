@@ -8,17 +8,17 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-func OpenAI(model, api_key string) error {
+func OpenAI(model, apikey string) error {
 	Provider = openAIStruct{
-		Model:   model,
-		API_KEY: api_key,
+		Model:  model,
+		ApiKey: apikey,
 	}
 	return nil
 }
 
 func sendOpenAI(request RequestStruct) (ResponseStruct, error) {
 	config := Provider.(openAIStruct)
-	client := openai.NewClient(config.API_KEY)
+	client := openai.NewClient(config.ApiKey)
 
 	openAITools := convertToOpenAITools()
 

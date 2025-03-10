@@ -9,7 +9,7 @@ package coeus
 */
 
 type ollamaStruct struct {
-	HttpProtocol string
+	HTTPProtocol string
 	ServerIP     string
 	Port         string
 	Model        string
@@ -61,8 +61,8 @@ type ollamaResponse struct {
            |_|
 */
 type openAIStruct struct {
-	Model   string
-	API_KEY string
+	Model  string
+	ApiKey string
 }
 
 /*

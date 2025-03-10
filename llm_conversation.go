@@ -45,7 +45,6 @@ func (c *Conversation) appendHistory(role, content string) {
 }
 
 func (c *Conversation) Prompt(userPrompt string) (ResponseStruct, error) {
-
 	c.Mutex.Lock()
 	defer c.Mutex.Unlock()
 	c.LastActive = time.Now()
@@ -75,7 +74,6 @@ func (c *Conversation) Prompt(userPrompt string) (ResponseStruct, error) {
 			c.Summary = strings.Join(splitString[i+1:], " ")
 			response.Response = strings.Join(splitString[:i], " ")
 			break
-
 		}
 	}
 	return response, err
@@ -89,7 +87,6 @@ func (c *Conversation) DumpConversation() string {
 	for _, h := range c.History {
 		temp += h.Role + ": " + h.Content + "\n"
 	}
-
 	return temp
 }
 
@@ -99,13 +96,11 @@ func BeginConversation() *Conversation {
 	newCon := Conversation{
 		MainPrompt: Persona,
 	}
-
 	ConvAll.Conversations = append(ConvAll.Conversations, &newCon)
 	return ConvAll.Conversations[len(ConvAll.Conversations)-1]
 }
 
 func (c *Conversation) systemPrompt() string {
-
 	sysP := make(map[string]interface{})
 
 	sysP["systemprompt"] = c.MainPrompt
@@ -115,6 +110,5 @@ func (c *Conversation) systemPrompt() string {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-
 	return string(ret)
 }

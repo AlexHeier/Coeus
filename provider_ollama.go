@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-const OLLAMA_SUFFIX = "/api/chat"
+const ollamaSuffix = "/api/chat"
 
 func Ollama(ip, port, model string) error {
 	// Validate IP address
@@ -29,7 +29,7 @@ func Ollama(ip, port, model string) error {
 	}
 
 	Provider = ollamaStruct{
-		HttpProtocol: "http",
+		HTTPProtocol: "http",
 		ServerIP:     ip,
 		Port:         port,
 		Model:        model,
@@ -43,7 +43,7 @@ func sendOllama(request RequestStruct) (ResponseStruct, error) {
 
 	config := Provider.(ollamaStruct)
 
-	url := "http://" + config.ServerIP + ":" + config.Port + OLLAMA_SUFFIX
+	url := "http://" + config.ServerIP + ":" + config.Port + ollamaSuffix
 
 	reqData := make(map[string]interface{})
 
@@ -79,7 +79,7 @@ func sendOllama(request RequestStruct) (ResponseStruct, error) {
 			}
 
 			reqData["messages"] = append(reqData["messages"].([]ollamaRole),
-				ollamaRole{Role: "tool", Content: string(toolResponse)})
+				ollamaRole{Role: "tool", Content: toolResponse})
 		}
 
 		jData, err = ollamaNetworkSender(reqData, url)
@@ -89,11 +89,11 @@ func sendOllama(request RequestStruct) (ResponseStruct, error) {
 	}
 
 	return ResponseStruct{
-		Response:             jData.Message.Content,
-		TotalLoadDuration:    float64(jData.TotalDuration),
-		Eval_count:           float64(jData.EvalCount),
-		Prompt_eval_count:    float64(jData.PromptEvalCount),
-		Prompt_eval_duration: float64(jData.PromptEvalDuration),
+		Response:           jData.Message.Content,
+		TotalLoadDuration:  float64(jData.TotalDuration),
+		Eval_count:         float64(jData.EvalCount),
+		PromptEvalCount:    float64(jData.PromptEvalCount),
+		PromptEvalDuration: float64(jData.PromptEvalDuration),
 	}, nil
 }
 

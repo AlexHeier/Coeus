@@ -3,11 +3,11 @@ package coeus
 import "fmt"
 
 type ResponseStruct struct {
-	Response             string
-	TotalLoadDuration    float64
-	Eval_count           float64
-	Prompt_eval_count    float64
-	Prompt_eval_duration float64
+	Response           string
+	TotalLoadDuration  float64
+	Eval_count         float64
+	PromptEvalCount    float64
+	PromptEvalDuration float64
 }
 
 type RequestStruct struct {
