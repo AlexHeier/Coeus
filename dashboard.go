@@ -41,7 +41,10 @@ func webGetHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err.Error())
 	}
 
-	w.Write(data)
+	_, err = w.Write(data)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }
 
 func chatHandler(w http.ResponseWriter, r *http.Request) {

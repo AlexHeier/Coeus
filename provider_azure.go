@@ -151,7 +151,7 @@ func azureSendRequest(AzureReq azureRequest) (azureResponse, error) {
 		return azureResponse{}, err
 	}
 
-	req.Header.Add("api-key", Config.APIKey)
+	req.Header.Add("Api-Key", Config.APIKey)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

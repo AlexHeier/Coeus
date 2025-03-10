@@ -8,7 +8,7 @@ import (
 var memory func(args ...interface{}) string = MemoryAllMessage
 var memArgs []interface{}
 
-/* Changes the function used for memory managment. Default is All messages. */
+/* Changes the function used for memory management. Default is All messages. */
 func MemoryVersion(newFunc ...interface{}) {
 	if len(newFunc) > 0 {
 		if fn, ok := newFunc[0].(func(args ...interface{}) string); ok {
