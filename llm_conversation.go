@@ -53,7 +53,6 @@ func (c *Conversation) Prompt(userPrompt string) (ResponseStruct, error) {
 
 	if err != nil {
 		fmt.Println(err.Error())
-		fmt.Println("wtf")
 		return response, err
 	}
 

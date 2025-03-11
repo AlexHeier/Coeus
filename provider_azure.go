@@ -95,8 +95,6 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 				return ResponseStruct{}, fmt.Errorf("error during tool execution: %v", err)
 			}
 
-			fmt.Println(toolResponse)
-
 			*request.History = append(*request.History, HistoryStruct{
 				Role:       azureRoleTool,
 				Content:    toolResponse,
