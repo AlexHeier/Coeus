@@ -54,6 +54,11 @@ func (t *toolStruct) RunTool(args ...interface{}) (string, error) {
 		return "", fmt.Errorf("function is not a function")
 	}
 
+	numArgs := f.Type().NumIn()
+	if numArgs != len(args) {
+		return "", fmt.Errorf("wrong number of arguments: expected %d, got %d", numArgs, len(args))
+	}
+
 	// Check if args are an array (or slice) and unpack accordingly
 	var finalArgs []reflect.Value
 
