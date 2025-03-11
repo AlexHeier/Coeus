@@ -28,14 +28,13 @@ func Start(port string) error {
 func webHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		webGetHandler(w, r)
+		webGetHandler(w)
 	default:
 		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
 }
 
-func webGetHandler(w http.ResponseWriter, r *http.Request) {
-	_ = r
+func webGetHandler(w http.ResponseWriter) {
 
 	data, err := base64.StdEncoding.DecodeString(dashboardPageBase64)
 	if err != nil {
