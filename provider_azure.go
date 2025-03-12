@@ -68,10 +68,6 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 
 	if len(azureRes.Choices[0].Message.ToolCalls) > 0 {
 
-		// Push LLM tool calls to the history
-		*request.History = append(*request.History, HistoryStruct{Role: azureRoleAssistant,
-			ToolCalls: azureRes.Choices[0].Message.ToolCalls})
-
 		for _, toolCall := range azureRes.Choices[0].Message.ToolCalls {
 
 			t, err := FindTool(toolCall.Function.Name)
@@ -106,6 +102,10 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 			return ResponseStruct{}, err
 		}
 	}
+
+	*request.History = append(*request.History, HistoryStruct{Role: azureRoleAssistant,
+		ToolCalls: azureRes.Choices[0].Message.ToolCalls})
+
 	return ResponseStruct{Response: azureRes.Choices[0].Message.Content}, nil
 }
 
