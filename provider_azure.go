@@ -103,9 +103,6 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 		}
 	}
 
-	*request.History = append(*request.History, HistoryStruct{Role: azureRoleAssistant,
-		ToolCalls: azureRes.Choices[0].Message.ToolCalls})
-
 	return ResponseStruct{Response: azureRes.Choices[0].Message.Content}, nil
 }
 
