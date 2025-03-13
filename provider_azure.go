@@ -111,6 +111,7 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 				if err != nil {
 					return ResponseStruct{}, err
 				}
+
 			}
 
 			if len(azureRes.Choices[0].Message.ToolCalls) == 0 {
