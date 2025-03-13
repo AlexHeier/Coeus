@@ -106,11 +106,11 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 					Content:    toolResponse,
 					ToolCallID: toolCall.ID,
 				})
-			}
 
-			azureRes, err = azureSendRequest(azureReq)
-			if err != nil {
-				return ResponseStruct{}, err
+				azureRes, err = azureSendRequest(azureReq)
+				if err != nil {
+					return ResponseStruct{}, err
+				}
 			}
 
 			if len(azureRes.Choices[0].Message.ToolCalls) == 0 {
