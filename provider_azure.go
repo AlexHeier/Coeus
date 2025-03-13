@@ -94,6 +94,12 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 			}
 
 			azureReq.Messages = append(azureReq.Messages, azureMessage{
+				Role:      azureRoleAssistant,
+				Content:   "",
+				ToolCalls: []ToolCall{toolCall},
+			})
+
+			azureReq.Messages = append(azureReq.Messages, azureMessage{
 				Role:       azureRoleTool,
 				Content:    toolResponse,
 				ToolCallID: toolCall.ID,
