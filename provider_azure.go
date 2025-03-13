@@ -68,6 +68,8 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 
 	if len(azureRes.Choices[0].Message.ToolCalls) > 0 {
 
+		azureReq := createAzureRequest(request)
+
 		for _, toolCall := range azureRes.Choices[0].Message.ToolCalls {
 
 			t, err := FindTool(toolCall.Function.Name)
@@ -91,13 +93,14 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 				return ResponseStruct{}, fmt.Errorf("error during tool execution: %v", err)
 			}
 
-			*request.History = append(*request.History, HistoryStruct{
+			azureReq.Messages = append(azureReq.Messages, azureMessage{
 				Role:       azureRoleTool,
 				Content:    toolResponse,
-				ToolCallID: toolCall.ID})
+				ToolCallID: toolCall.ID,
+			})
 		}
 
-		azureRes, err = azureSendRequest(createAzureRequest(request))
+		azureRes, err = azureSendRequest(azureReq)
 		if err != nil {
 			return ResponseStruct{}, err
 		}
