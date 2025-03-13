@@ -171,7 +171,7 @@ func azureSendRequest(AzureReq azureRequest) (azureResponse, error) {
 		return azureResponse{}, err
 	}
 
-	req.Header.Add("Api-Key", Config.APIKey)
+	req.Header.Add("api-key", Config.APIKey)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -213,7 +213,7 @@ func azureParseStatusCode(res *http.Response) error {
 	case 200: // OK
 		return nil
 	default:
-		fmt.Printf("unhandled status code: %d\n", res.StatusCode)
-		return nil
+		data, _ := io.ReadAll(res.Body)
+		return fmt.Errorf("azure: unhandled status code: %d, response: %s", res.StatusCode, string(data))
 	}
 }
