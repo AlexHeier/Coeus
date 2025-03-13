@@ -162,7 +162,7 @@ azureSendRequest sends a request to Azure.
 
 @return: an azureResponse struct and an error if the request fails
 */
-func azureSendRequest(AzureReq azureRequest) (azureResponse, error) {
+func azureSendRequest(AzureReq azureRequest) (azureCompletionMessage, error) {
 	Config := Provider.(azureProviderStruct)
 
 	buf := new(bytes.Buffer)
@@ -171,32 +171,32 @@ func azureSendRequest(AzureReq azureRequest) (azureResponse, error) {
 
 	req, err := http.NewRequest(http.MethodPost, Config.Endpoint, buf)
 	if err != nil {
-		return azureResponse{}, err
+		return azureCompletionMessage{}, err
 	}
 
 	req.Header.Add("api-key", Config.APIKey)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return azureResponse{}, err
+		return azureCompletionMessage{}, err
 	}
 	defer res.Body.Close()
 
 	err = azureParseStatusCode(res)
 	if err != nil {
-		return azureResponse{}, err
+		return azureCompletionMessage{}, err
 	}
 
 	resData, err := io.ReadAll(res.Body)
 	if err != nil {
-		return azureResponse{}, err
+		return azureCompletionMessage{}, err
 	}
 
-	var azureRes azureResponse
+	var azureRes azureCompletionMessage
 
 	err = json.Unmarshal(resData, &azureRes)
 	if err != nil {
-		return azureResponse{}, err
+		return azureCompletionMessage{}, err
 	}
 
 	return azureRes, nil

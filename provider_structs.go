@@ -98,7 +98,7 @@ type azureRequest struct {
 }
 
 // Struct for containing the response from Azure
-type azureResponse struct {
+type azureCompletionMessage struct {
 	Choices []struct {
 		ContentFilterResults map[string]interface{} `json:"content_filter_results"`
 		FinishReason         string                 `json:"finish_reason"`
