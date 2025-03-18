@@ -97,7 +97,6 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 
 				azureReq.Messages = append(azureReq.Messages, azureMessage{
 					Role:      azureRoleAssistant,
-					Content:   "",
 					ToolCalls: []ToolCall{toolCall},
 				})
 
@@ -106,6 +105,18 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 					Content:    toolResponse,
 					ToolCallID: toolCall.ID,
 				})
+
+				*request.History = append(*request.History, HistoryStruct{
+					Role:      azureRoleAssistant,
+					ToolCalls: []ToolCall{toolCall},
+				})
+
+				*request.History = append(*request.History, HistoryStruct{
+					Role:       azureRoleTool,
+					Content:    toolResponse,
+					ToolCallID: toolCall.ID,
+				})
+
 			}
 
 			azureRes, err = azureSendRequest(azureReq)
