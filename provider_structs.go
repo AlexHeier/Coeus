@@ -43,9 +43,9 @@ type ollamaToolCall struct {
 
 // Struct used in resonse from Ollama
 type ollamaMessage struct {
-	Content   string     `json:"content"`
-	Role      string     `json:"role"`
-	ToolCalls []ToolCall `json:"tool_calls"`
+	Content   string           `json:"content"`
+	Role      string           `json:"role"`
+	ToolCalls []ollamaToolCall `json:"tool_calls"`
 }
 
 // Struct for containing the response from Ollama
