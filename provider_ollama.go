@@ -99,17 +99,6 @@ func sendOllama(request RequestStruct) (ResponseStruct, error) {
 
 			reqData["messages"] = append(reqData["messages"].([]ollamaRole),
 				ollamaRole{Role: "tool", Content: toolResponse})
-
-			*request.History = append(*request.History, HistoryStruct{
-				Role:      "assistant",
-				ToolCalls: []ToolCall{t},
-			})
-
-			*request.History = append(*request.History, HistoryStruct{
-				Role:       "tool",
-				Content:    toolResponse,
-				ToolCallID: t.ID,
-			})
 		}
 
 		jData, err = ollamaNetworkSender(reqData, url)
