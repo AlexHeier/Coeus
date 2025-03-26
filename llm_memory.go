@@ -56,7 +56,7 @@ func MemoryLastMessage(args ...interface{}) ([]HistoryStruct, error) {
 		return nil, fmt.Errorf("BAD CONVERSATION: How?")
 	}
 
-	elements, ok := args[1].(int)
+	elements, ok := memArgs[0].(int)
 	if !ok {
 		return nil, fmt.Errorf("second argument needs to be an integer")
 	}
