@@ -39,19 +39,19 @@ var Provider interface{}
 /*
 Send function will send the request to any provider and return the response
 
-@param request RequestStruct
+@param con ConversationStruct
 
 @return ResponseStruct, error
 */
-func Send(request RequestStruct) (ResponseStruct, error) {
+func Send(con *Conversation) (ResponseStruct, error) {
 
 	switch Provider.(type) {
 	case ollamaStruct:
-		return sendOllama(request)
+		return sendOllama(con)
 	case azureProviderStruct:
-		return sendAzure(request)
+		return sendAzure(con)
 	case openAIStruct:
-		return sendOpenAI(request)
+		return sendOpenAI(con)
 	default:
 		return ResponseStruct{}, fmt.Errorf("no valid provider configured")
 	}

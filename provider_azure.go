@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 )
 
@@ -59,16 +60,16 @@ sendAzure sends a request to Azure.
 
 @return A response and an error if the request fails
 */
-func sendAzure(request RequestStruct) (ResponseStruct, error) {
+func sendAzure(con *Conversation) (ResponseStruct, error) {
 
-	azureRes, err := azureSendRequest(createAzureRequest(request))
+	azureRes, err := azureSendRequest(createAzureRequest(con))
 	if err != nil {
 		return ResponseStruct{}, err
 	}
 
 	if len(azureRes.Choices[0].Message.ToolCalls) > 0 {
 
-		azureReq := createAzureRequest(request)
+		azureReq := createAzureRequest(con)
 
 		for {
 
@@ -106,12 +107,12 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 					ToolCallID: toolCall.ID,
 				})
 
-				*request.History = append(*request.History, HistoryStruct{
+				con.History = append(con.History, HistoryStruct{
 					Role:      azureRoleAssistant,
 					ToolCalls: []ToolCall{toolCall},
 				})
 
-				*request.History = append(*request.History, HistoryStruct{
+				con.History = append(con.History, HistoryStruct{
 					Role:       azureRoleTool,
 					Content:    toolResponse,
 					ToolCallID: toolCall.ID,
@@ -140,7 +141,7 @@ createAzureRequest creates an Azure request.
 
 @return: an azureRequest struct
 */
-func createAzureRequest(request RequestStruct) azureRequest {
+func createAzureRequest(con *Conversation) azureRequest {
 	Config := Provider.(azureProviderStruct)
 
 	AzureReq := azureRequest{
@@ -150,13 +151,18 @@ func createAzureRequest(request RequestStruct) azureRequest {
 
 	AzureReq.Messages = append(AzureReq.Messages, azureMessage{
 		Role:    azureRoleSystem,
-		Content: request.Systemprompt})
+		Content: sp})
 
-	*request.History = append(*request.History, HistoryStruct{
+	con.History = append(con.History, HistoryStruct{
 		Role:    azureRoleUser,
-		Content: request.Userprompt})
+		Content: con.UserPrompt})
 
-	for _, h := range *request.History {
+	history, err := memory()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	for _, h := range history {
 		AzureReq.Messages = append(AzureReq.Messages,
 			azureMessage{
 				Role:       h.Role,

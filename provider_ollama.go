@@ -58,7 +58,7 @@ sendOllama is a function that setups and sends a request to Ollama.
 
 @return A response and an error if the request fails
 */
-func sendOllama(request RequestStruct) (ResponseStruct, error) {
+func sendOllama(con *Conversation) (ResponseStruct, error) {
 
 	config := Provider.(ollamaStruct)
 
@@ -68,8 +68,8 @@ func sendOllama(request RequestStruct) (ResponseStruct, error) {
 
 	reqData["model"] = config.Model
 	reqData["messages"] = []ollamaRole{
-		{Role: "system", Content: request.Systemprompt},
-		{Role: "user", Content: request.Userprompt},
+		{Role: "system", Content: sp},
+		{Role: "user", Content: con.UserPrompt},
 	}
 	reqData["stream"] = config.Stream
 	reqData["tools"] = ollamaToolsWrapper()

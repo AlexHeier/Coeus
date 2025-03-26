@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -32,19 +33,36 @@ sendOpenAI is a function that sends a request to OpenAI.
 
 @return A response and an error if the request fails
 */
-func sendOpenAI(request RequestStruct) (ResponseStruct, error) {
+func sendOpenAI(con *Conversation) (ResponseStruct, error) {
 	config := Provider.(openAIStruct)
 	client := openai.NewClient(config.ApiKey)
 
 	openAITools := convertToOpenAITools()
 
-	resp, err := client.CreateChatCompletion(context.TODO(), openai.ChatCompletionRequest{
+	history, err := memory()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req := openai.ChatCompletionRequest{
 		Model: config.Model,
-		Messages: []openai.ChatCompletionMessage{
-			{Role: "user", Content: request.Systemprompt + request.Userprompt},
-		},
 		Tools: openAITools,
-	})
+		Messages: []openai.ChatCompletionMessage{
+			{Role: "system", Content: sp},
+			{Role: "user", Content: con.UserPrompt},
+		},
+	}
+
+	for _, his := range history {
+		req.Messages = append(req.Messages, openai.ChatCompletionMessage{
+			Role:       his.Role,
+			Content:    his.Content,
+			ToolCallID: his.ToolCallID,
+			ToolCalls:  convertToOpenAIToolCalls(his.ToolCalls),
+		})
+	}
+
+	resp, err := client.CreateChatCompletion(context.TODO(), req)
 	if err != nil {
 		return ResponseStruct{}, err
 	}
@@ -113,4 +131,20 @@ func convertToOpenAITools() []openai.Tool {
 	}
 
 	return openAITools
+}
+
+func convertToOpenAIToolCalls(t []ToolCall) []openai.ToolCall {
+	var array []openai.ToolCall
+	for _, call := range t {
+		array = append(array, openai.ToolCall{
+			Index: call.Index,
+			ID:    call.ID,
+			Type:  openai.ToolType(call.Type),
+			Function: openai.FunctionCall{
+				Arguments: call.Function.Arguments,
+				Name:      call.Function.Name,
+			},
+		})
+	}
+	return array
 }

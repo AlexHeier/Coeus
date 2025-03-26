@@ -5,7 +5,7 @@ import (
 )
 
 /* Default memory function is All. This function will use all messages as memory. */
-var memory func(args ...interface{}) string = MemoryAllMessage
+var memory func(args ...interface{}) ([]HistoryStruct, error) = MemoryAllMessage
 var memArgs []interface{}
 
 /*
@@ -15,7 +15,7 @@ MemoryVersion changes the function used for memory management. Default is All me
 */
 func MemoryVersion(newFunc ...interface{}) {
 	if len(newFunc) > 0 {
-		if fn, ok := newFunc[0].(func(args ...interface{}) string); ok {
+		if fn, ok := newFunc[0].(func(args ...interface{}) ([]HistoryStruct, error)); ok {
 			memory = fn
 			if len(newFunc) > 1 {
 				memArgs = newFunc[1:]
@@ -30,25 +30,15 @@ func MemoryVersion(newFunc ...interface{}) {
 /*
 MemoryAllMessage is a function that will use all messages as memory.
 
-@return A string of the history.
+@return Array of history objects to use as memory.
 */
-func MemoryAllMessage(args ...interface{}) string {
+func MemoryAllMessage(args ...interface{}) ([]HistoryStruct, error) {
 	con, ok := args[0].(*Conversation)
 	if !ok {
-		fmt.Println("MEMORY: Bad type. How?")
-		return ""
+		return nil, fmt.Errorf("MEMORY: Bad type. How?")
 	}
 
-	if len(con.History) <= 0 {
-		return "No History"
-	}
-
-	var temp string
-	for _, h := range con.History {
-		temp += h.Role + ": " + h.Content
-	}
-
-	return temp
+	return con.History, nil
 }
 
 /*
@@ -56,34 +46,33 @@ MemoryLastMessage is a function that will use the last int x messages as memory.
 
 @param The number of last messages to use as memory.
 
-@return A string representing the memory.
+@return Array of the last X amount of messages
 */
-func MemoryLastMessage(args ...interface{}) string {
+func MemoryLastMessage(args ...interface{}) ([]HistoryStruct, error) {
 	con, ok := args[0].(*Conversation)
 	if !ok {
-		return "No history"
+		return nil, fmt.Errorf("BAD CONVERSATION: How?")
 	}
 
-	x, ok := args[1].(int)
+	elements, ok := args[1].(int)
 	if !ok {
-		return ""
+		return nil, fmt.Errorf("Second argument needs to be an integer")
+	}
+
+	if elements < 0 {
+		return nil, fmt.Errorf("Integer needs to be a positive number")
 	}
 
 	historyLen := len(con.History)
-	if x > historyLen {
-		x = historyLen
+	if elements > historyLen {
+		elements = historyLen
 	}
 
-	lastMessages := con.History[historyLen-x:]
-	var hist string
-	for _, h := range lastMessages {
-		hist += h.Role + ": " + h.Content + "\n"
-	}
-
-	return "[BEGIN HISTORY]" + hist + "[END HISTORY]"
+	return con.History[historyLen-elements:], nil
 }
 
 /*
+CURRENTLY NOT IN USE
 MemorySummary will create a summary of the conversation and use it as memory.
 
 @return A string representing the new message with the summary and an error if the conversion fails.

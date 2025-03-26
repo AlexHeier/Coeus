@@ -30,12 +30,14 @@ func TestOllama(t *testing.T) {
 		t.Errorf("Expected nil, got %v", result)
 	}
 
-	resp, err := coeus.Send(coeus.RequestStruct{
-		History:      nil,
-		Systemprompt: "test",
-		Userprompt:   "Hello Ollama"})
+	con := coeus.BeginConversation()
+	if con == nil {
+		t.Errorf("Expected new conversation pointer, got %v", con)
+	}
+
+	resp, err := con.Prompt("Hello Ollama")
 	if err != nil {
-		t.Errorf("Expected nil, got %v", err)
+		t.Errorf("Expected nil, got %s", err.Error())
 	}
 
 	if resp.Response == "" {

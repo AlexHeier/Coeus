@@ -1,7 +1,6 @@
 package coeus
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
@@ -45,12 +44,15 @@ func (c *Conversation) Prompt(userPrompt string) (ResponseStruct, error) {
 	c.LastActive = time.Now()
 	c.UserPrompt = userPrompt
 
-	response, err := Send(RequestStruct{
-		Userprompt:   c.UserPrompt,
-		Systemprompt: c.getSystemPrompt(),
-		History:      &c.History,
-	})
+	/*
+		response, err := Send(RequestStruct{
+			Userprompt:   c.UserPrompt,
+			Systemprompt: sp,
+			History:      &c.History,
+		})
+	*/
 
+	response, err := Send(c)
 	if err != nil {
 		fmt.Println(err.Error())
 		return response, err
@@ -58,6 +60,8 @@ func (c *Conversation) Prompt(userPrompt string) (ResponseStruct, error) {
 
 	c.appendHistory("user", c.UserPrompt)
 	c.appendHistory("assistant", response.Response)
+
+	memory()
 
 	splitString := strings.Split(response.Response, " ")
 
@@ -110,7 +114,7 @@ getSystemPrompt is a function that returns the system prompt as a string.
 @receiver c: The conversation to get the system prompt from
 
 @return A string of the system prompt
-*/
+
 func (c *Conversation) getSystemPrompt() string {
 	sysP := make(map[string]interface{})
 
@@ -123,3 +127,4 @@ func (c *Conversation) getSystemPrompt() string {
 	}
 	return string(ret)
 }
+*/
