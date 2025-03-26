@@ -73,7 +73,7 @@ func MemoryLastMessage(args ...interface{}) ([]HistoryStruct, error) {
 
 	his := []HistoryStruct{{Role: "system", Content: sp}}
 
-	his = append(his, con.History[historyLen-elements:]...)
+	his = append(his, con.History[historyLen-elements-1:]...)
 
 	fmt.Println("------------------------------------------------------")
 	for _, h := range his {
