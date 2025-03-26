@@ -137,10 +137,6 @@ func createAzureRequest(con *Conversation) azureRequest {
 		MaxTokens:   Config.MaxTokens,
 	}
 
-	con.History = append(con.History, HistoryStruct{
-		Role:    azureRoleUser,
-		Content: con.UserPrompt})
-
 	history, err := memory(con)
 	if err != nil {
 		log.Fatal(err.Error())
