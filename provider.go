@@ -28,8 +28,8 @@ type ToolCall struct {
 	ID       string `json:"id,omitempty"`
 	Type     string `json:"type"`
 	Function struct {
-		Name      string                 `json:"name,omitempty"`
-		Arguments map[string]interface{} `json:"arguments,omitempty"`
+		Name      string `json:"name,omitempty"`
+		Arguments string `json:"arguments,omitempty"`
 	} `json:"function"`
 }
 
