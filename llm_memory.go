@@ -71,14 +71,18 @@ func MemoryLastMessage(args ...interface{}) ([]HistoryStruct, error) {
 		elements = historyLen
 	}
 
-	for _, h := range con.History {
+	his := []HistoryStruct{{Role: "system", Content: sp}}
+
+	his = append(his, con.History[historyLen-elements:]...)
+
+	fmt.Println("------------------------------------------------------")
+	for _, h := range his {
 		fmt.Println(h)
 	}
-
-	system := []HistoryStruct{{Role: "system", Content: sp}}
+	fmt.Println("------------------------------------------------------")
 
 	// Always returns the system message first then the other interactions
-	return append(system, con.History[historyLen-elements:]...), nil
+	return his, nil
 }
 
 /*
