@@ -79,16 +79,14 @@ func sendAzure(request RequestStruct) (ResponseStruct, error) {
 					return ResponseStruct{}, fmt.Errorf("could not find the tool %s", t.Name)
 				}
 
-				/*
-					parsedToolCall := make(map[string]interface{})
-					err = json.Unmarshal(toolCall.Function.Arguments, &parsedToolCall)
-					if err != nil {
-						return ResponseStruct{}, fmt.Errorf("failed to parse tool arguments: %v", err)
-					}
-				*/
+				parsedToolCall := make(map[string]interface{})
+				err = json.Unmarshal([]byte(toolCall.Function.Arguments), &parsedToolCall)
+				if err != nil {
+					return ResponseStruct{}, fmt.Errorf("failed to parse tool arguments: %v", err)
+				}
 
 				var args []interface{}
-				for _, val := range toolCall.Function.Arguments {
+				for _, val := range parsedToolCall {
 					args = append(args, val)
 				}
 
