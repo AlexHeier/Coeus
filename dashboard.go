@@ -18,7 +18,7 @@ The dashboard is a web interface for the LLM chatbot used for trubleshooting and
 
 @return error - Returns an error if the server could not start.
 */
-func StartDashboard(port string) error {
+func Start(port string) error {
 	cons = make(map[string]*Conversation)
 	http.HandleFunc("/api/chat", chatHandler)
 	http.HandleFunc("/", webHandler)
