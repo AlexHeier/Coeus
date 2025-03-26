@@ -11,7 +11,8 @@ import (
 
 const azureRoleUser = "user"
 const azureRoleTool = "tool"
-const azureRoleSystem = "system"
+
+// const azureRoleSystem = "system"
 const azureRoleAssistant = "assistant"
 const azureTypeFunction = "function"
 
@@ -67,67 +68,51 @@ func sendAzure(con *Conversation) (ResponseStruct, error) {
 		return ResponseStruct{}, err
 	}
 
-	if len(azureRes.Choices[0].Message.ToolCalls) > 0 {
+	for {
 
-		azureReq := createAzureRequest(con)
+		for _, toolCall := range azureRes.Choices[0].Message.ToolCalls {
 
-		for {
-
-			for _, toolCall := range azureRes.Choices[0].Message.ToolCalls {
-
-				t, err := FindTool(toolCall.Function.Name)
-				if err != nil {
-					return ResponseStruct{}, fmt.Errorf("could not find the tool %s", t.Name)
-				}
-
-				parsedToolCall := make(map[string]interface{})
-				err = json.Unmarshal([]byte(toolCall.Function.Arguments), &parsedToolCall)
-				if err != nil {
-					return ResponseStruct{}, fmt.Errorf("failed to parse tool arguments: %v", err)
-				}
-
-				var args []interface{}
-				for _, val := range parsedToolCall {
-					args = append(args, val)
-				}
-
-				toolResponse, err := t.RunTool(args...)
-				if err != nil {
-					return ResponseStruct{}, fmt.Errorf("error during tool execution: %v", err)
-				}
-
-				azureReq.Messages = append(azureReq.Messages, azureMessage{
-					Role:      azureRoleAssistant,
-					ToolCalls: []ToolCall{toolCall},
-				})
-
-				azureReq.Messages = append(azureReq.Messages, azureMessage{
-					Role:       azureRoleTool,
-					Content:    toolResponse,
-					ToolCallID: toolCall.ID,
-				})
-
-				con.History = append(con.History, HistoryStruct{
-					Role:      azureRoleAssistant,
-					ToolCalls: []ToolCall{toolCall},
-				})
-
-				con.History = append(con.History, HistoryStruct{
-					Role:       azureRoleTool,
-					Content:    toolResponse,
-					ToolCallID: toolCall.ID,
-				})
-
-			}
-
-			azureRes, err = azureSendRequest(azureReq)
+			t, err := FindTool(toolCall.Function.Name)
 			if err != nil {
-				return ResponseStruct{}, err
+				return ResponseStruct{}, fmt.Errorf("could not find the tool %s", t.Name)
 			}
 
-			if len(azureRes.Choices[0].Message.ToolCalls) == 0 {
-				break
+			parsedToolCall := make(map[string]interface{})
+			err = json.Unmarshal([]byte(toolCall.Function.Arguments), &parsedToolCall)
+			if err != nil {
+				return ResponseStruct{}, fmt.Errorf("failed to parse tool arguments: %v", err)
 			}
+
+			var args []interface{}
+			for _, val := range parsedToolCall {
+				args = append(args, val)
+			}
+
+			toolResponse, err := t.RunTool(args...)
+			if err != nil {
+				return ResponseStruct{}, fmt.Errorf("error during tool execution: %v", err)
+			}
+
+			con.History = append(con.History, HistoryStruct{
+				Role:      azureRoleAssistant,
+				ToolCalls: []ToolCall{toolCall},
+			})
+
+			con.History = append(con.History, HistoryStruct{
+				Role:       azureRoleTool,
+				Content:    toolResponse,
+				ToolCallID: toolCall.ID,
+			})
+
+		}
+
+		azureRes, err = azureSendRequest(createAzureRequest(con))
+		if err != nil {
+			return ResponseStruct{}, err
+		}
+
+		if len(azureRes.Choices[0].Message.ToolCalls) == 0 {
+			break
 		}
 	}
 
@@ -148,10 +133,6 @@ func createAzureRequest(con *Conversation) azureRequest {
 		Temperature: Config.Temperature,
 		MaxTokens:   Config.MaxTokens,
 	}
-
-	AzureReq.Messages = append(AzureReq.Messages, azureMessage{
-		Role:    azureRoleSystem,
-		Content: sp})
 
 	con.History = append(con.History, HistoryStruct{
 		Role:    azureRoleUser,

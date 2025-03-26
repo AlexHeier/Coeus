@@ -38,7 +38,7 @@ func MemoryAllMessage(args ...interface{}) ([]HistoryStruct, error) {
 		return nil, fmt.Errorf("MEMORY: Bad type. How?")
 	}
 
-	return con.History, nil
+	return append(con.History, HistoryStruct{Role: "system", Content: sp}), nil
 }
 
 /*
@@ -64,14 +64,15 @@ func MemoryLastMessage(args ...interface{}) ([]HistoryStruct, error) {
 	}
 
 	historyLen := len(con.History)
+	fmt.Println(historyLen)
 	if elements > historyLen {
 		elements = historyLen
 	}
 
-	system := con.History[0:]
+	system := []HistoryStruct{{Role: "system", Content: sp}}
 
 	// Always returns the system message first then the other interactions
-	return append(system, con.History[:historyLen-elements+1]...), nil
+	return append(system, con.History[:historyLen-elements]...), nil
 }
 
 /*
