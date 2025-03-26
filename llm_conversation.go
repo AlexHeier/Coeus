@@ -61,8 +61,6 @@ func (c *Conversation) Prompt(userPrompt string) (ResponseStruct, error) {
 	c.appendHistory("user", c.UserPrompt)
 	c.appendHistory("assistant", response.Response)
 
-	memory()
-
 	splitString := strings.Split(response.Response, " ")
 
 	//Check for if the response contains a summary and extract it

@@ -157,7 +157,7 @@ func createAzureRequest(con *Conversation) azureRequest {
 		Role:    azureRoleUser,
 		Content: con.UserPrompt})
 
-	history, err := memory()
+	history, err := memory(con)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

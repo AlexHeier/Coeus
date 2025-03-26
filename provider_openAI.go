@@ -39,7 +39,7 @@ func sendOpenAI(con *Conversation) (ResponseStruct, error) {
 
 	openAITools := convertToOpenAITools()
 
-	history, err := memory()
+	history, err := memory(con)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

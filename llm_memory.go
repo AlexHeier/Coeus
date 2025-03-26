@@ -56,11 +56,11 @@ func MemoryLastMessage(args ...interface{}) ([]HistoryStruct, error) {
 
 	elements, ok := args[1].(int)
 	if !ok {
-		return nil, fmt.Errorf("Second argument needs to be an integer")
+		return nil, fmt.Errorf("second argument needs to be an integer")
 	}
 
 	if elements < 0 {
-		return nil, fmt.Errorf("Integer needs to be a positive number")
+		return nil, fmt.Errorf("integer needs to be a positive number")
 	}
 
 	historyLen := len(con.History)
@@ -68,7 +68,10 @@ func MemoryLastMessage(args ...interface{}) ([]HistoryStruct, error) {
 		elements = historyLen
 	}
 
-	return con.History[historyLen-elements:], nil
+	system := con.History[0:]
+
+	// Always returns the system message first then the other interactions
+	return append(system, con.History[:historyLen-elements+1]...), nil
 }
 
 /*

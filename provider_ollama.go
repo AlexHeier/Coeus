@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"strconv"
@@ -64,17 +66,20 @@ func sendOllama(con *Conversation) (ResponseStruct, error) {
 
 	url := config.HTTPProtocol + "://" + config.ServerIP + ":" + config.Port + ollamaSuffix
 
-	reqData := make(map[string]interface{})
-
-	reqData["model"] = config.Model
-	reqData["messages"] = []ollamaRole{
-		{Role: "system", Content: sp},
-		{Role: "user", Content: con.UserPrompt},
+	ollamaReq := ollamaRequest{
+		Model:  config.Model,
+		Stream: config.Stream,
+		Tools:  ollamaToolsWrapper(),
 	}
-	reqData["stream"] = config.Stream
-	reqData["tools"] = ollamaToolsWrapper()
 
-	jData, err := ollamaNetworkSender(reqData, url)
+	history, err := memory(con)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	ollamaReq.Messages = append(ollamaReq.Messages, history...)
+
+	jData, err := ollamaNetworkSender(ollamaReq, url)
 	if err != nil {
 		return ResponseStruct{}, err
 	}
@@ -94,14 +99,31 @@ func sendOllama(con *Conversation) (ResponseStruct, error) {
 
 			toolResponse, err := tool.RunTool(args...)
 			if err != nil {
+				fmt.Println(err.Error())
 				continue
 			}
 
-			reqData["messages"] = append(reqData["messages"].([]ollamaRole),
-				ollamaRole{Role: "tool", Content: toolResponse})
+			con.History = append(con.History, HistoryStruct{
+				Role:      "assistant",
+				ToolCalls: []ToolCall{t},
+			})
+
+			con.History = append(con.History, HistoryStruct{
+				Role:       "tool",
+				ToolCallID: t.ID,
+				Content:    toolResponse,
+			})
+
 		}
 
-		jData, err = ollamaNetworkSender(reqData, url)
+		history, err := memory(con)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+
+		ollamaReq.Messages = history
+
+		jData, err = ollamaNetworkSender(ollamaReq, url)
 		if err != nil {
 			return ResponseStruct{}, err
 		}
@@ -145,7 +167,7 @@ ollaNetworkSender is a function that sends a request to Ollama.
 
 @return A response and an error if the request fails
 */
-func ollamaNetworkSender(reqData map[string]interface{}, url string) (ollamaResponse, error) {
+func ollamaNetworkSender(reqData ollamaRequest, url string) (ollamaResponse, error) {
 	data, err := json.Marshal(reqData)
 	if err != nil {
 		return ollamaResponse{}, err
