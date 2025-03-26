@@ -78,7 +78,7 @@ func MemoryLastMessage(args ...interface{}) ([]HistoryStruct, error) {
 	system := []HistoryStruct{{Role: "system", Content: sp}}
 
 	// Always returns the system message first then the other interactions
-	return append(system, con.History[:historyLen-elements]...), nil
+	return append(system, con.History[historyLen-elements:]...), nil
 }
 
 /*
