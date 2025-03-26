@@ -38,6 +38,8 @@ func MemoryAllMessage(args ...interface{}) ([]HistoryStruct, error) {
 		return nil, fmt.Errorf("MEMORY: Bad type. How?")
 	}
 
+	fmt.Println("Hello")
+
 	return append(con.History, HistoryStruct{Role: "system", Content: sp}), nil
 }
 
