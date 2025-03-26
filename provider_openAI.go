@@ -39,27 +39,10 @@ func sendOpenAI(con *Conversation) (ResponseStruct, error) {
 
 	openAITools := convertToOpenAITools()
 
-	history, err := memory(con)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
 	req := openai.ChatCompletionRequest{
-		Model: config.Model,
-		Tools: openAITools,
-		Messages: []openai.ChatCompletionMessage{
-			{Role: "system", Content: sp},
-			{Role: "user", Content: con.UserPrompt},
-		},
-	}
-
-	for _, his := range history {
-		req.Messages = append(req.Messages, openai.ChatCompletionMessage{
-			Role:       his.Role,
-			Content:    his.Content,
-			ToolCallID: his.ToolCallID,
-			ToolCalls:  convertToOpenAIToolCalls(his.ToolCalls),
-		})
+		Model:    config.Model,
+		Tools:    openAITools,
+		Messages: createOpenAIMessages(con),
 	}
 
 	resp, err := client.CreateChatCompletion(context.TODO(), req)
@@ -68,8 +51,12 @@ func sendOpenAI(con *Conversation) (ResponseStruct, error) {
 	}
 
 	if len(resp.Choices[0].Message.ToolCalls) > 0 {
-		var newMessage []openai.ChatCompletionMessage
-		newMessage = append(newMessage, resp.Choices[0].Message)
+
+		con.History = append(con.History, HistoryStruct{
+			Role:      "assistant",
+			ToolCalls: convertToHistoryToolCalls(resp.Choices[0].Message.ToolCalls),
+		})
+
 		for _, t := range resp.Choices[0].Message.ToolCalls {
 			tool, err := FindTool(t.Function.Name)
 			if err != nil {
@@ -92,15 +79,15 @@ func sendOpenAI(con *Conversation) (ResponseStruct, error) {
 				return ResponseStruct{}, err
 			}
 
-			newMessage = append(newMessage, openai.ChatCompletionMessage{
+			con.History = append(con.History, HistoryStruct{
 				Role:       "tool",
 				ToolCallID: t.ID,
-				Content:    string(toolResponse),
+				Content:    toolResponse,
 			})
 		}
 		resp, err = client.CreateChatCompletion(context.TODO(), openai.ChatCompletionRequest{
 			Model:    config.Model,
-			Messages: newMessage,
+			Messages: createOpenAIMessages(con),
 			Tools:    openAITools,
 		})
 		if err != nil {
@@ -146,5 +133,41 @@ func convertToOpenAIToolCalls(t []ToolCall) []openai.ToolCall {
 			},
 		})
 	}
+	return array
+}
+
+func convertToHistoryToolCalls(t []openai.ToolCall) []ToolCall {
+	var array []ToolCall
+	for _, call := range t {
+		array = append(array, ToolCall{
+			Index: call.Index,
+			ID:    call.ID,
+			Type:  string(call.Type),
+			Function: openai.FunctionCall{
+				Arguments: call.Function.Arguments,
+				Name:      call.Function.Name,
+			},
+		})
+	}
+	return array
+}
+
+func createOpenAIMessages(con *Conversation) []openai.ChatCompletionMessage {
+	history, err := memory(con)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	var array []openai.ChatCompletionMessage
+
+	for _, h := range history {
+		array = append(array, openai.ChatCompletionMessage{
+			Role:       h.Role,
+			Content:    h.Content,
+			ToolCallID: h.ToolCallID,
+			ToolCalls:  convertToOpenAIToolCalls(h.ToolCalls),
+		})
+	}
+
 	return array
 }

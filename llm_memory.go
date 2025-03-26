@@ -38,8 +38,6 @@ func MemoryAllMessage(args ...interface{}) ([]HistoryStruct, error) {
 		return nil, fmt.Errorf("MEMORY: Bad type. How?")
 	}
 
-	fmt.Println("Hello")
-
 	return append(con.History, HistoryStruct{Role: "system", Content: sp}), nil
 }
 
@@ -51,6 +49,41 @@ MemoryLastMessage is a function that will use the last int x messages as memory.
 @return Array of the last X amount of messages
 */
 func MemoryLastMessage(args ...interface{}) ([]HistoryStruct, error) {
+	con, ok := args[0].(*Conversation)
+	if !ok {
+		return nil, fmt.Errorf("BAD CONVERSATION: How?")
+	}
+
+	elements, ok := memArgs[0].(int)
+	if !ok {
+		return nil, fmt.Errorf("second argument needs to be an integer")
+	}
+
+	if elements < 0 {
+		return nil, fmt.Errorf("integer needs to be a positive number")
+	}
+
+	historyLen := len(con.History)
+	fmt.Println(historyLen)
+	if elements > historyLen {
+		elements = historyLen
+	}
+
+	his := []HistoryStruct{{Role: "system", Content: sp}}
+
+	// Always returns the system message first then the other interactions
+	return append(his, con.History[historyLen-elements:]...), nil
+}
+
+/*
+MemoryLastMessage is a function that will use the last int x messages as memory.
+Includes debug information
+
+@param The number of last messages to use as memory.
+
+@return Array of the last X amount of messages
+*/
+func MemoryLastMessageDebug(args ...interface{}) ([]HistoryStruct, error) {
 	con, ok := args[0].(*Conversation)
 	if !ok {
 		return nil, fmt.Errorf("BAD CONVERSATION: How?")
