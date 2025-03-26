@@ -52,13 +52,14 @@ func (c *Conversation) Prompt(userPrompt string) (ResponseStruct, error) {
 		})
 	*/
 
+	c.appendHistory("user", userPrompt)
+
 	response, err := Send(c)
 	if err != nil {
 		fmt.Println(err.Error())
 		return response, err
 	}
 
-	c.appendHistory("user", c.UserPrompt)
 	c.appendHistory("assistant", response.Response)
 
 	splitString := strings.Split(response.Response, " ")
