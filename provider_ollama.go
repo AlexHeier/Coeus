@@ -85,48 +85,54 @@ func sendOllama(con *Conversation) (ResponseStruct, error) {
 	}
 
 	if len(jData.Message.ToolCalls) > 0 {
-		calls := jData.Message.ToolCalls
 
-		con.History = append(con.History, HistoryStruct{
-			Role:      "assistant",
-			ToolCalls: calls,
-		})
-
-		for _, t := range calls {
-			tool, err := FindTool(t.Function.Name)
-			if err != nil {
-				continue
-			}
-
-			var args []interface{}
-			for _, a := range t.Function.Arguments {
-				args = append(args, a)
-			}
-
-			toolResponse, err := tool.RunTool(args...)
-			if err != nil {
-				fmt.Println(err.Error())
-				continue
-			}
+		for {
 
 			con.History = append(con.History, HistoryStruct{
-				Role:       "tool",
-				ToolCallID: t.ID,
-				Content:    toolResponse,
+				Role:      "assistant",
+				ToolCalls: jData.Message.ToolCalls,
 			})
 
-		}
+			for _, t := range jData.Message.ToolCalls {
+				tool, err := FindTool(t.Function.Name)
+				if err != nil {
+					continue
+				}
 
-		history, err := memory(con)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
+				var args []interface{}
+				for _, a := range t.Function.Arguments {
+					args = append(args, a)
+				}
 
-		ollamaReq.Messages = history
+				toolResponse, err := tool.RunTool(args...)
+				if err != nil {
+					fmt.Println(err.Error())
+					continue
+				}
 
-		jData, err = ollamaNetworkSender(ollamaReq, url)
-		if err != nil {
-			return ResponseStruct{}, err
+				con.History = append(con.History, HistoryStruct{
+					Role:       "tool",
+					ToolCallID: t.ID,
+					Content:    toolResponse,
+				})
+
+			}
+
+			history, err := memory(con)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
+
+			ollamaReq.Messages = history
+
+			jData, err = ollamaNetworkSender(ollamaReq, url)
+			if err != nil {
+				return ResponseStruct{}, err
+			}
+
+			if len(jData.Message.ToolCalls) == 0 {
+				break
+			}
 		}
 	}
 
