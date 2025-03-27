@@ -86,6 +86,12 @@ func sendOllama(con *Conversation) (ResponseStruct, error) {
 
 	if len(jData.Message.ToolCalls) > 0 {
 		calls := jData.Message.ToolCalls
+
+		con.History = append(con.History, HistoryStruct{
+			Role:      "assistant",
+			ToolCalls: calls,
+		})
+
 		for _, t := range calls {
 			tool, err := FindTool(t.Function.Name)
 			if err != nil {
@@ -102,11 +108,6 @@ func sendOllama(con *Conversation) (ResponseStruct, error) {
 				fmt.Println(err.Error())
 				continue
 			}
-
-			con.History = append(con.History, HistoryStruct{
-				Role:      "assistant",
-				ToolCalls: []ToolCall{t},
-			})
 
 			con.History = append(con.History, HistoryStruct{
 				Role:       "tool",

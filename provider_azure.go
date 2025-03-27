@@ -70,6 +70,11 @@ func sendAzure(con *Conversation) (ResponseStruct, error) {
 
 	if len(azureRes.Choices[0].Message.ToolCalls) > 0 {
 
+		con.History = append(con.History, HistoryStruct{
+			Role:      azureRoleAssistant,
+			ToolCalls: azureRes.Choices[0].Message.ToolCalls,
+		})
+
 		for {
 
 			for _, toolCall := range azureRes.Choices[0].Message.ToolCalls {
@@ -94,11 +99,6 @@ func sendAzure(con *Conversation) (ResponseStruct, error) {
 				if err != nil {
 					return ResponseStruct{}, fmt.Errorf("error during tool execution: %v", err)
 				}
-
-				con.History = append(con.History, HistoryStruct{
-					Role:      azureRoleAssistant,
-					ToolCalls: []ToolCall{toolCall},
-				})
 
 				con.History = append(con.History, HistoryStruct{
 					Role:       azureRoleTool,
