@@ -26,7 +26,7 @@ type Conversation struct {
 
 // Appends a prompt and section to the history within the conversation
 func (c *Conversation) appendHistory(role, content string) {
-	c.History = append(c.History, HistoryStruct{Role: role, Content: content})
+	c.History = append(c.History, HistoryStruct{Role: role, Content: content, TimeStamp: time.Now()})
 }
 
 /*

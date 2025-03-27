@@ -2,11 +2,14 @@ package coeus
 
 import (
 	"fmt"
+	"time"
 )
 
 /* Default memory function is All. This function will use all messages as memory. */
 var memory func(args ...interface{}) ([]HistoryStruct, error) = MemoryAllMessage
 var memArgs []interface{}
+
+const memerr string = "memory: argument 1 is not a conversation"
 
 /*
 MemoryVersion changes the function used for memory management. Default is All messages.
@@ -35,31 +38,12 @@ MemoryAllMessage is a function that will use all messages as memory.
 func MemoryAllMessage(args ...interface{}) ([]HistoryStruct, error) {
 	con, ok := args[0].(*Conversation)
 	if !ok {
-		return nil, fmt.Errorf("memory: argument 1 is not a conversation")
+		return nil, fmt.Errorf(memerr)
 	}
 
-	return append(con.History, HistoryStruct{Role: "system", Content: sp}), nil
-}
+	mem := []HistoryStruct{{Role: "system", Content: sp}}
 
-/*
-MemoryAllMessage is a function that will use all messages as memory.
-Includes history debugging to the console
-
-@return Array of history objects to use as memory.
-*/
-func MemoryAllMessageDebug(args ...interface{}) ([]HistoryStruct, error) {
-	con, ok := args[0].(*Conversation)
-	if !ok {
-		return nil, fmt.Errorf("memory: argument 1 is not a conversation")
-	}
-
-	fmt.Println("------------------------------------------------------")
-	for _, h := range con.History {
-		fmt.Println(h)
-	}
-	fmt.Println("------------------------------------------------------")
-
-	return append(con.History, HistoryStruct{Role: "system", Content: sp}), nil
+	return append(mem, con.History...), nil
 }
 
 /*
@@ -72,94 +56,61 @@ MemoryLastMessage is a function that will use the last int x messages as memory.
 func MemoryLastMessage(args ...interface{}) ([]HistoryStruct, error) {
 	con, ok := args[0].(*Conversation)
 	if !ok {
-		return nil, fmt.Errorf("memory: argument 1 is not a conversation")
+		return nil, fmt.Errorf(memerr)
 	}
 
-	elements, ok := memArgs[0].(int)
+	count, ok := memArgs[0].(int)
 	if !ok {
 		return nil, fmt.Errorf("memory: second argument needs to be an integer")
 	}
 
-	if elements < 0 {
-		return nil, fmt.Errorf("memory: integer needs to be a positive number")
+	count-- // Subtract 1 to account for binary counting
+
+	if count < 0 {
+		count = -count
 	}
 
-	historyLen := len(con.History)
-	fmt.Println(historyLen)
-	if elements > historyLen {
-		elements = historyLen
+	historyLength := len(con.History)
+
+	if count > historyLength {
+		count = historyLength
 	}
 
-	his := []HistoryStruct{{Role: "system", Content: sp}}
+	mem := []HistoryStruct{{Role: "system", Content: sp}}
 
 	// Always returns the system message first then the other interactions
-	return append(his, con.History[historyLen-elements:]...), nil
+	return append(mem, con.History[historyLength-count:]...), nil
 }
 
 /*
-MemoryLastMessage is a function that will use the last int x messages as memory.
-Includes debug information
+MemoryTime is a function that will use the messages within the last int x minutes as memory.
 
-@param The number of last messages to use as memory.
+@param The number of last minutes to use as memory.
 
-@return Array of the last X amount of messages
+@return Array of the last X amount of messages within the last Y minutes
 */
-func MemoryLastMessageDebug(args ...interface{}) ([]HistoryStruct, error) {
+func MemoryTime(args ...interface{}) ([]HistoryStruct, error) {
 	con, ok := args[0].(*Conversation)
 	if !ok {
-		return nil, fmt.Errorf("memory: argument 1 is not a conversation")
+		return nil, fmt.Errorf(memerr)
 	}
 
-	elements, ok := memArgs[0].(int)
+	age, ok := memArgs[0].(int)
 	if !ok {
 		return nil, fmt.Errorf("memory: second argument needs to be an integer")
 	}
 
-	if elements < 0 {
-		return nil, fmt.Errorf("memory: integer needs to be a positive number")
+	if age < 0 {
+		age = -age
 	}
 
-	historyLen := len(con.History)
-	fmt.Println(historyLen)
-	if elements > historyLen {
-		elements = historyLen
-	}
+	mem := []HistoryStruct{{Role: "system", Content: sp}}
 
-	his := []HistoryStruct{{Role: "system", Content: sp}}
-
-	his = append(his, con.History[historyLen-elements:]...)
-
-	fmt.Println("------------------------------------------------------")
-	for _, h := range his {
-		fmt.Println(h)
-	}
-	fmt.Println("------------------------------------------------------")
-
-	// Always returns the system message first then the other interactions
-	return his, nil
-}
-
-/*
-CURRENTLY NOT IN USE
-MemorySummary will create a summary of the conversation and use it as memory.
-
-@return A string representing the new message with the summary and an error if the conversion fails.
-*/
-func MemorySummary(args ...interface{}) string {
-	var tempSummary string
-	makeNewSummary := `Respond to the user's latest message appropriately. Then, generate a summary using only the previous summary [OLD SUMMARY] and the latest user message. Do not include any other context. Begin the summary with "[SUMMARY]". Ensure that all information from the old summary is retained.`
-
-	con, ok := args[0].(*Conversation)
-	if !ok {
-		return "No history"
-	}
-
-	if con.Summary == "" {
-		for _, h := range con.History {
-			tempSummary += h.Role + ": " + h.Content + "\n"
+	for i := range len(con.History) {
+		if time.Since(con.History[i].TimeStamp).Minutes() < float64(age) {
+			mem = append(mem, con.History[i])
 		}
-		con.Summary = tempSummary
 	}
 
-	return "[BEGIN OLD SUMMARY] " + con.Summary + " [END OLD SUMMARY]" + makeNewSummary
+	return mem, nil
 }

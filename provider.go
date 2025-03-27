@@ -1,6 +1,9 @@
 package coeus
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type ResponseStruct struct {
 	Response           string
@@ -21,6 +24,7 @@ type HistoryStruct struct {
 	Content    string     `json:"content"`
 	ToolCallID string     `json:"tool_call_id,omitempty"`
 	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
+	TimeStamp  time.Time
 }
 
 type ToolCall struct {
