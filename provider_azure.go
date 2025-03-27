@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 )
 
@@ -139,7 +138,7 @@ func createAzureRequest(con *Conversation) azureRequest {
 
 	history, err := memory(con)
 	if err != nil {
-		log.Fatal(err.Error())
+		history = []HistoryStruct{{Role: "system", Content: sp}}
 	}
 
 	for _, h := range history {

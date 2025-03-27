@@ -74,7 +74,7 @@ func sendOllama(con *Conversation) (ResponseStruct, error) {
 
 	history, err := memory(con)
 	if err != nil {
-		log.Fatal(err.Error())
+		history = []HistoryStruct{{Role: "system", Content: sp}}
 	}
 
 	ollamaReq.Messages = append(ollamaReq.Messages, convertHistoryToOllama(history)...)

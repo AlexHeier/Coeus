@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/sashabaranov/go-openai"
 )
@@ -161,7 +160,7 @@ func convertToHistoryToolCalls(t []openai.ToolCall) []ToolCall {
 func createOpenAIMessages(con *Conversation) []openai.ChatCompletionMessage {
 	history, err := memory(con)
 	if err != nil {
-		log.Fatal(err.Error())
+		history = []HistoryStruct{{Role: "system", Content: sp}}
 	}
 
 	var array []openai.ChatCompletionMessage
