@@ -234,7 +234,7 @@ func convertHistoryToolCallsToOllama(t []ToolCall) []ollamaToolCall {
 
 		var m = make(map[string]interface{})
 
-		err := json.Unmarshal([]byte(call.Function.Arguments), m)
+		err := json.Unmarshal([]byte(call.Function.Arguments), &m)
 		if err != nil {
 			log.Fatal("convertollamatoolcalls:" + err.Error())
 		}
