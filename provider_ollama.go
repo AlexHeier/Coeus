@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"strconv"
@@ -120,7 +119,7 @@ func sendOllama(con *Conversation) (ResponseStruct, error) {
 
 			history, err := memory(con)
 			if err != nil {
-				log.Fatal(err.Error())
+				history = []HistoryStruct{{Role: "system", Content: sp}}
 			}
 
 			ollamaReq.Messages = convertHistoryToOllama(history)
@@ -210,7 +209,7 @@ func convertOllamaToolCallsToHistory(t []ollamaToolCall) []ToolCall {
 	for _, call := range t {
 		data, err := json.Marshal(call.Function.Arguments)
 		if err != nil {
-			log.Fatal("convertollamatoolcalls:" + err.Error())
+			return nil
 		}
 
 		array = append(array, ToolCall{
@@ -236,7 +235,7 @@ func convertHistoryToolCallsToOllama(t []ToolCall) []ollamaToolCall {
 
 		err := json.Unmarshal([]byte(call.Function.Arguments), &m)
 		if err != nil {
-			log.Fatal("convertollamatoolcalls:" + err.Error())
+			return nil
 		}
 
 		array = append(array, ollamaToolCall{
