@@ -42,6 +42,27 @@ func MemoryAllMessage(args ...interface{}) ([]HistoryStruct, error) {
 }
 
 /*
+MemoryAllMessage is a function that will use all messages as memory.
+Includes history debugging to the console
+
+@return Array of history objects to use as memory.
+*/
+func MemoryAllMessageDebug(args ...interface{}) ([]HistoryStruct, error) {
+	con, ok := args[0].(*Conversation)
+	if !ok {
+		return nil, fmt.Errorf("MEMORY: Bad type. How?")
+	}
+
+	fmt.Println("------------------------------------------------------")
+	for _, h := range con.History {
+		fmt.Println(h)
+	}
+	fmt.Println("------------------------------------------------------")
+
+	return append(con.History, HistoryStruct{Role: "system", Content: sp}), nil
+}
+
+/*
 MemoryLastMessage is a function that will use the last int x messages as memory.
 
 @param The number of last messages to use as memory.
