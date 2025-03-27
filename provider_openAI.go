@@ -52,49 +52,54 @@ func sendOpenAI(con *Conversation) (ResponseStruct, error) {
 
 	if len(resp.Choices[0].Message.ToolCalls) > 0 {
 
-		con.History = append(con.History, HistoryStruct{
-			Role:      "assistant",
-			ToolCalls: convertToHistoryToolCalls(resp.Choices[0].Message.ToolCalls),
-		})
-
-		for _, t := range resp.Choices[0].Message.ToolCalls {
-			tool, err := FindTool(t.Function.Name)
-			if err != nil {
-				return ResponseStruct{}, err
-			}
-
-			var parsedToolCall = make(map[string]interface{})
-			err = json.Unmarshal([]byte(t.Function.Arguments), &parsedToolCall)
-			if err != nil {
-				return ResponseStruct{}, fmt.Errorf("failed to parse tool arguments: %v", err)
-			}
-
-			var args []interface{}
-			for _, val := range parsedToolCall {
-				args = append(args, val)
-			}
-
-			toolResponse, err := tool.RunTool(args...)
-			if err != nil {
-				return ResponseStruct{}, err
-			}
-
+		for {
 			con.History = append(con.History, HistoryStruct{
-				Role:       "tool",
-				ToolCallID: t.ID,
-				Content:    toolResponse,
+				Role:      "assistant",
+				ToolCalls: convertToHistoryToolCalls(resp.Choices[0].Message.ToolCalls),
 			})
-		}
-		resp, err = client.CreateChatCompletion(context.TODO(), openai.ChatCompletionRequest{
-			Model:    config.Model,
-			Messages: createOpenAIMessages(con),
-			Tools:    openAITools,
-		})
-		if err != nil {
-			return ResponseStruct{}, err
+
+			for _, t := range resp.Choices[0].Message.ToolCalls {
+				tool, err := FindTool(t.Function.Name)
+				if err != nil {
+					return ResponseStruct{}, err
+				}
+
+				var parsedToolCall = make(map[string]interface{})
+				err = json.Unmarshal([]byte(t.Function.Arguments), &parsedToolCall)
+				if err != nil {
+					return ResponseStruct{}, fmt.Errorf("failed to parse tool arguments: %v", err)
+				}
+
+				var args []interface{}
+				for _, val := range parsedToolCall {
+					args = append(args, val)
+				}
+
+				toolResponse, err := tool.RunTool(args...)
+				if err != nil {
+					return ResponseStruct{}, err
+				}
+
+				con.History = append(con.History, HistoryStruct{
+					Role:       "tool",
+					ToolCallID: t.ID,
+					Content:    toolResponse,
+				})
+			}
+			resp, err = client.CreateChatCompletion(context.TODO(), openai.ChatCompletionRequest{
+				Model:    config.Model,
+				Messages: createOpenAIMessages(con),
+				Tools:    openAITools,
+			})
+			if err != nil {
+				return ResponseStruct{}, err
+			}
+
+			if len(resp.Choices[0].Message.ToolCalls) == 0 {
+				break
+			}
 		}
 	}
-
 	return ResponseStruct{Response: resp.Choices[0].Message.Content}, nil
 }
 
