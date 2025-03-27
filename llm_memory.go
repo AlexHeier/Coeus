@@ -35,7 +35,7 @@ MemoryAllMessage is a function that will use all messages as memory.
 func MemoryAllMessage(args ...interface{}) ([]HistoryStruct, error) {
 	con, ok := args[0].(*Conversation)
 	if !ok {
-		return nil, fmt.Errorf("MEMORY: Bad type. How?")
+		return nil, fmt.Errorf("memory: argument 1 is not a conversation")
 	}
 
 	return append(con.History, HistoryStruct{Role: "system", Content: sp}), nil
@@ -50,7 +50,7 @@ Includes history debugging to the console
 func MemoryAllMessageDebug(args ...interface{}) ([]HistoryStruct, error) {
 	con, ok := args[0].(*Conversation)
 	if !ok {
-		return nil, fmt.Errorf("MEMORY: Bad type. How?")
+		return nil, fmt.Errorf("memory: argument 1 is not a conversation")
 	}
 
 	fmt.Println("------------------------------------------------------")
@@ -72,16 +72,16 @@ MemoryLastMessage is a function that will use the last int x messages as memory.
 func MemoryLastMessage(args ...interface{}) ([]HistoryStruct, error) {
 	con, ok := args[0].(*Conversation)
 	if !ok {
-		return nil, fmt.Errorf("BAD CONVERSATION: How?")
+		return nil, fmt.Errorf("memory: argument 1 is not a conversation")
 	}
 
 	elements, ok := memArgs[0].(int)
 	if !ok {
-		return nil, fmt.Errorf("second argument needs to be an integer")
+		return nil, fmt.Errorf("memory: second argument needs to be an integer")
 	}
 
 	if elements < 0 {
-		return nil, fmt.Errorf("integer needs to be a positive number")
+		return nil, fmt.Errorf("memory: integer needs to be a positive number")
 	}
 
 	historyLen := len(con.History)
@@ -107,16 +107,16 @@ Includes debug information
 func MemoryLastMessageDebug(args ...interface{}) ([]HistoryStruct, error) {
 	con, ok := args[0].(*Conversation)
 	if !ok {
-		return nil, fmt.Errorf("BAD CONVERSATION: How?")
+		return nil, fmt.Errorf("memory: argument 1 is not a conversation")
 	}
 
 	elements, ok := memArgs[0].(int)
 	if !ok {
-		return nil, fmt.Errorf("second argument needs to be an integer")
+		return nil, fmt.Errorf("memory: second argument needs to be an integer")
 	}
 
 	if elements < 0 {
-		return nil, fmt.Errorf("integer needs to be a positive number")
+		return nil, fmt.Errorf("memory: integer needs to be a positive number")
 	}
 
 	historyLen := len(con.History)
