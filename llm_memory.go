@@ -5,11 +5,9 @@ import (
 	"time"
 )
 
-/* Default memory function is All. This function will use all messages as memory. */
-var memory func(args ...interface{}) ([]HistoryStruct, error) = MemoryAllMessage
+/* Default memory function is MemoryAllMessage.*/
+var memory func(c *Conversation) ([]HistoryStruct, error) = MemoryAllMessage
 var memArgs []interface{}
-
-const memerr string = "memory: argument 1 is not a conversation"
 
 /*
 MemoryVersion changes the function used for memory management. Default is All messages.
@@ -18,15 +16,14 @@ MemoryVersion changes the function used for memory management. Default is All me
 */
 func MemoryVersion(newFunc ...interface{}) {
 	if len(newFunc) > 0 {
-		if fn, ok := newFunc[0].(func(args ...interface{}) ([]HistoryStruct, error)); ok {
+		if fn, ok := newFunc[0].(func(*Conversation) ([]HistoryStruct, error)); ok {
 			memory = fn
-			if len(newFunc) > 1 {
-				memArgs = newFunc[1:]
-			}
+			memArgs = newFunc[1:] // Save additional arguments
+		} else {
+			memory = MemoryAllMessage // Default if type doesn't match
 		}
 	} else {
 		memory = MemoryAllMessage // Default
-		return
 	}
 }
 
@@ -35,15 +32,11 @@ MemoryAllMessage is a function that will use all messages as memory.
 
 @return Array of history objects to use as memory.
 */
-func MemoryAllMessage(args ...interface{}) ([]HistoryStruct, error) {
-	con, ok := args[0].(*Conversation)
-	if !ok {
-		return nil, fmt.Errorf(memerr)
-	}
+func MemoryAllMessage(c *Conversation) ([]HistoryStruct, error) {
 
 	mem := []HistoryStruct{{Role: "system", Content: sp}}
 
-	return append(mem, con.History...), nil
+	return append(mem, c.History...), nil
 }
 
 /*
@@ -53,24 +46,17 @@ MemoryLastMessage is a function that will use the last int x messages as memory.
 
 @return Array of the last X amount of messages
 */
-func MemoryLastMessage(args ...interface{}) ([]HistoryStruct, error) {
-	con, ok := args[0].(*Conversation)
-	if !ok {
-		return nil, fmt.Errorf(memerr)
-	}
-
+func MemoryLastMessage(c *Conversation) ([]HistoryStruct, error) {
 	count, ok := memArgs[0].(int)
 	if !ok {
 		return nil, fmt.Errorf("memory: second argument needs to be an integer")
 	}
 
-	count-- // Subtract 1 to account for binary counting
-
 	if count < 0 {
 		count = -count
 	}
 
-	historyLength := len(con.History)
+	historyLength := len(c.History)
 
 	if count > historyLength {
 		count = historyLength
@@ -79,7 +65,7 @@ func MemoryLastMessage(args ...interface{}) ([]HistoryStruct, error) {
 	mem := []HistoryStruct{{Role: "system", Content: sp}}
 
 	// Always returns the system message first then the other interactions
-	return append(mem, con.History[historyLength-count:]...), nil
+	return append(mem, c.History[historyLength-count:]...), nil
 }
 
 /*
@@ -89,11 +75,7 @@ MemoryTime is a function that will use the messages within the last int x minute
 
 @return Array of the last X amount of messages within the last Y minutes
 */
-func MemoryTime(args ...interface{}) ([]HistoryStruct, error) {
-	con, ok := args[0].(*Conversation)
-	if !ok {
-		return nil, fmt.Errorf(memerr)
-	}
+func MemoryTime(c *Conversation) ([]HistoryStruct, error) {
 
 	age, ok := memArgs[0].(int)
 	if !ok {
@@ -106,9 +88,9 @@ func MemoryTime(args ...interface{}) ([]HistoryStruct, error) {
 
 	mem := []HistoryStruct{{Role: "system", Content: sp}}
 
-	for i := range len(con.History) {
-		if time.Since(con.History[i].TimeStamp).Minutes() < float64(age) {
-			mem = append(mem, con.History[i])
+	for i := range len(c.History) {
+		if time.Since(c.History[i].TimeStamp).Minutes() < float64(age) {
+			mem = append(mem, c.History[i])
 		}
 	}
 
