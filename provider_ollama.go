@@ -90,7 +90,7 @@ func sendOllama(con *Conversation) (ResponseStruct, error) {
 
 			con.History = append(con.History, HistoryStruct{
 				Role:      "assistant",
-				ToolCalls: jData.Message.ToolCalls,
+				ToolCalls: convertOllamaToolCallsToHistory(jData.Message.ToolCalls),
 			})
 
 			for _, t := range jData.Message.ToolCalls {
@@ -203,4 +203,26 @@ func ollamaNetworkSender(reqData ollamaRequest, url string) (ollamaResponse, err
 	}
 
 	return jData, nil
+}
+
+func convertOllamaToolCallsToHistory(t []ollamaToolCall) []ToolCall {
+	var array []ToolCall
+	for _, call := range t {
+		data, err := json.Marshal(call.Function.Arguments)
+		if err != nil {
+			log.Fatal("convertollamatoolcalls:" + err.Error())
+		}
+
+		array = append(array, ToolCall{
+			Index: call.Index,
+			ID:    call.ID,
+			Type:  call.Type,
+			Function: struct {
+				Name      string "json:\"name,omitempty\""
+				Arguments string "json:\"arguments,omitempty\""
+			}{Name: call.Function.Name,
+				Arguments: string(data)},
+		})
+	}
+	return array
 }

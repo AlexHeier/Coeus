@@ -35,6 +35,9 @@ type ollamaTool struct {
 
 // Struct used for tool calls in the response from Ollama
 type ollamaToolCall struct {
+	Index    *int   `json:"index,omitempty"`
+	ID       string `json:"id,omitempty"`
+	Type     string `json:"type,omitempty"`
 	Function struct {
 		Arguments map[string]interface{} `json:"arguments"`
 		Name      string                 `json:"name"`
@@ -43,10 +46,10 @@ type ollamaToolCall struct {
 
 // Struct used in resonse from Ollama
 type ollamaMessage struct {
-	Content    string     `json:"content"`
-	Role       string     `json:"role"`
-	ToolCalls  []ToolCall `json:"tool_calls"`
-	ToolCallID string     `json:"tool_call_id"`
+	Content    string           `json:"content"`
+	Role       string           `json:"role"`
+	ToolCalls  []ollamaToolCall `json:"tool_calls"`
+	ToolCallID string           `json:"tool_call_id"`
 }
 
 // Struct for containing the request to Ollama
