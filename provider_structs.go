@@ -55,7 +55,7 @@ type ollamaMessage struct {
 // Struct for containing the request to Ollama
 type ollamaRequest struct {
 	Model    string          `json:"model"`
-	Messages []HistoryStruct `json:"messages"`
+	Messages []ollamaMessage `json:"messages"`
 	Tools    []ollamaTool    `json:"tools"`
 	Stream   bool            `json:"stream"`
 }

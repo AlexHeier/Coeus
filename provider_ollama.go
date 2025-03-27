@@ -77,7 +77,7 @@ func sendOllama(con *Conversation) (ResponseStruct, error) {
 		log.Fatal(err.Error())
 	}
 
-	ollamaReq.Messages = append(ollamaReq.Messages, history...)
+	ollamaReq.Messages = append(ollamaReq.Messages, convertHistoryToOllama(history)...)
 
 	jData, err := ollamaNetworkSender(ollamaReq, url)
 	if err != nil {
@@ -123,7 +123,7 @@ func sendOllama(con *Conversation) (ResponseStruct, error) {
 				log.Fatal(err.Error())
 			}
 
-			ollamaReq.Messages = history
+			ollamaReq.Messages = convertHistoryToOllama(history)
 
 			jData, err = ollamaNetworkSender(ollamaReq, url)
 			if err != nil {
@@ -222,6 +222,45 @@ func convertOllamaToolCallsToHistory(t []ollamaToolCall) []ToolCall {
 				Arguments string "json:\"arguments,omitempty\""
 			}{Name: call.Function.Name,
 				Arguments: string(data)},
+		})
+	}
+	return array
+}
+
+func convertHistoryToolCallsToOllama(t []ToolCall) []ollamaToolCall {
+	var array []ollamaToolCall
+
+	for _, call := range t {
+
+		var m = make(map[string]interface{})
+
+		err := json.Unmarshal([]byte(call.Function.Arguments), m)
+		if err != nil {
+			log.Fatal("convertollamatoolcalls:" + err.Error())
+		}
+
+		array = append(array, ollamaToolCall{
+			Index: call.Index,
+			ID:    call.ID,
+			Type:  call.Type,
+			Function: struct {
+				Arguments map[string]interface{} "json:\"arguments\""
+				Name      string                 "json:\"name\""
+			}{Name: call.Function.Name,
+				Arguments: m},
+		})
+	}
+	return array
+}
+
+func convertHistoryToOllama(h []HistoryStruct) []ollamaMessage {
+	var array []ollamaMessage
+	for _, his := range h {
+		array = append(array, ollamaMessage{
+			Content:    his.Content,
+			Role:       his.Role,
+			ToolCalls:  convertHistoryToolCallsToOllama(his.ToolCalls),
+			ToolCallID: his.ToolCallID,
 		})
 	}
 	return array
