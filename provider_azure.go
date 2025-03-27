@@ -70,12 +70,12 @@ func sendAzure(con *Conversation) (ResponseStruct, error) {
 
 	if len(azureRes.Choices[0].Message.ToolCalls) > 0 {
 
-		con.History = append(con.History, HistoryStruct{
-			Role:      azureRoleAssistant,
-			ToolCalls: azureRes.Choices[0].Message.ToolCalls,
-		})
-
 		for {
+
+			con.History = append(con.History, HistoryStruct{
+				Role:      azureRoleAssistant,
+				ToolCalls: azureRes.Choices[0].Message.ToolCalls,
+			})
 
 			for _, toolCall := range azureRes.Choices[0].Message.ToolCalls {
 

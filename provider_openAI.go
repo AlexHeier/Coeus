@@ -53,6 +53,7 @@ func sendOpenAI(con *Conversation) (ResponseStruct, error) {
 	if len(resp.Choices[0].Message.ToolCalls) > 0 {
 
 		for {
+
 			con.History = append(con.History, HistoryStruct{
 				Role:      "assistant",
 				ToolCalls: convertToHistoryToolCalls(resp.Choices[0].Message.ToolCalls),
