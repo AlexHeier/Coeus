@@ -57,6 +57,8 @@ func MemoryLastMessage(c *Conversation) ([]HistoryStruct, error) {
 		count = -count
 	}
 
+	count++ // Add exstra due to user message being appended before memory call.
+
 	i := len(c.History) - 1
 	found := 0
 	for ; i > 0; i-- {
@@ -69,8 +71,6 @@ func MemoryLastMessage(c *Conversation) ([]HistoryStruct, error) {
 	}
 
 	mem := []HistoryStruct{{Role: "system", Content: sp}}
-
-	fmt.Printf("%v", append(mem, c.History[i:]...))
 
 	// Always returns the system message first then the other interactions
 	return append(mem, c.History[i:]...), nil
