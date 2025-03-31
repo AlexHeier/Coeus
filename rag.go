@@ -105,7 +105,8 @@ func getRAG(userPrompt string) string {
 	ORDER BY vector <-> $1 
 	LIMIT $2;
 	`
-	rows, err := db.Query(query, vector, closest)
+	vecStr := "[" + strings.Trim(strings.Replace(fmt.Sprint(vector), " ", ",", -1), "[]") + "]"
+	rows, err := db.Query(query, vecStr, closest)
 	if err != nil {
 		fmt.Println("\nGetRAG Error executing query:", err)
 		return "Unable to use RAG"
@@ -122,8 +123,9 @@ func getRAG(userPrompt string) string {
 		}
 		chunks = append(chunks, chunk)
 	}
+	fmt.Printf("\n\nUser Prompt: %s\n", userPrompt)
 
-	fmt.Printf("\n\nChunks: %v\n\n", chunks)
+	fmt.Printf("\nChunks: %v\n", chunks)
 
 	return strings.Join(chunks, "\n")
 }
