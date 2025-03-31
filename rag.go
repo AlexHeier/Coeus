@@ -107,7 +107,7 @@ func getRAG(userPrompt string) string {
 	`
 	rows, err := db.Query(query, vector, closest)
 	if err != nil {
-		fmt.Println("\nError executing query:", err)
+		fmt.Println("\nGetRAG Error executing query:", err)
 		return "Unable to use RAG"
 	}
 	defer rows.Close()
@@ -228,9 +228,9 @@ func chunkToVector(chunk string) []float64 {
 	query := `SELECT vector FROM embeddings WHERE word = ANY($1)`
 	words := strings.Fields(chunk)
 
-	rows, err := db.Query(query, words)
+	rows, err := db.Query(query, pg.Array(words))
 	if err != nil {
-		fmt.Println("Error executing query:", err)
+		fmt.Println("chunkToVector Error executing query:", err)
 		return nil
 	}
 	defer rows.Close()
