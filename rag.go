@@ -276,7 +276,6 @@ func updateRAG(filePath string) {
 	_, err = db.Exec(query, filePath)
 	if err != nil {
 		fmt.Printf("error deleting old data: %v", err)
-		return
 	}
 
 	for _, chunk := range chunks {
