@@ -187,7 +187,7 @@ func fileToToken(filePath string) ([]string, error) {
 	}
 
 	// Process the chunks to ensure they are ≤ 200 characters with overlap
-	finalChunks := splitChunks(rawChunks, 200, 0.3)
+	finalChunks := splitChunks(rawChunks, 500, 0.3)
 
 	return finalChunks, nil
 }
@@ -247,21 +247,30 @@ func chunkToVector(chunk string) []float64 {
 		vector = append(vector, v)
 	}
 
-	vec := sumVectors(vector)
+	vec := averageVectors(vector)
 	return vec
 }
 
-func sumVectors(vectors [][]float64) []float64 {
+func averageVectors(vectors [][]float64) []float64 {
 	if len(vectors) == 0 {
-		return nil
+		return []float64{} // Return empty slice instead of nil
 	}
 
-	sum := make([]float64, len(vectors[0]))
+	vecSize := len(vectors[0])
+	sum := make([]float64, vecSize)
 
 	for _, vector := range vectors {
+		if len(vector) != vecSize {
+			panic("all vectors must have the same length")
+		}
 		for i, val := range vector {
 			sum[i] += val
 		}
+	}
+
+	// Compute the average
+	for i := range sum {
+		sum[i] /= float64(len(vectors))
 	}
 
 	return sum
