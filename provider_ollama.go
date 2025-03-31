@@ -262,5 +262,12 @@ func convertHistoryToOllama(h []HistoryStruct) []ollamaMessage {
 			ToolCallID: his.ToolCallID,
 		})
 	}
+
+	if rag {
+		array = append(array, ollamaMessage{
+			Role:    "system",
+			Content: getRAG(h[len(h)-1].Content),
+		})
+	}
 	return array
 }

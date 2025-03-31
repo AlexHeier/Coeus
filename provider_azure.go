@@ -150,6 +150,13 @@ func createAzureRequest(con *Conversation) azureRequest {
 				ToolCalls:  h.ToolCalls})
 	}
 
+	if rag {
+		AzureReq.Messages = append(AzureReq.Messages,
+			azureMessage{
+				Role:    "system",
+				Content: getRAG(con.History[len(con.History)-1].Content)})
+	}
+
 	for _, t := range Tools {
 		AzureReq.Tools = append(AzureReq.Tools, azureTool{Type: azureTypeFunction, Function: struct {
 			Name        string   `json:"name"`
