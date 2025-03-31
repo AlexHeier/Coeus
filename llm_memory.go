@@ -2,6 +2,7 @@ package coeus
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -44,7 +45,7 @@ MemoryLastMessage is a function that will use the last int x messages as memory.
 
 @param The number of last messages to use as memory.
 
-@return Array of the last X amount of messages
+@return Array of the last X amount of messages from user and everything between.
 */
 func MemoryLastMessage(c *Conversation) ([]HistoryStruct, error) {
 	count, ok := memArgs[0].(int)
@@ -56,16 +57,21 @@ func MemoryLastMessage(c *Conversation) ([]HistoryStruct, error) {
 		count = -count
 	}
 
-	historyLength := len(c.History)
-
-	if count > historyLength {
-		count = historyLength
+	i := len(c.History) - 1
+	found := 0
+	for ; i > 0; i-- {
+		if strings.ToLower(c.History[i].Role) == "user" {
+			found++
+			if found >= count {
+				break
+			}
+		}
 	}
 
 	mem := []HistoryStruct{{Role: "system", Content: sp}}
 
 	// Always returns the system message first then the other interactions
-	return append(mem, c.History[historyLength-count:]...), nil
+	return append(mem, c.History[i:]...), nil
 }
 
 /*
