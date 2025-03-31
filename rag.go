@@ -284,7 +284,7 @@ func updateRAG(filePath string) {
 			continue
 		}
 		query := `INSERT INTO rag (file_location, chunk, vector) VALUES ($1, $2, $3);`
-		vecStr := "{" + strings.Trim(strings.Replace(fmt.Sprint(chunkVec), " ", ",", -1), "[]") + "}"
+		vecStr := "[" + strings.Trim(strings.Replace(fmt.Sprint(chunkVec), " ", ",", -1), "[]") + "]"
 		_, err = db.Exec(query, filePath, chunk, vecStr)
 		if err != nil {
 			fmt.Printf("error inserting data: %v", err)
