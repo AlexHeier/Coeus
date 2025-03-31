@@ -134,7 +134,6 @@ If a file is updated, it updates the RAG.
 */
 func updateCheck() {
 	for {
-		time.Sleep(15 * time.Minute)
 		files, err := os.ReadDir(ragfolder)
 		if err != nil {
 			continue
@@ -152,6 +151,7 @@ func updateCheck() {
 				go updateRAG(filePath)
 			}
 		}
+		time.Sleep(15 * time.Minute)
 	}
 }
 
