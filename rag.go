@@ -22,7 +22,7 @@ var sqlConfig struct {
 }
 
 // ragfolder is the folder where the RAG files are stored
-const ragfolder string = "./rag"
+const ragfolder string = "./RAG"
 
 // fileUpdateTime is a map that stores the last update time of each file
 var fileUpdateTime = make(map[string]time.Time)
@@ -123,9 +123,9 @@ func getRAG(userPrompt string) string {
 		}
 		chunks = append(chunks, chunk)
 	}
-	fmt.Printf("\n\nUser Prompt: %s\n", userPrompt)
+	fmt.Printf("\nUser Prompt: %s\n", userPrompt)
 
-	fmt.Printf("\nChunks: %v\n", chunks)
+	fmt.Printf("\nChunks: %v\n", strings.Join(chunks, "\n"))
 
 	return strings.Join(chunks, "\n")
 }
@@ -292,7 +292,6 @@ func updateRAG(filePath string) {
 			fmt.Printf("error inserting data: %v", err)
 			return
 		}
-		fmt.Printf("\n\nInserted chunk: %s\n", chunk)
 	}
 }
 
