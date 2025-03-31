@@ -70,6 +70,8 @@ func MemoryLastMessage(c *Conversation) ([]HistoryStruct, error) {
 
 	mem := []HistoryStruct{{Role: "system", Content: sp}}
 
+	fmt.Printf("%v", append(mem, c.History[i:]...))
+
 	// Always returns the system message first then the other interactions
 	return append(mem, c.History[i:]...), nil
 }
