@@ -105,9 +105,9 @@ func getRAG(userPrompt string) string {
 	ORDER BY vector <-> $1 
 	LIMIT $2;
 	`
-	rows, err := db.Query(query, pg.Array(vector), closest)
+	rows, err := db.Query(query, vector, closest)
 	if err != nil {
-		fmt.Println("Error executing query:", err)
+		fmt.Println("\nError executing query:", err)
 		return "Unable to use RAG"
 	}
 	defer rows.Close()
