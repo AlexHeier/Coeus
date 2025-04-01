@@ -153,7 +153,7 @@ func getRAG(userPrompt string) string {
 	query := `
 	SELECT chunk 
 	FROM rag
-	ORDER BY vector <=> $1 
+	ORDER BY vector <#> $1 
 	LIMIT $2;
 	`
 	vecStr := "[" + strings.Trim(strings.Replace(fmt.Sprint(vector), " ", ",", -1), "[]") + "]"
