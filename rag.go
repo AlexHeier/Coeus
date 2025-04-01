@@ -336,6 +336,10 @@ func addVectorsLogScaled(vf []vectorFrequency) []float64 {
 		}
 	}
 
+	for i := range sum {
+		sum[i] /= float64(len(vf)) // Average the vectors
+	}
+
 	return sum
 }
 
