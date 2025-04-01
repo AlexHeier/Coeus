@@ -33,8 +33,11 @@ var fileUpdateTime = make(map[string]time.Time)
 // rag is a boolean that indicates if RAG is enabled
 var rag bool = false
 
-// closest is the number of closest results to return
-var closest int = 1
+// RAG config with default values
+var closest int = 1        // closest is the number of closest results to return
+var cs int = 300           // Chunk size for splitting the text into smaller chunks
+var overlap float64 = 0.25 // Overlap ratio for splitting the text into smaller chunks
+var mp float64 = 2.0       // Multiplier for the vector scaling
 
 // db is the database connection
 var db *sql.DB
@@ -44,9 +47,6 @@ var db *sql.DB
 var wordWeights map[string]float64
 var totalWords int = 0 // Total number of words in the RAG folder
 
-var cs int          // Chunk size for splitting the text into smaller chunks
-var overlap float64 // Overlap ratio for splitting the text into smaller chunks
-
 var mu sync.RWMutex // A mutex to handle concurrent access to the wordWeights map
 
 var maxFrequency int = 0 // Maximum frequency of any word in the database
@@ -54,6 +54,24 @@ var maxFrequency int = 0 // Maximum frequency of any word in the database
 type vectorFrequency struct {
 	Vector   []float64 // The vector representation of the word
 	WordFreq int       // The frequency of the word in the database
+}
+
+/*
+RAGConfig sets the configuration for the RAG (Retrieval-Augmented Generation) mode.
+
+@param context: The number of closest results to use as context for the model. Default is 1.
+
+@param chunkSize: The size of the chunks to split the text into. Default is 300.
+
+@param overlapRatio: The ratio of overlap between chunks. Default is 0.25.
+
+@param multiplier: The multiplier for the vector scaling. Default is 2.
+*/
+func RAGConfig(context, chunkSize int, overlapRatio, multiplier float64) {
+	closest = context
+	cs = chunkSize
+	overlap = overlapRatio
+	mp = multiplier
 }
 
 /*
@@ -76,10 +94,8 @@ This mode allows the model to use external knowledge sources to improve its resp
 
 @return An error if any of the fields are empty or invalid.
 */
-func EnableRAG(host, dbname, user, password string, port, amount, chunkSize int, overlapRatio float64) error {
-	closest = amount
-	cs = chunkSize
-	overlap = overlapRatio
+func EnableRAG(host, dbname, user, password string, port int) error {
+
 	rag = true
 
 	if host == "" || dbname == "" || user == "" || password == "" {
@@ -310,7 +326,7 @@ func addVectorsLogScaled(vf []vectorFrequency) []float64 {
 		scale := logScaledFrequency / math.Log(1+float64(maxFrequency)) // Normalize by the max frequency
 
 		for j, val := range v.Vector {
-			sum[j] += val * scale * 2 // Multiplies the scale my 2 to increase the weight of the vector
+			sum[j] += val * scale * mp // Scale the vector by the log-scaled frequency and multiplier
 		}
 	}
 
