@@ -154,7 +154,7 @@ func createAzureRequest(con *Conversation) azureRequest {
 		AzureReq.Messages = append(AzureReq.Messages,
 			azureMessage{
 				Role:    "system",
-				Content: getRAG(con.History[len(con.History)-1].Content)})
+				Content: GetRAG(con.History[len(con.History)-1].Content)})
 	}
 
 	for _, t := range Tools {

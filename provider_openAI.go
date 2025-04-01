@@ -177,7 +177,7 @@ func createOpenAIMessages(con *Conversation) []openai.ChatCompletionMessage {
 	if rag {
 		array = append(array, openai.ChatCompletionMessage{
 			Role:    "system",
-			Content: getRAG(con.History[len(con.History)-1].Content),
+			Content: GetRAG(con.History[len(con.History)-1].Content),
 		})
 	}
 

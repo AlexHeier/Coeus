@@ -1,3 +1,5 @@
 .env
 .vscode
-main.go.older
+
+# Folder for testing data for RAG. Create a .txt file in this folder with the test data for the RAG test.
+test/RAG/*

@@ -25,7 +25,7 @@ var sqlConfig struct {
 }
 
 // ragfolder is the folder where the RAG files are stored
-const ragfolder string = "./RAG"
+var ragfolder string = "./RAG"
 
 // fileUpdateTime is a map that stores the last update time of each file
 var fileUpdateTime = make(map[string]time.Time)
@@ -34,7 +34,7 @@ var fileUpdateTime = make(map[string]time.Time)
 var rag bool = false
 
 // RAG config with default values
-var closest int = 1        // closest is the number of closest results to return
+var closest int = 2        // closest is the number of closest results to return
 var cs int = 300           // Chunk size for splitting the text into smaller chunks
 var overlap float64 = 0.25 // Overlap ratio for splitting the text into smaller chunks
 var mp float64 = 2.0       // Multiplier for the vector scaling
@@ -59,15 +59,19 @@ type vectorFrequency struct {
 /*
 RAGConfig sets the configuration for the RAG (Retrieval-Augmented Generation) mode.
 
-@param context: The number of closest results to use as context for the model. Default is 1.
+@param context: The number of closest results to use as context for the model. Default is 2.
 
 @param chunkSize: The size of the chunks to split the text into. Default is 300.
 
 @param overlapRatio: The ratio of overlap between chunks. Default is 0.25.
 
 @param multiplier: The multiplier for the vector scaling. Default is 2.
+
+@param folder: The folder where the RAG files are stored. Default is "./RAG".
+
+@param error: An error if any of the fields are invalid.
 */
-func RAGConfig(context, chunkSize int, overlapRatio, multiplier float64) error {
+func RAGConfig(context, chunkSize int, overlapRatio, multiplier float64, folder string) error {
 	if context < 1 {
 		return fmt.Errorf("context must be greater than 0")
 	}
@@ -77,10 +81,18 @@ func RAGConfig(context, chunkSize int, overlapRatio, multiplier float64) error {
 	if overlapRatio < 0 || overlapRatio > 1 {
 		return fmt.Errorf("overlap ratio must be between 0 and 1")
 	}
+	info, err := os.Stat(folder)
+	if err != nil {
+		return fmt.Errorf("folder does not exist")
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("path is not a directory")
+	}
 	closest = context
 	cs = chunkSize
 	overlap = overlapRatio
 	mp = multiplier
+	ragfolder = folder
 	return nil
 }
 
@@ -142,9 +154,9 @@ func ragDBConnection() string {
 }
 
 /*
-getRAG retrieves the closests chunk from the RAG database based on the user prompt.
+GetRAG retrieves the closests chunks from the RAG database based of the user prompt.
 */
-func getRAG(userPrompt string) string {
+func GetRAG(userPrompt string) string {
 	vector := chunkToVector(userPrompt)
 	if vector == nil {
 		return "Unable to use RAG"
@@ -153,7 +165,7 @@ func getRAG(userPrompt string) string {
 	query := `
 	SELECT chunk 
 	FROM rag
-	ORDER BY vector <#> $1 
+	ORDER BY vector <=> $1 
 	LIMIT $2;
 	`
 	vecStr := "[" + strings.Trim(strings.Replace(fmt.Sprint(vector), " ", ",", -1), "[]") + "]"
@@ -310,10 +322,10 @@ func chunkToVector(chunk string) []float64 {
 		vf = append(vf, vectorFrequency{Vector: v, WordFreq: f})
 	}
 
-	return addVectorsLogScaled(vf)
+	return avrgVectorsLogScaled(vf)
 }
 
-func addVectorsLogScaled(vf []vectorFrequency) []float64 {
+func avrgVectorsLogScaled(vf []vectorFrequency) []float64 {
 	if len(vf) == 0 {
 		return []float64{} // Return empty slice if no vectors
 	}

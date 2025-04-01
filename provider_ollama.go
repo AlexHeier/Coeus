@@ -266,7 +266,7 @@ func convertHistoryToOllama(h []HistoryStruct) []ollamaMessage {
 	if rag {
 		array = append(array, ollamaMessage{
 			Role:    "system",
-			Content: getRAG(h[len(h)-1].Content),
+			Content: GetRAG(h[len(h)-1].Content),
 		})
 	}
 	return array
