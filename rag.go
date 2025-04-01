@@ -67,11 +67,21 @@ RAGConfig sets the configuration for the RAG (Retrieval-Augmented Generation) mo
 
 @param multiplier: The multiplier for the vector scaling. Default is 2.
 */
-func RAGConfig(context, chunkSize int, overlapRatio, multiplier float64) {
+func RAGConfig(context, chunkSize int, overlapRatio, multiplier float64) error {
+	if context < 1 {
+		return fmt.Errorf("context must be greater than 0")
+	}
+	if chunkSize < 1 {
+		return fmt.Errorf("chunk size must be greater than 0")
+	}
+	if overlapRatio < 0 || overlapRatio > 1 {
+		return fmt.Errorf("overlap ratio must be between 0 and 1")
+	}
 	closest = context
 	cs = chunkSize
 	overlap = overlapRatio
 	mp = multiplier
+	return nil
 }
 
 /*
@@ -87,10 +97,6 @@ This mode allows the model to use external knowledge sources to improve its resp
 @param password: The password to connect to the database.
 
 @param port: The port to connect to the database.
-
-@param amount: The number of closest results to return.
-
-@param chunkSize: The size of the chunks to split the text into.
 
 @return An error if any of the fields are empty or invalid.
 */
@@ -147,7 +153,7 @@ func getRAG(userPrompt string) string {
 	query := `
 	SELECT chunk 
 	FROM rag
-	ORDER BY vector <-> $1 
+	ORDER BY vector <=> $1 
 	LIMIT $2;
 	`
 	vecStr := "[" + strings.Trim(strings.Replace(fmt.Sprint(vector), " ", ",", -1), "[]") + "]"
