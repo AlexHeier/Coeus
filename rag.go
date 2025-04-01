@@ -260,7 +260,7 @@ func splitChunks(chunks []string, maxLength int, overlapRatio float64) []string 
 }
 
 func chunkToVector(chunk string) []float64 {
-	query := `SELECT vector, word_frequesy FROM embeddings WHERE word = ANY($1)`
+	query := `SELECT vector, word_frequency FROM embeddings WHERE word = ANY($1)`
 	words := strings.Fields(chunk)
 
 	rows, err := db.Query(query, pg.Array(words))
