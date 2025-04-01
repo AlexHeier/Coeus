@@ -44,6 +44,9 @@ var db *sql.DB
 var wordWeights map[string]float64
 var totalWords int = 0 // Total number of words in the RAG folder
 
+var cs int          // Chunk size for splitting the text into smaller chunks
+var overlap float64 // Overlap ratio for splitting the text into smaller chunks
+
 var mu sync.RWMutex // A mutex to handle concurrent access to the wordWeights map
 
 var maxFrequency int = 0 // Maximum frequency of any word in the database
@@ -67,12 +70,16 @@ This mode allows the model to use external knowledge sources to improve its resp
 
 @param port: The port to connect to the database.
 
-@param number: The number of closest results to return.
+@param amount: The number of closest results to return.
+
+@param chunkSize: The size of the chunks to split the text into.
 
 @return An error if any of the fields are empty or invalid.
 */
-func EnableRAG(host, dbname, user, password string, port, number int) error {
-	closest = number
+func EnableRAG(host, dbname, user, password string, port, amount, chunkSize int, overlapRatio float64) error {
+	closest = amount
+	cs = chunkSize
+	overlap = overlapRatio
 	rag = true
 
 	if host == "" || dbname == "" || user == "" || password == "" {
@@ -220,7 +227,7 @@ func fileToTokenAndFrequency(filePath string) ([]string, error) {
 	}
 
 	// Process the chunks to ensure they are ≤ 200 characters with overlap
-	finalChunks := splitChunks(rawChunks, 500, 0.3)
+	finalChunks := splitChunks(rawChunks, cs, overlap)
 
 	return finalChunks, nil
 }
@@ -303,7 +310,7 @@ func addVectorsLogScaled(vf []vectorFrequency) []float64 {
 		scale := logScaledFrequency / math.Log(1+float64(maxFrequency)) // Normalize by the max frequency
 
 		for j, val := range v.Vector {
-			sum[j] += val * scale
+			sum[j] += val * scale * 2 // Multiplies the scale my 2 to increase the weight of the vector
 		}
 	}
 
