@@ -99,7 +99,6 @@ func EnableRAG(host, dbname, user, password string, port, number int) error {
 	if err != nil {
 		log.Fatalf("Error fetching max frequency: %v", err)
 	}
-	defer db.Close()
 
 	go updateCheck()
 	return nil
