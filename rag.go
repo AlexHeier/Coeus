@@ -4,9 +4,12 @@ import (
 	"bufio"
 	"database/sql"
 	"fmt"
+	"log"
+	"math"
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	pg "github.com/lib/pq" // Import the PostgreSQL driver
@@ -35,6 +38,20 @@ var closest int = 1
 
 // db is the database connection
 var db *sql.DB
+
+// wordWeights is a map that stores the weights of each word in the database based on frequency within the RAG folder
+// This is used to determine the importance of each word in the context of the RAG
+var wordWeights map[string]float64
+var totalWords int = 0 // Total number of words in the RAG folder
+
+var mu sync.RWMutex // A mutex to handle concurrent access to the wordWeights map
+
+var maxFrequency int = 0 // Maximum frequency of any word in the database
+
+type vectorFrequency struct {
+	Vector   []float64 // The vector representation of the word
+	WordFreq int       // The frequency of the word in the database
+}
 
 /*
 EnableRAG enables RAG (Retrieval-Augmented Generation) mode.
@@ -77,6 +94,12 @@ func EnableRAG(host, dbname, user, password string, port, number int) error {
 	if err != nil {
 		return fmt.Errorf("error connecting to the database: %v", err)
 	}
+
+	err = db.QueryRow("SELECT word_frequency FROM embeddings ORDER BY word_frequency DESC LIMIT 1").Scan(&maxFrequency)
+	if err != nil {
+		log.Fatalf("Error fetching max frequency: %v", err)
+	}
+	defer db.Close()
 
 	go updateCheck()
 	return nil
@@ -157,7 +180,11 @@ func updateCheck() {
 	}
 }
 
-func fileToToken(filePath string) ([]string, error) {
+func fileToTokenAndFrequency(filePath string) ([]string, error) {
+	if wordWeights == nil {
+		wordWeights = make(map[string]float64)
+	}
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
@@ -176,6 +203,13 @@ func fileToToken(filePath string) ([]string, error) {
 		line = re.ReplaceAllString(line, "")       // Remove special characters
 		line = strings.ToLower(line)               // Convert to lowercase
 		line = strings.TrimSpace(line)             // Trim spaces
+
+		for _, word := range strings.Fields(line) {
+			mu.Lock()
+			wordWeights[word]++
+			totalWords++
+			mu.Unlock()
+		}
 
 		if line != "" {
 			rawChunks = append(rawChunks, line)
@@ -227,7 +261,7 @@ func splitChunks(chunks []string, maxLength int, overlapRatio float64) []string 
 }
 
 func chunkToVector(chunk string) []float64 {
-	query := `SELECT vector FROM embeddings WHERE word = ANY($1)`
+	query := `SELECT vector, word_frequesy FROM embeddings WHERE word = ANY($1)`
 	words := strings.Fields(chunk)
 
 	rows, err := db.Query(query, pg.Array(words))
@@ -237,47 +271,48 @@ func chunkToVector(chunk string) []float64 {
 	}
 	defer rows.Close()
 
-	var vector [][]float64
+	var vf []vectorFrequency
 	for rows.Next() {
 		var v []float64
-		if err := rows.Scan(pg.Array(&v)); err != nil {
+		var f int
+		if err := rows.Scan(pg.Array(&v), &f); err != nil {
 			fmt.Println("Error scanning row:", err)
 			continue
 		}
-		vector = append(vector, v)
+		vf = append(vf, vectorFrequency{Vector: v, WordFreq: f})
 	}
 
-	vec := averageVectors(vector)
-	return vec
+	return addVectorsLogScaled(vf)
 }
 
-func averageVectors(vectors [][]float64) []float64 {
-	if len(vectors) == 0 {
-		return []float64{} // Return empty slice instead of nil
+func addVectorsLogScaled(vf []vectorFrequency) []float64 {
+	if len(vf) == 0 {
+		return []float64{} // Return empty slice if no vectors
 	}
 
-	vecSize := len(vectors[0])
+	vecSize := len(vf[0].Vector)
 	sum := make([]float64, vecSize)
 
-	for _, vector := range vectors {
-		if len(vector) != vecSize {
+	// Add the vectors scaled logarithmically by their frequencies
+	for _, v := range vf {
+		if len(v.Vector) != vecSize {
 			panic("all vectors must have the same length")
 		}
-		for i, val := range vector {
-			sum[i] += val
-		}
-	}
+		// Logarithmic scaling of frequency
+		logScaledFrequency := math.Log(1 + float64(v.WordFreq)) // Adding 1 to avoid log(0)
+		// Normalize with respect to the max frequency
+		scale := logScaledFrequency / math.Log(1+float64(maxFrequency)) // Normalize by the max frequency
 
-	// Compute the average
-	for i := range sum {
-		sum[i] /= float64(len(vectors))
+		for j, val := range v.Vector {
+			sum[j] += val * scale
+		}
 	}
 
 	return sum
 }
 
 func updateRAG(filePath string) {
-	chunks, err := fileToToken(filePath)
+	chunks, err := fileToTokenAndFrequency(filePath)
 	if err != nil {
 		fmt.Print("Error reading file:", err)
 		return
@@ -302,6 +337,14 @@ func updateRAG(filePath string) {
 			return
 		}
 	}
+}
+
+func getWordFrequency(word string) float64 {
+	// Lock the wordWeights map for reading
+	mu.RLock()
+	defer mu.RUnlock()
+
+	return wordWeights[word]
 }
 
 /*
