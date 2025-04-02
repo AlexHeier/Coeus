@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+/*
+ResponseStruct is the struct that will be returned from the provider.
+It contains the response from the LLM, the total load duration, the eval count, the prompt eval count and the prompt eval duration.
+
+Response: The response from the LLM
+TotalLoadDuration: The total load duration of the request
+Eval_count: The number of evals that were made
+PromptEvalCount: The number of prompt evals that were made
+PromptEvalDuration: The duration of the prompt evals
+*/
 type ResponseStruct struct {
 	Response           string
 	TotalLoadDuration  float64

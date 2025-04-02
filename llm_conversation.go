@@ -44,14 +44,6 @@ func (c *Conversation) Prompt(userPrompt string) (ResponseStruct, error) {
 	c.LastActive = time.Now()
 	c.UserPrompt = userPrompt
 
-	/*
-		response, err := Send(RequestStruct{
-			Userprompt:   c.UserPrompt,
-			Systemprompt: sp,
-			History:      &c.History,
-		})
-	*/
-
 	c.appendHistory("user", userPrompt)
 
 	response, err := Send(c)
@@ -106,24 +98,3 @@ func BeginConversation() *Conversation {
 	ConvAll.Conversations = append(ConvAll.Conversations, &newCon)
 	return ConvAll.Conversations[len(ConvAll.Conversations)-1]
 }
-
-/*
-getSystemPrompt is a function that returns the system prompt as a string.
-
-@receiver c: The conversation to get the system prompt from
-
-@return A string of the system prompt
-
-func (c *Conversation) getSystemPrompt() string {
-	sysP := make(map[string]interface{})
-
-	sysP["systemprompt"] = c.MainPrompt
-	sysP["conversationHistory"] = memory(append([]interface{}{c}, memArgs...)...)
-
-	ret, err := json.Marshal(sysP)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	return string(ret)
-}
-*/

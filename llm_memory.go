@@ -43,7 +43,7 @@ func MemoryAllMessage(c *Conversation) ([]HistoryStruct, error) {
 /*
 MemoryLastMessage is a function that will use the last int x messages as memory.
 
-@param The number of last messages to use as memory.
+@extra param: The number of last user messages to use as memory.
 
 @return Array of the last X amount of messages from user and everything between.
 */
@@ -79,7 +79,7 @@ func MemoryLastMessage(c *Conversation) ([]HistoryStruct, error) {
 /*
 MemoryTime is a function that will use the messages within the last int x minutes as memory.
 
-@param The number of last minutes to use as memory.
+@extra param: The number of last minutes to use as memory.
 
 @return Array of the last X amount of messages within the last Y minutes
 */
