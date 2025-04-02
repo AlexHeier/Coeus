@@ -188,7 +188,7 @@ func GetRAG(userPrompt string) string {
 	}
 	fmt.Printf("\nUser Prompt: %s\n", userPrompt)
 
-	fmt.Printf("\nChunks: %v\n", strings.Join(chunks, "\n"))
+	fmt.Printf("\nChunks: %v\n", strings.Join(chunks, "\n\n"))
 
 	return strings.Join(chunks, "\n")
 }

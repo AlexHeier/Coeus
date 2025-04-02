@@ -14,12 +14,12 @@ func TestCoeusRAG(t *testing.T) {
 		t.Fatalf("Failed to enable RAG: %v", err)
 	}
 
-	err = coeus.RAGConfig(2, 250, 0.25, 2, "./RAG")
+	err = coeus.RAGConfig(1, 1000, 0.25, 2, "./RAG")
 	if err != nil {
 		t.Fatalf("Failed to configure RAG: %v", err)
 	}
 
-	time.Sleep(5 * time.Minute)
+	time.Sleep(3 * time.Minute)
 
 	coeus.GetRAG("What is the deepest oceanic trench, and how deep is it?")
 	coeus.GetRAG("Why are bananas considered berries while strawberries are not?")

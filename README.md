@@ -90,6 +90,25 @@ coeus.MemoryVersion(MemoryLastMessage, messageCount int)
 coeus.MemoryVersion(MemoryTime, messageAge int)
 ```
 
+To implement custom memory management functions, ensure they follow to the following signature:
+
+```go
+func(c *Conversation) ([]HistoryStruct, error)
+```
+
+**Requirements:**
+- Functions can accept any number of predefined input arguments found in the `memArgs` slice:
+  
+  ```go
+  memArgs []interface{}
+  ```
+
+- The function should return a slice of `HistoryStruct` and an `error` value.
+
+For reference, check how predefined memory functions are implemented in `coeus/llm_memory.go`.
+
+
+
 ### Retrieval-Augmented Generation (RAG)
 Coeus includes a custom RAG model based on a skip-gram word2vec model (supports English only). The RAG training process is available [here](https://github.com/AlexHeier/word2vector).
 
@@ -110,6 +129,12 @@ err := coeus.RAGConfig(context, chunkSize int, overlapRatio, multiplier float64,
 - `overlapRatio`: Overlapping ratio between chunks (default: 0.25).
 - `multiplier`: Vector scaling multiplier (default: 2).
 - `folder`: Storage folder for RAG files (default: "./RAG").
+
+To test what the RAG would retrive given a user prompt:
+
+```go
+fmt.Println(coeus.GetRAG("Test prompt"))
+```
 
 ### Debug Dashboard
 To start a debug window as a local web interface:
