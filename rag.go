@@ -71,7 +71,7 @@ RAGConfig sets the configuration for the RAG (Retrieval-Augmented Generation) mo
 
 @param error: An error if any of the fields are invalid.
 */
-func RAGConfig(context, chunkSize int, overlapRatio, multiplier float64, folder string) error {
+func RAGConfig(context, chunkSize int, overlapRatio, multiplier float64) error {
 	if context < 1 {
 		return fmt.Errorf("context must be greater than 0")
 	}
@@ -81,24 +81,19 @@ func RAGConfig(context, chunkSize int, overlapRatio, multiplier float64, folder 
 	if overlapRatio < 0 || overlapRatio > 1 {
 		return fmt.Errorf("overlap ratio must be between 0 and 1")
 	}
-	info, err := os.Stat(folder)
-	if err != nil {
-		return fmt.Errorf("folder does not exist")
-	}
-	if !info.IsDir() {
-		return fmt.Errorf("path is not a directory")
-	}
+
 	closest = context
 	cs = chunkSize
 	overlap = overlapRatio
 	mp = multiplier
-	ragfolder = folder
 	return nil
 }
 
 /*
 EnableRAG enables RAG (Retrieval-Augmented Generation) mode.
 This mode allows the model to use external knowledge sources to improve its responses.
+
+Recommended to use RAGConfig before Enable to remove racecondition between start of tokenization and config.
 
 @param host: The host of the database.
 
@@ -112,7 +107,15 @@ This mode allows the model to use external knowledge sources to improve its resp
 
 @return An error if any of the fields are empty or invalid.
 */
-func EnableRAG(host, dbname, user, password string, port int) error {
+func EnableRAG(host, dbname, user, password string, port int, folder string) error {
+
+	info, err := os.Stat(folder)
+	if err != nil {
+		return fmt.Errorf("folder does not exist")
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("path is not a directory")
+	}
 
 	rag = true
 
@@ -129,8 +132,8 @@ func EnableRAG(host, dbname, user, password string, port int) error {
 	sqlConfig.user = user
 	sqlConfig.password = password
 	sqlConfig.port = port
+	ragfolder = folder
 
-	var err error
 	db, err = sql.Open("postgres", ragDBConnection())
 	if err != nil {
 		return fmt.Errorf("error connecting to the database: %v", err)
@@ -186,9 +189,6 @@ func GetRAG(userPrompt string) string {
 		}
 		chunks = append(chunks, chunk)
 	}
-	fmt.Printf("\nUser Prompt: %s\n", userPrompt)
-
-	fmt.Printf("\nChunks: %v\n", strings.Join(chunks, "\n\n"))
 
 	return strings.Join(chunks, "\n")
 }
