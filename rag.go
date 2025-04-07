@@ -109,12 +109,9 @@ Recommended to use RAGConfig before Enable to remove racecondition between start
 */
 func EnableRAG(host, dbname, user, password string, port int, folder string) error {
 
-	info, err := os.Stat(folder)
+	err := os.MkdirAll(folder, 0777)
 	if err != nil {
-		return fmt.Errorf("folder does not exist")
-	}
-	if !info.IsDir() {
-		return fmt.Errorf("path is not a directory")
+		return fmt.Errorf("error creating or checking file")
 	}
 
 	rag = true
