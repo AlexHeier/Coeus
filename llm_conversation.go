@@ -98,3 +98,33 @@ func BeginConversation() *Conversation {
 	ConvAll.Conversations = append(ConvAll.Conversations, &newCon)
 	return ConvAll.Conversations[len(ConvAll.Conversations)-1]
 }
+
+/*
+ConversationTTL is a function that automatically cleans up conversations by checking their Time To Live (TTL).
+
+@param ttl Time in minutes a conversation can be dormant before being deleted.
+
+@return error If ttl is not a positive number.
+*/
+func ConversationTTL(ttl int) error {
+	if ttl < 0 {
+		return fmt.Errorf("TTL has to be a positive number")
+	}
+	go beginCleanup(ttl)
+	return nil
+}
+
+func beginCleanup(ttl int) {
+	for {
+		var temp []*Conversation
+		ConvAll.Mutex.Lock()
+		for _, con := range ConvAll.Conversations {
+			if time.Since(con.LastActive) >= time.Duration(ttl)*time.Minute {
+				temp = append(temp, con)
+			}
+		}
+		ConvAll.Conversations = temp
+		ConvAll.Mutex.Unlock()
+		time.Sleep(30 * time.Second)
+	}
+}

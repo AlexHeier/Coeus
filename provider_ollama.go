@@ -76,7 +76,7 @@ func sendOllama(con *Conversation) (ResponseStruct, error) {
 		history = []HistoryStruct{{Role: "system", Content: sp}}
 	}
 
-	ollamaReq.Messages = append(ollamaReq.Messages, convertHistoryToOllama(history)...)
+	ollamaReq.Messages = append(ollamaReq.Messages, convertHistoryToOllama(history, con)...)
 
 	jData, err := ollamaNetworkSender(ollamaReq, url)
 	if err != nil {
@@ -122,7 +122,7 @@ func sendOllama(con *Conversation) (ResponseStruct, error) {
 				history = []HistoryStruct{{Role: "system", Content: sp}}
 			}
 
-			ollamaReq.Messages = convertHistoryToOllama(history)
+			ollamaReq.Messages = convertHistoryToOllama(history, con)
 
 			jData, err = ollamaNetworkSender(ollamaReq, url)
 			if err != nil {
@@ -252,7 +252,7 @@ func convertHistoryToolCallsToOllama(t []ToolCall) []ollamaToolCall {
 	return array
 }
 
-func convertHistoryToOllama(h []HistoryStruct) []ollamaMessage {
+func convertHistoryToOllama(h []HistoryStruct, con *Conversation) []ollamaMessage {
 	var array []ollamaMessage
 	for _, his := range h {
 		array = append(array, ollamaMessage{
@@ -266,7 +266,7 @@ func convertHistoryToOllama(h []HistoryStruct) []ollamaMessage {
 	if rag {
 		array = append(array, ollamaMessage{
 			Role:    "system",
-			Content: "This is innformation from RAG: " + GetRAG(con.History[len(con.History)-1].Content)})
+			Content: "This is innformation from RAG: " + GetRAG(con.History[len(con.History)-1].Content),
 		})
 	}
 	return array
