@@ -2,7 +2,6 @@ package coeus
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 )
