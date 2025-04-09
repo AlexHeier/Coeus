@@ -146,6 +146,16 @@ if err != nil {
 ```
 Access it at `localhost:PORT`.
 
+### Automatic Conversation Cleanup
+To enable automatic conversation cleanup that will remove unactive conversations from memory:
+```go
+err := coeus.ConversationTTL(ttl int)
+if err != nil {
+	log.Fatal(err)
+}
+```
+TTL is the number of minutes a conversation can be inactive before terminated.
+
 ## Running Tests
 To run tests for Coeus:
 ```sh
