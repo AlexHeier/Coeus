@@ -180,7 +180,7 @@ func createOpenAIMessages(con *Conversation) []openai.ChatCompletionMessage {
 	if rag {
 		array = append(array, openai.ChatCompletionMessage{
 			Role:    "system",
-			Content: "This is innformation from RAG: " + GetRAG(con.History[len(con.History)-1].Content),
+			Content: "This is information from RAG: " + GetRAG(con.History[len(con.History)-1].Content),
 		})
 	}
 	return array
