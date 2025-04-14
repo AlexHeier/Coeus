@@ -81,8 +81,9 @@ type ollamaResponse struct {
 
 // Struct for OpenAI definition
 type openAIStruct struct {
-	Model  string
-	ApiKey string
+	Model       string
+	ApiKey      string
+	Temperature float32
 }
 
 /*

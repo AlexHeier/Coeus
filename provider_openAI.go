@@ -17,10 +17,11 @@ OpenAI is a function that sets the provider to OpenAI.
 
 @return An error if the model or api key is empty
 */
-func OpenAI(model, apikey string) error {
+func OpenAI(model, apikey string, temperature float32) error {
 	Provider = openAIStruct{
-		Model:  model,
-		ApiKey: apikey,
+		Model:       model,
+		ApiKey:      apikey,
+		Temperature: temperature,
 	}
 	return nil
 }
@@ -39,9 +40,10 @@ func sendOpenAI(con *Conversation) (ResponseStruct, error) {
 	openAITools := convertToOpenAITools()
 
 	req := openai.ChatCompletionRequest{
-		Model:    config.Model,
-		Tools:    openAITools,
-		Messages: createOpenAIMessages(con),
+		Model:       config.Model,
+		Temperature: config.Temperature,
+		Tools:       openAITools,
+		Messages:    createOpenAIMessages(con),
 	}
 
 	resp, err := client.CreateChatCompletion(context.TODO(), req)
@@ -87,9 +89,10 @@ func sendOpenAI(con *Conversation) (ResponseStruct, error) {
 				})
 			}
 			resp, err = client.CreateChatCompletion(context.TODO(), openai.ChatCompletionRequest{
-				Model:    config.Model,
-				Messages: createOpenAIMessages(con),
-				Tools:    openAITools,
+				Model:       config.Model,
+				Temperature: config.Temperature,
+				Messages:    createOpenAIMessages(con),
+				Tools:       openAITools,
 			})
 			if err != nil {
 				return ResponseStruct{}, err
