@@ -25,7 +25,7 @@ Ollama is a function that sets the provider to Ollama.
 
 @return An error if the IP address, port or model is invalid
 */
-func Ollama(ip, port, model string) error {
+func Ollama(ip, port, model string, temperature float64) error {
 	// Validate IP address
 	if net.ParseIP(ip) == nil {
 		return errors.New("invalid IP address")
@@ -47,6 +47,7 @@ func Ollama(ip, port, model string) error {
 		Port:         port,
 		Model:        model,
 		Stream:       false,
+		Temperature:  temperature,
 	}
 
 	return nil
@@ -69,6 +70,10 @@ func sendOllama(con *Conversation) (ResponseStruct, error) {
 		Model:  config.Model,
 		Stream: config.Stream,
 		Tools:  ollamaToolsWrapper(),
+		Options: struct {
+			Temperature float64 "json:\"temperature,omitempty\""
+			Seed        int     "json:\"seed,omitempty\""
+		}{Temperature: config.Temperature},
 	}
 
 	history, err := memory(con)

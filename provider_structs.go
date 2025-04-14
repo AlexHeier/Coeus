@@ -15,6 +15,7 @@ type ollamaStruct struct {
 	Port         string
 	Model        string
 	Stream       bool
+	Temperature  float64
 }
 
 // Struct used in sending requests to Ollama
@@ -58,6 +59,10 @@ type ollamaRequest struct {
 	Messages []ollamaMessage `json:"messages"`
 	Tools    []ollamaTool    `json:"tools"`
 	Stream   bool            `json:"stream"`
+	Options  struct {
+		Temperature float64 `json:"temperature,omitempty"`
+		Seed        int     `json:"seed,omitempty"`
+	} `json:"options,omitempty"`
 }
 
 // Struct for containing the response from Ollama
