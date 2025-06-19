@@ -15,11 +15,6 @@ Coeus is a Golang library designed for customizing existing Large Language Model
 To install:
 ```sh
 # Install Coeus
-go get github.com/AlexHeier/Coeus@latest
-```
-
-When Coeus goes public, it will be installable with:
-```sh
 go get github.com/AlexHeier/Coeus
 ```
 
